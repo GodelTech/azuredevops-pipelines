@@ -4,6 +4,11 @@ parameters:
     type: boolean
     default: false
 
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
+
 steps:
   - pwsh: |
       $headers = @{
@@ -14,3 +19,4 @@ steps:
       $body = @{ status = "cancelling" } | ConvertTo-Json
       Invoke-RestMethod -Uri $url -Method Patch -Headers $headers -Body $body
     displayName: 'Cancel build'
+    condition: ${{ parameters.condition }}

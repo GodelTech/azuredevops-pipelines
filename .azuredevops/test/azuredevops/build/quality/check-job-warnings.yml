@@ -70,3 +70,4 @@ jobs:
       - template: '../../../../../azuredevops/build/cancel-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          condition: failed()
