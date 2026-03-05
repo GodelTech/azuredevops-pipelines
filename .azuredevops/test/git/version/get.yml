@@ -1,0 +1,10 @@
+name: azuredevops/test/git/version/get
+description: 'Test pipeline for getting Git version using GitVersion task'
+
+trigger: none
+
+jobs:
+  - template: '../../../../git/version/get.yml'
+    parameters:
+      enablePipelineDebug: true
+      vmImage: 'ubuntu-latest'
