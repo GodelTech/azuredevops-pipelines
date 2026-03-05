@@ -1,0 +1,27 @@
+parameters:
+  - name: enablePipelineDebug
+    displayName: 'Enable pipeline debug'
+    type: boolean
+    default: false
+
+  - name: checkWarnings
+    displayName: 'Check warnings'
+    type: boolean
+    default: true
+
+steps:
+  - script: |
+      $headers = @{ Authorization = "Bearer $(System.AccessToken)" }
+      $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/timeline?api-version=7.1"
+      $timeline = Invoke-RestMethod -Uri $url -Headers $headers
+      $hasWarnings = $timeline.records | Where-Object { $_.warningCount -gt 0 }
+      if ($hasWarnings) {
+        Write-Host "##vso[task.complete result=SucceededWithIssues;]Build completed with warnings"
+      }
+    displayName: 'Check for pipeline warnings'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.checkWarnings }}, true)
+      )
