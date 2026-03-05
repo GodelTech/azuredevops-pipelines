@@ -32,7 +32,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - bash: |
-          echo "##[warning]Warning message"
+          echo "##vso[task.logissue type=warning]Test warning message."
 
       - template: '../../../../../azuredevops/build/quality/check-build-warnings.yml'
         parameters:
