@@ -21,6 +21,8 @@ jobs:
     displayName: 'Build quality checks'
     pool:
       vmImage: 'ubuntu-latest'
+    dependsOn:
+      - GitVersion
     steps:
       - template: '../../../../azuredevops/pipeline/quality/check-warnings.yml'
         parameters:
