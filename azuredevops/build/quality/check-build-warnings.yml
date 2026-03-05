@@ -16,6 +16,7 @@ steps:
       $timeline = Invoke-RestMethod -Uri $url -Headers $headers
       $hasWarnings = $timeline.records | Where-Object { $_.warningCount -gt 0 }
       if ($hasWarnings) {
+        Write-Host "##[warning]Build completed with warnings"
         Write-Host "##vso[task.complete result=SucceededWithIssues;]Build completed with warnings"
       }
     displayName: 'Check for build warnings'
