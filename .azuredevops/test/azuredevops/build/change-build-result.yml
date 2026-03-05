@@ -1,0 +1,45 @@
+# test-azuredevops-build-change-build-result.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+  - name: buildId
+    displayName: 'Build ID to change result for'
+    type: string
+
+  - name: buildResult
+    displayName: 'Build result to set'
+    type: string
+    default: 'succeeded'
+    values:
+      - none
+      - succeeded
+      - partiallySucceeded
+      - failed
+      - canceled
+
+trigger: none
+
+jobs:
+  - job: ChangeBuildResult
+    displayName: 'Change build result'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - template: '../../../../azuredevops/build/change-build-result.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          buildId: ${{ parameters.buildId }}
+          buildResult: ${{ parameters.buildResult }}

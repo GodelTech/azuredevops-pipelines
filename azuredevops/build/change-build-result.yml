@@ -1,0 +1,31 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: buildId
+    displayName: 'Build ID to change result for'
+    type: string
+
+  - name: buildResult
+    displayName: 'Build result to set'
+    type: string
+    default: 'none'
+    values:
+      - none
+      - succeeded
+      - partiallySucceeded
+      - failed
+      - canceled
+
+steps:
+  - pwsh: |
+      $headers = @{
+        Authorization = "Bearer $(System.AccessToken)"
+        "Content-Type" = "application/json"
+      }
+      $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/${{ parameters.buildId }}?api-version=7.1"
+      $body = @{ result = "${{ parameters.buildResult }}" } | ConvertTo-Json
+      Invoke-RestMethod -Uri $url -Method Patch -Headers $headers -Body $body
+    displayName: 'Change [${{ parameters.buildId }}] build result to: ''${{ parameters.buildResult }}'''
