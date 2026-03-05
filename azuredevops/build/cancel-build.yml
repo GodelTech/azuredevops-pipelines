@@ -1,0 +1,16 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+steps:
+  - pwsh: |
+      $headers = @{
+        Authorization  = "Bearer $(System.AccessToken)"
+        "Content-Type" = "application/json"
+      }
+      $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)?api-version=7.1"
+      $body = @{ status = "cancelling" } | ConvertTo-Json
+      Invoke-RestMethod -Uri $url -Method Patch -Headers $headers -Body $body
+    displayName: 'Cancel build'
