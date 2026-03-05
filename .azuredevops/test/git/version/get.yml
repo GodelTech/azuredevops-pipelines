@@ -1,5 +1,20 @@
 # test-git-version-get.job.yml
 
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
 trigger: none
 
 schedules:
@@ -10,27 +25,23 @@ schedules:
         - main
     always: true
 
-variables:
-  enableBuildDebug: true
-  vmImage: 'ubuntu-latest'
-
 jobs:
   - template: '../../../../git/version/get.job.yml'
     parameters:
-      enableBuildDebug: $(enableBuildDebug)
-      vmImage: $(vmImage)
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
 
   - template: '../../../../azuredevops/build/job.yml'
     parameters:
-      enableBuildDebug: $(enableBuildDebug)
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
       jobName: 'BuildQualityChecks'
       jobDisplayName: 'Build quality checks'
-      vmImage: $(vmImage)
+      vmImage: ${{ parameters.vmImage }}
       dependsOn:
         - GitVersion
       checkOutSourceCode: false
       jobSteps:
         - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
           parameters:
-            enableBuildDebug: $(enableBuildDebug)
+            enableBuildDebug: ${{ parameters.enableBuildDebug }}
             checkWarnings: true
