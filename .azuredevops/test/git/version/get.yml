@@ -1,4 +1,4 @@
-name: azuredevops/test/git/version/get
+name: test-git-version-get.yml
 
 trigger: none
 

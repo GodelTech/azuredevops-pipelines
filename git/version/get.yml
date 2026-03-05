@@ -33,5 +33,9 @@ jobs:
 
       - ${{ if eq(parameters.enablePipelineDebug, true) }}:
         - script: |
+            echo "SemVer (git_version_step.semVer): $(git_version_step.semVer)"
+          displayName: 'Display GitVersion SemVer output'
+
+        - script: |
             echo "FullSemVer (git_version_step.fullSemVer): $(git_version_step.fullSemVer)"
-          displayName: 'Display GitVersion outputs (step output without prefix)'
+          displayName: 'Display GitVersion FullSemVer output'
