@@ -1,0 +1,72 @@
+# test-azuredevops-build-quality-check-job-warnings.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger: none
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: SetBuildWarning
+    displayName: 'Set build warning'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - bash: |
+          echo "##vso[task.logissue type=warning]Test warning message (SetBuildWarning)."
+
+  - job: CheckBuildWarnings
+    displayName: 'Check build warnings'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - SetBuildWarning
+    steps:
+      - checkout: none
+
+      - template: '../../../../../azuredevops/build/quality/check-job-warnings.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          checkWarnings: true
+
+  - job: SetAndCheckBuildWarnings
+    displayName: 'Set and check build warnings'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - CheckBuildWarnings
+    steps:
+      - checkout: none
+
+      - bash: |
+          echo "##vso[task.logissue type=warning]Test warning message (SetAndCheckBuildWarnings)."
+
+      - template: '../../../../../azuredevops/build/quality/check-job-warnings.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          checkWarnings: true
+
+      - template: '../../../../../azuredevops/build/cancel-build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
