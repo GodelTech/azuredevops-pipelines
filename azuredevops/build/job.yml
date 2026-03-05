@@ -17,6 +17,11 @@ parameters:
     type: string
     default: 'ubuntu-latest'
 
+  - name: dependsOn
+    displayName: 'Job depends on'
+    type: object
+    default: []
+
   - name: checkOutSourceCode
     displayName: 'Check out source code'
     type: boolean
@@ -32,6 +37,7 @@ jobs:
     displayName: ${{ parameters.jobDisplayName }}
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn: ${{ parameters.dependsOn }}
     steps:
       - ${{ if eq(parameters.checkOutSourceCode, false) }}:
         - checkout: none

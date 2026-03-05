@@ -22,6 +22,8 @@ jobs:
       jobName: 'BuildQualityChecks'
       jobDisplayName: 'Build quality checks'
       vmImage: 'ubuntu-latest'
+      dependsOn:
+        - GitVersion
       checkOutSourceCode: false
       jobSteps:
         - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
