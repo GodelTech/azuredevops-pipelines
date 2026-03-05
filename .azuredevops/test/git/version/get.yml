@@ -17,6 +17,11 @@ jobs:
       enablePipelineDebug: true
       vmImage: 'ubuntu-latest'
 
-  - template: '../../../../azuredevops/build/quality/check-warnings.yml'
-    parameters:
-      checkWarnings: true
+  - job: BuildQualityChecks
+    displayName: 'Build quality checks'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - template: '../../../../azuredevops/build/quality/check-warnings.yml'
+        parameters:
+          checkWarnings: true
