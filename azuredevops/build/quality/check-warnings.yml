@@ -1,0 +1,25 @@
+parameters:
+  - name: enablePipelineDebug
+    displayName: 'Enable pipeline debug'
+    type: boolean
+    default: false
+
+  - name: checkWarnings
+    displayName: 'Check warnings'
+    type: boolean
+    default: true
+
+steps:
+  - task: BuildQualityChecks@10
+    displayName: 'Warnings quality check'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.checkWarnings }}, true)
+      )
+    inputs:
+      checkWarnings: true
+      warningFailOption: 'fixed'
+      warningThreshold: '0'
+      showStatistics: true

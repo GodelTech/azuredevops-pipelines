@@ -1,9 +1,22 @@
-name: test-git-version-get.yml
+# test-git-version-get.yml
+name: asdf/sdfasdf/asd/fasdf/a/sdfasdfasdf
 
 trigger: none
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
 
 jobs:
   - template: '../../../../git/version/get.yml'
     parameters:
       enablePipelineDebug: true
       vmImage: 'ubuntu-latest'
+
+  - template: '../../../../azuredevops/build/quality/check-warnings.yml'
+    parameters:
+      checkWarnings: true
