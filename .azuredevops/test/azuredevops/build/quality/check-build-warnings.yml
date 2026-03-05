@@ -25,14 +25,16 @@ schedules:
         - main
     always: true
 
-pool:
-  vmImage: ${{ parameters.vmImage }}
+jobs:
+  - job: CheckBuildWarnings
+    displayName: 'Check build warnings'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - bash: |
+          echo "##[warning]Warning message"
 
-steps:
-  - bash: |
-      echo "##[warning]Warning message"
-
-  - template: '../../../../../azuredevops/build/quality/check-build-warnings.yml'
-    parameters:
-      enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      checkWarnings: true
+      - template: '../../../../../azuredevops/build/quality/check-build-warnings.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          checkWarnings: true
