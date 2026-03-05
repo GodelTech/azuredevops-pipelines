@@ -10,23 +10,27 @@ schedules:
         - main
     always: true
 
+variables:
+  enableBuildDebug: true
+  vmImage: 'ubuntu-latest'
+
 jobs:
   - template: '../../../../git/version/get.job.yml'
     parameters:
-      enableBuildDebug: true
-      vmImage: 'ubuntu-latest'
+      enableBuildDebug: $(enableBuildDebug)
+      vmImage: $(vmImage)
 
   - template: '../../../../azuredevops/build/job.yml'
     parameters:
-      enableBuildDebug: true
+      enableBuildDebug: $(enableBuildDebug)
       jobName: 'BuildQualityChecks'
       jobDisplayName: 'Build quality checks'
-      vmImage: 'ubuntu-latest'
+      vmImage: $(vmImage)
       dependsOn:
         - GitVersion
       checkOutSourceCode: false
       jobSteps:
         - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
           parameters:
-            enableBuildDebug: true
+            enableBuildDebug: $(enableBuildDebug)
             checkWarnings: true
