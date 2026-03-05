@@ -26,13 +26,24 @@ schedules:
     always: true
 
 jobs:
+  - job: SetBuildWarning
+    displayName: 'Set build warning'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - bash: |
+          echo "##vso[task.logissue type=warning]Test warning message."
+
   - job: CheckBuildWarnings
     displayName: 'Check build warnings'
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - SetBuildWarning
     steps:
-      - bash: |
-          echo "##vso[task.logissue type=warning]Test warning message."
+      - checkout: none
 
       - template: '../../../../../azuredevops/build/quality/check-build-warnings.yml'
         parameters:
