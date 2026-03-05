@@ -38,3 +38,8 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           checkWarnings: true
+
+      - template: '../../../../../azuredevops/build/change-build-result.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          buildResult: 'succeeded'
