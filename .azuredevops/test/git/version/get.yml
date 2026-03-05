@@ -1,5 +1,4 @@
 name: azuredevops/test/git/version/get
-description: 'Test pipeline for getting Git version using GitVersion task'
 
 trigger: none
 
