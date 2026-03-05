@@ -13,7 +13,7 @@ jobs:
   - job: GitVersion
     displayName: 'Git version'
     pool:
-      vmImage: $(vmImage)
+      vmImage: ${{ parameters.vmImage }}
     steps:
       - checkout: self
         fetchDepth: 0
