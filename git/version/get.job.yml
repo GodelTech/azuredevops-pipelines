@@ -1,6 +1,6 @@
 parameters:
-  - name: enablePipelineDebug
-    displayName: 'Enable pipeline debug'
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
     type: boolean
     default: false
 
@@ -31,7 +31,7 @@ jobs:
             semantic-version-format=Loose
             update-build-number=false
 
-      - ${{ if eq(parameters.enablePipelineDebug, true) }}:
+      - ${{ if eq(parameters.enableBuildDebug, true) }}:
         - script: |
             echo "SemVer (git_version_step.semVer): $(git_version_step.semVer)"
           displayName: 'Display GitVersion SemVer output'

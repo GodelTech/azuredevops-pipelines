@@ -1,6 +1,6 @@
 parameters:
-  - name: enablePipelineDebug
-    displayName: 'Enable pipeline debug'
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
     type: boolean
     default: false
 
@@ -20,6 +20,7 @@ steps:
       )
     inputs:
       checkWarnings: true
+      warningTaskFilters: '/.*/'
       warningFailOption: 'fixed'
       warningThreshold: '0'
       showStatistics: true

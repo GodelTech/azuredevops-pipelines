@@ -1,0 +1,41 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: jobName
+    displayName: 'Job name'
+    type: string
+
+  - name: jobDisplayName
+    displayName: 'Job display name'
+    type: string
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+
+  - name: checkOutSourceCode
+    displayName: 'Check out source code'
+    type: boolean
+    default: true
+
+  - name: jobSteps
+    displayName: 'Steps to run in the job'
+    type: stepList
+    default: []
+
+jobs:
+  - job: ${{ parameters.jobName }}
+    displayName: ${{ parameters.jobDisplayName }}
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - ${{ if eq(parameters.checkOutSourceCode, false) }}:
+        - checkout: none
+
+      - ${{ each step in parameters.jobSteps }}:
+        - ${{ each pair in step }}:
+            ${{ pair.key }}: ${{ pair.value }}

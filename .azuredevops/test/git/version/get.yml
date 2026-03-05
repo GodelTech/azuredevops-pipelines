@@ -1,5 +1,4 @@
-# test-git-version-get.yml
-name: asdf/sdfasdf/asd/fasdf/a/sdfasdfasdf
+# test-git-version-get.job.yml
 
 trigger: none
 
@@ -12,19 +11,20 @@ schedules:
     always: true
 
 jobs:
-  - template: '../../../../git/version/get.yml'
+  - template: '../../../../git/version/get.job.yml'
     parameters:
-      enablePipelineDebug: true
+      enableBuildDebug: true
       vmImage: 'ubuntu-latest'
 
-  - job: BuildQualityChecks
-    displayName: 'Build quality checks'
-    pool:
+  - template: '../../../../azuredevops/build/job.yml'
+    parameters:
+      enableBuildDebug: true
+      jobName: 'BuildQualityChecks'
+      jobDisplayName: 'Build quality checks'
       vmImage: 'ubuntu-latest'
-    dependsOn:
-      - GitVersion
-    steps:
-      - template: '../../../../azuredevops/pipeline/quality/check-warnings.yml'
-        parameters:
-          enablePipelineDebug: true
-          checkWarnings: true
+      checkOutSourceCode: false
+      jobSteps:
+        - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
+          parameters:
+            enableBuildDebug: true
+            checkWarnings: true

@@ -1,6 +1,6 @@
 parameters:
-  - name: enablePipelineDebug
-    displayName: 'Enable pipeline debug'
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
     type: boolean
     default: false
 
@@ -18,7 +18,7 @@ steps:
       if ($hasWarnings) {
         Write-Host "##vso[task.complete result=SucceededWithIssues;]Build completed with warnings"
       }
-    displayName: 'Check for pipeline warnings'
+    displayName: 'Check for build warnings'
     condition: |
       and
       (
