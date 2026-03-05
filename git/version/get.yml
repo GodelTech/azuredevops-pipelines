@@ -1,0 +1,37 @@
+parameters:
+  - name: enablePipelineDebug
+    displayName: 'Enable pipeline debug'
+    type: boolean
+    default: false
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+
+jobs:
+  - job: GitVersion
+    displayName: 'Git version'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+      - checkout: self
+        fetchDepth: 0
+
+      - task: gittools.gittools.setup-gitversion-task.gitversion-setup@4.3.3
+        displayName: 'Install GitVersion tool'
+        inputs:
+          versionSpec: '6.6.x'
+
+      - task: gittools.gittools.execute-gitversion-task.gitversion-execute@4.3.3
+        displayName: 'Determine Git version'
+        name: git_version_step # step id used as a reference for output values
+        inputs:
+          overrideConfig: |
+            semantic-version-format=Loose
+            update-build-number=false
+
+      - ${{ if eq(parameters.enablePipelineDebug, true) }}:
+        - script: |
+            echo "FullSemVer (git_version_step.fullSemVer): $(git_version_step.fullSemVer)"
+          displayName: 'Display GitVersion outputs (step output without prefix)'
