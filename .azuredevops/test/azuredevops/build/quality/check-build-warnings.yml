@@ -31,10 +31,31 @@ variables:
   checkBuildWarningStepResult: 'SucceededWithIssues'
 
 jobs:
+  - job: CheckBuildWarningsEmpty
+    displayName: 'Check build warnings (empty)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../../azuredevops/build/quality/check-build-warnings.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          checkWarnings: true
+          stepName: ${{ variables.checkBuildWarningStepName }}
+          stepOutputVariableName: ${{ variables.checkBuildWarningStepOutputVariableName }}
+          stepResult: 'Failed'
+
+      - script: |
+          echo "Build warning output variable (${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}): $(${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }})"
+        displayName: 'Display build warning output variable'
+
   - job: SetBuildWarning
     displayName: 'Set build warning'
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - CheckBuildWarningsEmpty
     steps:
       - checkout: none
 
@@ -42,8 +63,8 @@ jobs:
           echo "##vso[task.logissue type=warning]Test warning message."
         displayName: 'Set build warning'
 
-  - job: CheckBuildWarnings
-    displayName: 'Check build warnings'
+  - job: CheckBuildWarningsExist
+    displayName: 'Check build warnings (exist)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn:
@@ -58,6 +79,10 @@ jobs:
           stepName: ${{ variables.checkBuildWarningStepName }}
           stepOutputVariableName: ${{ variables.checkBuildWarningStepOutputVariableName }}
           stepResult: ${{ variables.checkBuildWarningStepResult }}
+
+      - script: |
+          echo "Build warning output variable (${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}): $(${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }})"
+        displayName: 'Display build warning output variable'
 
       - template: '../../../../../azuredevops/build/cancel-build.yml'
         parameters:
