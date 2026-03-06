@@ -73,7 +73,7 @@ steps:
 
       $lines | Set-Content -Path $filePath -Encoding UTF8
 
-      Write-Host $lines
+      Write-Host ($lines -join "`n")
       Write-Host "##vso[task.uploadsummary]$filePath"
     displayName: ${{ parameters.stepDisplayName }}
     condition: ${{ parameters.condition }}
