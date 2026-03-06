@@ -66,5 +66,5 @@ jobs:
             (
               succeededOrFailed(),
               eq(variables['Agent.JobStatus'], 'SucceededWithIssues'),
-              eq(variables['${{ variables.checkBuildWarningStepOutputVariableName }}'], 'true')
+              eq(${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}, 'true')
             )
