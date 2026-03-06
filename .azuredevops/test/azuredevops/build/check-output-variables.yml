@@ -42,7 +42,7 @@ stages:
           name: set_output_variable_step
 
         - bash: |
-            echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)'"
+            echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
           displayName: 'Show output variable ''testOutput'''
 
         - template: '../../../../azuredevops/build/check-output-variables.yml'
