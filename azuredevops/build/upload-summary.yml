@@ -7,54 +7,77 @@ parameters:
   - name: title
     displayName: 'Summary title'
     type: string
-    default: 'Build Summary'
+    default: ''
 
   - name: content
-    displayName: 'Additional markdown content to include in the summary'
+    displayName: 'Markdown content to include in the summary'
     type: string
     default: ''
+
+  - name: showSystemInfo
+    displayName: 'Show system info table with build details'
+    type: boolean
+    default: false
 
   - name: fileName
     displayName: 'Summary file name'
     type: string
     default: 'summary.md'
 
-  - name: condition
-    displayName: 'Step condition'
+  - name: stepDisplayName
+    displayName: 'Step display name'
     type: string
-    default: 'always()'
+    default: 'Upload build summary'
+
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
 
 steps:
   - pwsh: |
       $title    = $env:SUMMARY_TITLE
       $content  = $env:SUMMARY_CONTENT
+      $showSystemInfo = $env:SUMMARY_SHOW_SYSTEM_INFO
       $fileName = $env:SUMMARY_FILENAME
+
       $filePath = "$(Agent.TempDirectory)/$fileName"
 
       $lines = @()
-      $lines += "# $title"
-      $lines += ""
-      $lines += "| Property | Value |"
-      $lines += "| --- | --- |"
-      $lines += "| Build ID | $(Build.BuildId) |"
-      $lines += "| Build Number | $(Build.BuildNumber) |"
-      $lines += "| Branch | $(Build.SourceBranchName) |"
-      $lines += "| Commit | $(Build.SourceVersion) |"
-      $lines += "| Queue time | $(Build.QueuedBy) |"
-      $lines += "| Agent | $(Agent.MachineName) |"
-      $lines += ""
+
+      if ($title.Trim() -ne '') {
+         $lines += "# $title"
+         $lines += ""
+      }
 
       if ($content.Trim() -ne '') {
         $lines += $content
-        $lines += ""
+      }
+
+      if ($showSystemInfo -eq 'true') {
+         if ($lines.Count -gt 0) {
+           $lines += ""
+         }
+
+         $lines += "## System Information"
+         $lines += ""
+         $lines += "| Property | Value |"
+         $lines += "| --- | --- |"
+         $lines += "| Build ID | $(Build.BuildId) |"
+         $lines += "| Build Number | $(Build.BuildNumber) |"
+         $lines += "| Branch | $(Build.SourceBranchName) |"
+         $lines += "| Commit | $(Build.SourceVersion) |"
+         $lines += "| Queue time | $(Build.QueuedBy) |"
+         $lines += "| Agent | $(Agent.MachineName) |"
       }
 
       $lines | Set-Content -Path $filePath -Encoding UTF8
 
       Write-Host "##vso[task.uploadsummary]$filePath"
-    displayName: 'Upload build summary'
+    displayName: ${{ parameters.stepDisplayName }}
     condition: ${{ parameters.condition }}
     env:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
+      SUMMARY_SHOW_SYSTEM_INFO: ${{ parameters.showSystemInfo }}
       SUMMARY_FILENAME: ${{ parameters.fileName }}
