@@ -25,9 +25,10 @@ steps:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       title: 'Build Summary'
       content: |
-        ## This is TEST build summary
+        ### This is TEST build summary
 
-        ### Expected build result: **${{ parameters.expectedBuildResult }}**
-        ### Build result description:
+        ### Expected build result: **_${{ parameters.expectedBuildResult }}_**
+
+        **Build result description:**
         ${{ parameters.buildResultDescription }}
       condition: always()
