@@ -14,13 +14,20 @@ parameters:
       - Failed
       - Canceled
 
+  - name: buildResultDescription
+    displayName: 'Build result description'
+    type: string
+    default: '_No description provided_'
+
 steps:
   - template: '../../azuredevops/build/upload-summary.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       title: 'Build Summary'
       content: |
-        ### This is TEST build summary
+        ## This is TEST build summary
 
-        Expected build result: **${{ parameters.expectedBuildResult }}**
+        ### Expected build result: **${{ parameters.expectedBuildResult }}**
+        ### Build result description:
+        ${{ parameters.buildResultDescription }}
       condition: always()

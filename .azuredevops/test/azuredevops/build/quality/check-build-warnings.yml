@@ -106,3 +106,7 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           expectedBuildResult: 'Canceled'
+          buildResultDescription: |
+            Build was **canceled** due to detected warnings.
+            Step '${{ variables.checkBuildWarningStepName }}' result: ${{ variables.checkBuildWarningStepResult }}
+            Output variable '${{ variables.checkBuildWarningStepOutputVariableName }}' value: $(${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }})
