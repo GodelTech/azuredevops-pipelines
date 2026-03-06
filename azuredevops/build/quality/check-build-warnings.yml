@@ -38,6 +38,8 @@ steps:
         Write-Host "##[warning]Build completed with warnings"
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]true"
         Write-Host "##vso[task.complete result=${{ parameters.stepResult }};]Build completed with warnings"
+      } else {
+        Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]false"
       }
     displayName: 'Check for build warnings'
     name: ${{ parameters.stepName }}
