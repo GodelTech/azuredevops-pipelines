@@ -35,6 +35,7 @@ jobs:
 
       - bash: |
           echo "##vso[task.logissue type=warning]Test warning message (SetBuildWarning)."
+        displayName: 'Set build warning'
 
   - job: CheckBuildWarnings
     displayName: 'Check build warnings'
@@ -61,6 +62,7 @@ jobs:
 
       - bash: |
           echo "##vso[task.logissue type=warning]Test warning message (SetAndCheckBuildWarnings)."
+        displayName: 'Set build warning'
 
       - template: '../../../../../azuredevops/build/quality/check-job-warnings.yml'
         parameters:

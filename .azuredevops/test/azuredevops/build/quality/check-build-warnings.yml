@@ -40,6 +40,7 @@ jobs:
 
       - bash: |
           echo "##vso[task.logissue type=warning]Test warning message."
+        displayName: 'Set build warning'
 
   - job: CheckBuildWarnings
     displayName: 'Check build warnings'
