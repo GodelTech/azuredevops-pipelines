@@ -102,7 +102,7 @@ jobs:
               eq(variables['${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}'], 'true')
             )
 
-      - template: '../../../../../.azuredevops/test/testHelpers/upload-test-summary.yml'
+      - template: '../../../../../.azuredevops/testHelpers/upload-test-summary.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           expectedBuildResult: 'Canceled'
