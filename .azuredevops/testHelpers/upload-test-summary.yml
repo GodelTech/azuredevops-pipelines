@@ -23,5 +23,4 @@ steps:
         ### This is TEST build summary
 
         Expected build result: **${{ parameters.expectedBuildResult }}**
-        Actual build result:   **$(Agent.JobStatus)**
       condition: always()
