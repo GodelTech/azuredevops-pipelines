@@ -52,3 +52,15 @@ stages:
             variableValue: '$(set_output_variable_step.testOutput)'
             expectedValue: 'testValue'
             stepResult: 'Failed'
+
+        - template: '../../../../azuredevops/build/upload-summary.yml'
+          parameters:
+            enableBuildDebug: ${{ parameters.enableBuildDebug }}
+            title: 'Check Output Variables'
+            content: |
+              ## Output Variables
+
+              | Variable | Value |
+              | --- | --- |
+              | testOutput | $(set_output_variable_step.testOutput) |
+            condition: always()

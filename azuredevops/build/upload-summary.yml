@@ -1,0 +1,60 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: title
+    displayName: 'Summary title'
+    type: string
+    default: 'Build Summary'
+
+  - name: content
+    displayName: 'Additional markdown content to include in the summary'
+    type: string
+    default: ''
+
+  - name: fileName
+    displayName: 'Summary file name'
+    type: string
+    default: 'summary.md'
+
+  - name: condition
+    displayName: 'Step condition'
+    type: string
+    default: 'always()'
+
+steps:
+  - pwsh: |
+      $title    = $env:SUMMARY_TITLE
+      $content  = $env:SUMMARY_CONTENT
+      $fileName = $env:SUMMARY_FILENAME
+      $filePath = "$(Agent.TempDirectory)/$fileName"
+
+      $lines = @()
+      $lines += "# $title"
+      $lines += ""
+      $lines += "| Property | Value |"
+      $lines += "| --- | --- |"
+      $lines += "| Build ID | $(Build.BuildId) |"
+      $lines += "| Build Number | $(Build.BuildNumber) |"
+      $lines += "| Branch | $(Build.SourceBranchName) |"
+      $lines += "| Commit | $(Build.SourceVersion) |"
+      $lines += "| Queue time | $(Build.QueuedBy) |"
+      $lines += "| Agent | $(Agent.MachineName) |"
+      $lines += ""
+
+      if ($content.Trim() -ne '') {
+        $lines += $content
+        $lines += ""
+      }
+
+      $lines | Set-Content -Path $filePath -Encoding UTF8
+
+      Write-Host "##vso[task.uploadsummary]$filePath"
+    displayName: 'Upload build summary'
+    condition: ${{ parameters.condition }}
+    env:
+      SUMMARY_TITLE: ${{ parameters.title }}
+      SUMMARY_CONTENT: ${{ parameters.content }}
+      SUMMARY_FILENAME: ${{ parameters.fileName }}
