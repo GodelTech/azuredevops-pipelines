@@ -1,0 +1,62 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: variableName
+    displayName: 'Variable name (for display purposes)'
+    type: string
+
+  - name: variableValue
+    displayName: 'Variable value — use $(steps.<name>.outputs[''<var>'']) for same-job or $[dependencies.<job>.outputs[''<step>.<var>'']] for cross-job'
+    type: string
+
+  - name: expectedValue
+    displayName: 'Expected value — leave empty to log only without assertion'
+    type: string
+
+  - name: stepResult
+    displayName: 'Step result when actual value does not match expected value'
+    type: string
+    default: 'Failed'
+    values:
+      - Succeeded
+      - SucceededWithIssues
+      - Failed
+
+steps:
+  - pwsh: |
+      $variableName  = '${{ parameters.variableName }}'
+      $variableValue = '${{ parameters.variableValue }}'
+      $expectedValue = '${{ parameters.expectedValue }}'
+      $stepResult = '${{ parameters.stepResult }}'
+
+      Write-Host "Variable : $variableName"
+      Write-Host "Value    : $variableValue"
+
+      if ($expectedValue -ne '') {
+        Write-Host "Expected : $expectedValue"
+
+        if ($variableValue -eq $expectedValue) {
+          Write-Host "Result   : MATCH"
+        } else {
+          $message = "Variable '$variableName' value '$variableValue' does not match expected '$expectedValue'"
+
+          switch ($stepResult) {
+            'SucceededWithIssues' {
+              Write-Host "##[warning]$message"
+              Write-Host "Result   : MISMATCH (warning)"
+            }
+            'Failed' {
+              Write-Host "##[error]$message"
+              Write-Host "Result   : MISMATCH (failure)"
+              Write-Host "##vso[task.complete result=Failed;]$message"
+            }
+            default {
+              Write-Host "Result   : MISMATCH (ignored)"
+            }
+          }
+        }
+      }
+    displayName: 'Check output variable: ''${{ parameters.variableName }}'''
