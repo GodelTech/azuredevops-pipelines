@@ -1,0 +1,27 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: expectedBuildResult
+    displayName: 'Expected build result'
+    type: string
+    default: 'Succeeded'
+    values:
+      - Succeeded
+      - PartiallySucceeded
+      - Failed
+      - Canceled
+
+steps:
+  - template: '../../azuredevops/build/upload-summary.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      title: 'Build Summary'
+      content: |
+        ### This is TEST build summary
+
+        Expected build result: **${{ parameters.expectedBuildResult }}**
+        Actual build result:   **$(Build.Result)**
+      condition: always()

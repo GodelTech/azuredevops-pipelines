@@ -15,7 +15,14 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
-trigger: none
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/quality/check-build-warnings.yml
+      - azuredevops/build/quality/check-build-warnings.yml
+      - azuredevops/build/cancel-build.yml
+      - .azuredevops/testHelpers/upload-test-summary.yml
 
 schedules:
   - cron: '0 0 1 * *'
@@ -94,3 +101,8 @@ jobs:
               eq(variables['Agent.JobStatus'], 'SucceededWithIssues'),
               eq(variables['${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}'], 'true')
             )
+
+      - template: '../../../../../.azuredevops/test/testHelpers/upload-test-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          expectedBuildResult: 'Canceled'
