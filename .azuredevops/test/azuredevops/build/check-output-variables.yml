@@ -15,7 +15,13 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
-trigger: none
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/check-output-variables.yml
+      - azuredevops/build/check-output-variables.yml
+      - azuredevops/build/upload-summary.yml
 
 schedules:
   - cron: '0 0 1 * *'
