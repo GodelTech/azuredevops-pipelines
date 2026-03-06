@@ -9,6 +9,20 @@ parameters:
     type: boolean
     default: true
 
+  - name: stepName
+    displayName: 'Step name to use as reference'
+    type: string
+    default: 'check_build_warnings_step'
+
+  - name: stepResult
+    displayName: 'Step result to set if warnings are found'
+    type: string
+    default: 'SucceededWithIssues'
+    values:
+      - Succeeded
+      - SucceededWithIssues
+      - Failed
+
 steps:
   - pwsh: |
       $headers = @{ Authorization = "Bearer $(System.AccessToken)" }
@@ -17,9 +31,10 @@ steps:
       $hasWarnings = $timeline.records | Where-Object { $_.warningCount -gt 0 }
       if ($hasWarnings) {
         Write-Host "##[warning]Build completed with warnings"
-        Write-Host "##vso[task.complete result=SucceededWithIssues;]Build completed with warnings"
+        Write-Host "##vso[task.complete result=${{ parameters.stepResult }};]Build completed with warnings"
       }
     displayName: 'Check for build warnings'
+    name: ${{ parameters.stepName }}
     condition: |
       and
       (

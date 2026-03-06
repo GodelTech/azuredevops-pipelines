@@ -25,11 +25,19 @@ schedules:
         - main
     always: true
 
+variables:
+  gitvVersionJobName: 'GitVersion'
+  gitVersionStepName: 'git_version_step'
+  checkBuildWarningStepName: 'check_build_warnings_step'
+  checkBuildWarningStepResult: 'SucceededWithIssues'
+
 jobs:
   - template: '../../../../git/version/get.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      jobName: ${{ variables.gitvVersionJobName }}
       vmImage: ${{ parameters.vmImage }}
+      stepName: ${{ variables.gitVersionStepName }}
 
   - template: '../../../../azuredevops/build/job.yml'
     parameters:
@@ -38,10 +46,12 @@ jobs:
       jobDisplayName: 'Build quality checks'
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - GitVersion
+        - ${{ variables.gitvVersionJobName }}
       checkOutSourceCode: false
       jobSteps:
         - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
           parameters:
             enableBuildDebug: ${{ parameters.enableBuildDebug }}
             checkWarnings: true
+            stepName: ${{ variables.checkBuildWarningStepName }}
+            stepResult: ${{ variables.checkBuildWarningStepResult }}

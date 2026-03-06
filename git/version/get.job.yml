@@ -4,13 +4,23 @@ parameters:
     type: boolean
     default: false
 
+  - name: jobName
+    displayName: 'Job name'
+    type: string
+    default: 'GitVersion'
+
   - name: vmImage
     displayName: 'Pool VM image'
     type: string
     default: 'ubuntu-latest'
 
+  - name: stepName
+    displayName: 'Step name to use as reference'
+    type: string
+    default: 'git_version_step'
+
 jobs:
-  - job: GitVersion
+  - job: ${{ parameters.jobName }}
     displayName: 'Git version'
     pool:
       vmImage: ${{ parameters.vmImage }}
@@ -25,7 +35,7 @@ jobs:
 
       - task: gittools.gittools.execute-gitversion-task.gitversion-execute@4.3.3
         displayName: 'Determine Git version'
-        name: git_version_step # step id used as a reference for output values
+        name: ${{ parameters.stepName }}
         inputs:
           overrideConfig: |
             semantic-version-format=Loose
@@ -33,9 +43,9 @@ jobs:
 
       - ${{ if eq(parameters.enableBuildDebug, true) }}:
         - script: |
-            echo "SemVer (git_version_step.semVer): $(git_version_step.semVer)"
+            echo "SemVer (${{ parameters.stepName }}.semVer): $(${{ parameters.stepName }}.semVer)"
           displayName: 'Display GitVersion SemVer output'
 
         - script: |
-            echo "FullSemVer (git_version_step.fullSemVer): $(git_version_step.fullSemVer)"
+            echo "FullSemVer (${{ parameters.stepName }}.fullSemVer): $(${{ parameters.stepName }}.fullSemVer)"
           displayName: 'Display GitVersion FullSemVer output'
