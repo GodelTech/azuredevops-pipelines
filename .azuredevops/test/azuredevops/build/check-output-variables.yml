@@ -26,8 +26,8 @@ schedules:
     always: true
 
 stages:
-- stage: A
-  displayName: 'Stage: A'
+- stage: FirstStage
+  displayName: 'First stage'
   jobs:
     - job: SetOutputVariable
       displayName: 'Set output variable'
@@ -37,15 +37,18 @@ stages:
         - checkout: none
 
         - bash: |
-            echo "##vso[task.setvariable variable=testOutputA;isOutput=true]testValueA"
-            echo "Set output variable 'testOutputA' to: $(testOutputA)'"
-          displayName: 'Set output variable ''testOutputA'''
+            echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
+          displayName: 'Set output variable ''testOutput'''
           name: set_output_variable_step
+
+        - bash: |
+            echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)'"
+          displayName: 'Show output variable ''testOutput'''
 
         - template: '../../../../azuredevops/build/check-output-variables.yml'
           parameters:
             enableBuildDebug: ${{ parameters.enableBuildDebug }}
-            variableName: 'set_output_variable_step.testOutputA'
-            variableValue: '$(set_output_variable_step.testOutputA)'
-            expectedValue: 'testValueA'
+            variableName: 'testOutput'
+            variableValue: '$(set_output_variable_step.testOutput)'
+            expectedValue: 'testValue'
             stepResult: 'Failed'
