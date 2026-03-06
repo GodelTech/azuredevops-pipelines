@@ -27,6 +27,7 @@ schedules:
 
 variables:
   checkBuildWarningStepName: 'check_build_warnings_step'
+  checkBuildWarningStepOutputVariableName: 'hasWarnings'
   checkBuildWarningStepResult: 'SucceededWithIssues'
 
 jobs:
@@ -54,6 +55,7 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           checkWarnings: true
           stepName: ${{ variables.checkBuildWarningStepName }}
+          stepOutputVariableName: ${{ variables.checkBuildWarningStepOutputVariableName }}
           stepResult: ${{ variables.checkBuildWarningStepResult }}
 
       - template: '../../../../../azuredevops/build/cancel-build.yml'
@@ -63,5 +65,6 @@ jobs:
             and
             (
               succeededOrFailed(),
-              eq(steps.${{ variables.checkBuildWarningStepName }}.result, '${{ variables.checkBuildWarningStepResult }}')
+              eq(variables['Agent.JobStatus'], 'SucceededWithIssues'),
+              eq(variables['${{ variables.checkBuildWarningStepOutputVariableName }}'], 'true')
             )

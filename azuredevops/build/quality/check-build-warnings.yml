@@ -14,6 +14,11 @@ parameters:
     type: string
     default: 'check_build_warnings_step'
 
+  - name: stepOutputVariableName
+    displayName: 'Step output variable name to set if warnings are found'
+    type: string
+    default: 'hasWarnings'
+
   - name: stepResult
     displayName: 'Step result to set if warnings are found'
     type: string
@@ -31,6 +36,7 @@ steps:
       $hasWarnings = $timeline.records | Where-Object { $_.warningCount -gt 0 }
       if ($hasWarnings) {
         Write-Host "##[warning]Build completed with warnings"
+        Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]true"
         Write-Host "##vso[task.complete result=${{ parameters.stepResult }};]Build completed with warnings"
       }
     displayName: 'Check for build warnings'
