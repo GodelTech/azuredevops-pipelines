@@ -9,10 +9,20 @@ parameters:
     type: string
     default: 'GitVersion'
 
+  - name: jobDisplayName
+    displayName: 'Job display name'
+    type: string
+    default: 'Git version'
+
   - name: vmImage
     displayName: 'Pool VM image'
     type: string
     default: 'ubuntu-latest'
+
+  - name: dependsOn
+    displayName: 'Job depends on'
+    type: object
+    default: []
 
   - name: stepName
     displayName: 'Step name to use as reference'
@@ -21,9 +31,10 @@ parameters:
 
 jobs:
   - job: ${{ parameters.jobName }}
-    displayName: 'Git version'
+    displayName: ${{ parameters.jobDisplayName }}
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn: ${{ parameters.dependsOn }}
     steps:
       - checkout: self
         fetchDepth: 0

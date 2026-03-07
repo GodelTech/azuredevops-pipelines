@@ -67,7 +67,7 @@ steps:
          $lines += "| Build Number | $(Build.BuildNumber) |"
          $lines += "| Branch | $(Build.SourceBranchName) |"
          $lines += "| Commit | $(Build.SourceVersion) |"
-         $lines += "| Queue time | $(Build.QueuedBy) |"
+         $lines += "| Queued by | $(Build.QueuedBy) |"
          $lines += "| Agent | $(Agent.MachineName) |"
       }
 
@@ -76,7 +76,8 @@ steps:
       Write-Host ($lines -join "`n")
       Write-Host "##vso[task.uploadsummary]$filePath"
     displayName: ${{ parameters.stepDisplayName }}
-    condition: ${{ parameters.condition }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
     env:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}

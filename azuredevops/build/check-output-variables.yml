@@ -47,6 +47,7 @@ steps:
             'SucceededWithIssues' {
               Write-Host "##[warning]$message"
               Write-Host "Result   : MISMATCH (warning)"
+              Write-Host "##vso[task.complete result=SucceededWithIssues;]$message"
             }
             'Failed' {
               Write-Host "##[error]$message"
