@@ -1,0 +1,47 @@
+parameters:
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+    - *.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: Lint
+    displayName: 'YAML lint'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+
+      - task: UsePythonVersion@0
+        displayName: 'Use Python 3.x'
+        inputs:
+          versionSpec: '3.x'
+
+      - script: pip install yamllint
+        displayName: 'Install yamllint'
+
+      - script: yamllint .
+        displayName: 'Run yamllint'

@@ -1,0 +1,31 @@
+extends: default
+
+rules:
+  # Azure DevOps templates use 2-space indentation; sequences are indented
+  # consistently relative to their parent key.
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+    check-multi-line-strings: false
+
+  # Pipeline scripts (e.g. inline PowerShell/Bash) can produce longer lines.
+  # Treat over-length as a warning so the build isn't failed by script content.
+  line-length:
+    max: 120
+    level: warning
+
+  # Only lowercase true/false are allowed as YAML booleans.
+  # check-keys: false avoids false positives on mapping keys that look like
+  # booleans (e.g. "on:") which are used legitimately in some YAML dialects.
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+
+  # Allow a single space before inline comments (yamllint default requires 2).
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+
+  # Blank lines: allow up to 1 consecutive blank line (default is 2).
+  empty-lines:
+    max: 1
