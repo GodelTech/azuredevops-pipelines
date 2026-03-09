@@ -32,41 +32,41 @@ schedules:
     always: true
 
 stages:
-- stage: FirstStage
-  displayName: 'First stage'
-  jobs:
-    - job: SetOutputVariable
-      displayName: 'Set output variable'
-      pool:
-        vmImage: ${{ parameters.vmImage }}
-      steps:
-        - checkout: none
+  - stage: FirstStage
+    displayName: 'First stage'
+    jobs:
+      - job: SetOutputVariable
+        displayName: 'Set output variable'
+        pool:
+          vmImage: ${{ parameters.vmImage }}
+        steps:
+          - checkout: none
 
-        - bash: |
-            echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
-          displayName: 'Set output variable ''testOutput'''
-          name: set_output_variable_step
+          - bash: |
+              echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
+            displayName: 'Set output variable ''testOutput'''
+            name: set_output_variable_step
 
-        - bash: |
-            echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
-          displayName: 'Show output variable ''testOutput'''
+          - bash: |
+              echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
+            displayName: 'Show output variable ''testOutput'''
 
-        - template: '../../../../azuredevops/build/check-output-variables.yml'
-          parameters:
-            enableBuildDebug: ${{ parameters.enableBuildDebug }}
-            variableName: 'testOutput'
-            variableValue: '$(set_output_variable_step.testOutput)'
-            expectedValue: 'testValue'
-            stepResult: 'Failed'
+          - template: '../../../../azuredevops/build/check-output-variables.yml'
+            parameters:
+              enableBuildDebug: ${{ parameters.enableBuildDebug }}
+              variableName: 'testOutput'
+              variableValue: '$(set_output_variable_step.testOutput)'
+              expectedValue: 'testValue'
+              stepResult: 'Failed'
 
-        - template: '../../../../azuredevops/build/upload-summary.yml'
-          parameters:
-            enableBuildDebug: ${{ parameters.enableBuildDebug }}
-            title: 'Check Output Variables'
-            content: |
-              ## Output Variables
+          - template: '../../../../azuredevops/build/upload-summary.yml'
+            parameters:
+              enableBuildDebug: ${{ parameters.enableBuildDebug }}
+              title: 'Check Output Variables'
+              content: |
+                ## Output Variables
 
-              | Variable | Value |
-              | --- | --- |
-              | testOutput | $(set_output_variable_step.testOutput) |
-            condition: always()
+                | Variable | Value |
+                | --- | --- |
+                | testOutput | $(set_output_variable_step.testOutput) |
+              condition: always()

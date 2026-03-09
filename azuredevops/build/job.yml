@@ -40,8 +40,8 @@ jobs:
     dependsOn: ${{ parameters.dependsOn }}
     steps:
       - ${{ if eq(parameters.checkOutSourceCode, false) }}:
-        - checkout: none
+          - checkout: none
 
       - ${{ each step in parameters.jobSteps }}:
-        - ${{ each pair in step }}:
-            ${{ pair.key }}: ${{ pair.value }}
+          - ${{ each pair in step }}:
+              ${{ pair.key }}: ${{ pair.value }}
