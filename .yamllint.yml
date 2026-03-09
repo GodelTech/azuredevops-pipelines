@@ -1,6 +1,8 @@
 extends: default
 
 rules:
+  document-start: disable
+
   # Azure DevOps templates use 2-space indentation; sequences are indented
   # consistently relative to their parent key.
   indentation:
