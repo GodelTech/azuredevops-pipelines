@@ -2,7 +2,7 @@ $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $azureDevOpsPath = Join-Path $repoRoot '.azuredevops'
 
 $files = Get-ChildItem -Path $azureDevOpsPath -Recurse -Filter '*.yml' |
-    Where-Object { $_.Name -ne 'CI.yml' -and $_.FullName -notlike '*\testHelpers\*' }
+    Where-Object { $_.FullName -notlike '*\testHelpers\*' }
 
 function Get-TriggerIncludePaths {
     param([string]$content)
