@@ -15,7 +15,13 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
-trigger: none
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/git/version/get.job.yml
+      - git/version/get.job.yml
+      - azuredevops/build/quality/check-build-warnings.yml
 
 schedules:
   - cron: '0 0 1 * *'
@@ -39,19 +45,18 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       stepName: ${{ variables.gitVersionStepName }}
 
-  - template: '../../../../azuredevops/build/job.yml'
-    parameters:
-      enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      jobName: 'BuildQualityChecks'
-      jobDisplayName: 'Build quality checks'
+  - job: BuildQualityChecks
+    displayName: 'Build quality checks'
+    dependsOn:
+      - ${{ variables.gitvVersionJobName }}
+    pool:
       vmImage: ${{ parameters.vmImage }}
-      dependsOn:
-        - ${{ variables.gitvVersionJobName }}
-      checkOutSourceCode: false
-      jobSteps:
-        - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
-          parameters:
-            enableBuildDebug: ${{ parameters.enableBuildDebug }}
-            checkWarnings: true
-            stepName: ${{ variables.checkBuildWarningStepName }}
-            stepResult: ${{ variables.checkBuildWarningStepResult }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          checkWarnings: true
+          stepName: ${{ variables.checkBuildWarningStepName }}
+          stepResult: ${{ variables.checkBuildWarningStepResult }}

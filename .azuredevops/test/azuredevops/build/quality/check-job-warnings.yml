@@ -15,7 +15,13 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
-trigger: none
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/quality/check-job-warnings.yml
+      - azuredevops/build/quality/check-job-warnings.yml
+      - azuredevops/build/cancel-build.yml
 
 schedules:
   - cron: '0 0 1 * *'
