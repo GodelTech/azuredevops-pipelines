@@ -56,7 +56,7 @@ jobs:
           stepResult: 'Failed'
 
       - script: |
-          echo "Build warning output variable (${{ variables.outputVariableExpression }}): $(${{ variables.outputVariableExpression }})"
+          echo "Build warning output variable '${{ variables.outputVariableExpression }}': $(${{ variables.outputVariableExpression }})"
         displayName: 'Display build warning output variable'
 
   - job: SetBuildWarning
@@ -92,7 +92,7 @@ jobs:
           stepResult: ${{ variables.checkBuildWarningStepResult }}
 
       - script: |
-          echo "Build warning output variable (${{ variables.outputVariableExpression }}): $(${{ variables.outputVariableExpression }})"
+          echo "Build warning output variable '${{ variables.outputVariableExpression }}': $(${{ variables.outputVariableExpression }})"
         displayName: 'Display build warning output variable'
 
       - template: '../../../../../azuredevops/build/cancel-build.yml'
@@ -112,5 +112,8 @@ jobs:
           expectedBuildResult: 'Canceled'
           buildResultDescription: |
             Build was **canceled** due to detected warnings.
+
+            Job **'$(Agent.JobName)'**
             Step **'${{ variables.checkBuildWarningStepName }}'** result must be: **${{ variables.checkBuildWarningStepResult }}**
+
             Output variable **'${{ variables.checkBuildWarningStepOutputVariableName }}'** value: **$(${{ variables.outputVariableExpression }})**
