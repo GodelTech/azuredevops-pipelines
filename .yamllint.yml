@@ -14,7 +14,6 @@ rules:
   # Treat over-length as a warning so the build isn't failed by script content.
   line-length:
     max: 120
-    level: warning
 
   # Only lowercase true/false are allowed as YAML booleans.
   # check-keys: false avoids false positives on mapping keys that look like

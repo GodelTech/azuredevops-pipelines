@@ -9,12 +9,16 @@ parameters:
     type: string
 
   - name: variableValue
-    displayName: 'Variable value — use $(steps.<name>.outputs[''<var>'']) for same-job or $[dependencies.<job>.outputs[''<step>.<var>'']] for cross-job'
+    displayName: 'Variable value'
+    # use $(steps.<name>.outputs[''<var>'']) for same-job
+    # use $[dependencies.<job>.outputs[''<step>.<var>'']] for cross-job
     type: string
 
   - name: expectedValue
-    displayName: 'Expected value — leave empty to log only without assertion'
+    displayName: 'Expected value'
+    # leave empty to log only without assertion
     type: string
+    default: ''
 
   - name: stepResult
     displayName: 'Step result when actual value does not match expected value'
