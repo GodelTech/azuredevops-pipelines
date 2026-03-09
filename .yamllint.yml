@@ -13,7 +13,7 @@ rules:
   # Pipeline scripts (e.g. inline PowerShell/Bash) can produce longer lines.
   # Treat over-length as a warning so the build isn't failed by script content.
   line-length:
-    max: 120
+    max: 150
 
   # Only lowercase true/false are allowed as YAML booleans.
   # check-keys: false avoids false positives on mapping keys that look like

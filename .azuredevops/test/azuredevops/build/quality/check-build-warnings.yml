@@ -42,6 +42,8 @@ jobs:
     displayName: 'Check build warnings (empty)'
     pool:
       vmImage: ${{ parameters.vmImage }}
+    variables:
+      outputVariableExpression: '${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}'
     steps:
       - checkout: none
 
@@ -54,7 +56,7 @@ jobs:
           stepResult: 'Failed'
 
       - script: |
-          echo "Build warning output variable (${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}): $(${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }})"
+          echo "Build warning output variable (${{ variables.outputVariableExpression }}): $(${{ variables.outputVariableExpression }})"
         displayName: 'Display build warning output variable'
 
   - job: SetBuildWarning
@@ -76,6 +78,8 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     dependsOn:
       - SetBuildWarning
+    variables:
+      outputVariableExpression: '${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}'
     steps:
       - checkout: none
 
@@ -88,7 +92,7 @@ jobs:
           stepResult: ${{ variables.checkBuildWarningStepResult }}
 
       - script: |
-          echo "Build warning output variable (${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}): $(${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }})"
+          echo "Build warning output variable (${{ variables.outputVariableExpression }}): $(${{ variables.outputVariableExpression }})"
         displayName: 'Display build warning output variable'
 
       - template: '../../../../../azuredevops/build/cancel-build.yml'
@@ -99,7 +103,7 @@ jobs:
             (
               succeededOrFailed(),
               eq(variables['Agent.JobStatus'], 'SucceededWithIssues'),
-              eq(variables['${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }}'], 'true')
+              eq(variables['${{ variables.outputVariableExpression }}'], 'true')
             )
 
       - template: '../../../../../.azuredevops/testHelpers/upload-build-summary.yml'
@@ -109,4 +113,4 @@ jobs:
           buildResultDescription: |
             Build was **canceled** due to detected warnings.
             Step **'${{ variables.checkBuildWarningStepName }}'** result must be: **${{ variables.checkBuildWarningStepResult }}**
-            Output variable **'${{ variables.checkBuildWarningStepOutputVariableName }}'** value: **$(${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningStepOutputVariableName }})**
+            Output variable **'${{ variables.checkBuildWarningStepOutputVariableName }}'** value: **$(${{ variables.outputVariableExpression }})**
