@@ -10,7 +10,7 @@ schedules:
 
 $azureDevOpsPath = Join-Path (Join-Path $PSScriptRoot '..') '.azuredevops'
 $files = Get-ChildItem -Path $azureDevOpsPath -Recurse -Filter '*.yml' |
-    Where-Object { $_.FullName -notlike '*\testHelpers\*' }
+    Where-Object { $_.FullName -notmatch '[/\\]testHelpers[/\\]' }
 
 $missing = @()
 

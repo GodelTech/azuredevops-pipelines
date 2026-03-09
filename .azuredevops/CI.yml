@@ -46,3 +46,31 @@ jobs:
 
       - script: yamllint .
         displayName: 'Run yamllint'
+
+  - job: CheckTriggers
+    displayName: 'Check triggers'
+    dependsOn: Lint
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-triggers'
+        inputs:
+          filePath: '.scripts/check-triggers.ps1'
+          pwsh: true
+
+  - job: CheckSchedules
+    displayName: 'Check schedules'
+    dependsOn: CheckTriggers
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-schedules'
+        inputs:
+          filePath: '.scripts/check-schedules.ps1'
+          pwsh: true
