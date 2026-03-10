@@ -15,6 +15,7 @@ trigger:
       - .azuredevops/CI.yml
       - '.scripts/*'
       - .yamllint
+      - .prettierrc
       - '*.yml'
 
 pr:
@@ -49,11 +50,30 @@ jobs:
       - script: yamllint .
         displayName: 'Run yamllint'
 
-  - job: CheckTriggers
-    displayName: 'Check triggers'
-    dependsOn: Lint
+  - job: CheckPrettier
+    displayName: 'Check prettier'
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn: Lint
+    steps:
+      - checkout: self
+
+      - task: NodeTool@0
+        displayName: 'Use Node.js'
+        inputs:
+          versionSpec: '22.x'
+
+      - script: npm install
+        displayName: 'npm install'
+
+      - script: npx prettier . --check
+        displayName: 'Run prettier'
+
+  - job: CheckTriggers
+    displayName: 'Check triggers'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckPrettier
     steps:
       - checkout: self
 
@@ -65,9 +85,9 @@ jobs:
 
   - job: CheckSchedules
     displayName: 'Check schedules'
-    dependsOn: CheckTriggers
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckTriggers
     steps:
       - checkout: self
 
@@ -79,9 +99,9 @@ jobs:
 
   - job: CheckTestCoverage
     displayName: 'Check test coverage'
-    dependsOn: CheckSchedules
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckSchedules
     steps:
       - checkout: self
 

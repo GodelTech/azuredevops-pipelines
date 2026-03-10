@@ -47,10 +47,10 @@ jobs:
 
   - job: BuildQualityChecks
     displayName: 'Build quality checks'
-    dependsOn:
-      - ${{ variables.gitvVersionJobName }}
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - ${{ variables.gitvVersionJobName }}
     steps:
       - checkout: none
 
