@@ -34,7 +34,7 @@ jobs:
   - job: Lint
     displayName: 'YAML lint'
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: ${{ parameters.vmImage }}
     steps:
       - checkout: self
 
@@ -53,7 +53,7 @@ jobs:
     displayName: 'Check triggers'
     dependsOn: Lint
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: ${{ parameters.vmImage }}
     steps:
       - checkout: self
 
@@ -67,7 +67,7 @@ jobs:
     displayName: 'Check schedules'
     dependsOn: CheckTriggers
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: ${{ parameters.vmImage }}
     steps:
       - checkout: self
 
@@ -75,4 +75,18 @@ jobs:
         displayName: 'Run check-schedules'
         inputs:
           filePath: '.scripts/check-schedules.ps1'
+          pwsh: true
+
+  - job: CheckTestCoverage
+    displayName: 'Check test coverage'
+    dependsOn: CheckSchedules
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-test-coverage'
+        inputs:
+          filePath: '.scripts/check-test-coverage.ps1'
           pwsh: true
