@@ -5,6 +5,7 @@
       "label": "Build",
       "dependsOn": [
         "npm install",
+        "Check Prettier",
         "Check Triggers",
         "Check Schedules",
         "Check Test Coverage"
@@ -21,6 +22,21 @@
       "type": "shell",
       "command": "npm",
       "args": ["install"],
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check Prettier",
+      "type": "shell",
+      "command": "npx",
+      "args": ["prettier", ".", "--check"],
       "presentation": {
         "echo": false,
         "reveal": "always",

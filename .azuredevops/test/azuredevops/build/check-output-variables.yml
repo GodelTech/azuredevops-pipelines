@@ -44,12 +44,12 @@ stages:
 
           - bash: |
               echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
-            displayName: 'Set output variable ''testOutput'''
+            displayName: 'Set output variable "testOutput"'
             name: set_output_variable_step
 
           - bash: |
               echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
-            displayName: 'Show output variable ''testOutput'''
+            displayName: 'Show output variable "testOutput"'
 
           - template: '../../../../azuredevops/build/check-output-variables.yml'
             parameters:

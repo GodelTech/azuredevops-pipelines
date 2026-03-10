@@ -64,4 +64,4 @@ steps:
           }
         }
       }
-    displayName: 'Check output variable: ''${{ parameters.variableName }}'''
+    displayName: 'Check output variable: "${{ parameters.variableName }}"'
