@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "ms-azure-devops.azure-pipelines"
+        "ms-azure-devops.azure-pipelines",
+        "esbenp.prettier-vscode",
+        "ms-vscode.powershell"
     ]
 }

@@ -2,6 +2,9 @@
     "files.associations": {
         "*.yml": "azure-pipelines"
     },
+    "[azure-pipelines]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
     "azure-pipelines.customSchemaFile": "./yamlschema.json",
     "azure-pipelines.tenant": "d78f2755-3785-4233-9333-cae33ed781c5"
 }
