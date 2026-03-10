@@ -13,6 +13,7 @@ trigger:
   paths:
     include:
       - .azuredevops/CI.yml
+      - .yamllint
       - '*.yml'
 
 pr:
