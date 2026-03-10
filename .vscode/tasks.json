@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "Build",
-            "dependsOn": ["Check Triggers", "Check Schedules", "Check YAML Schema"],
+            "dependsOn": ["Check Triggers", "Check Schedules"],
             "dependsOrder": "sequence",
             "group": {
                 "kind": "build",
