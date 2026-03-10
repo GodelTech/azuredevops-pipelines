@@ -75,3 +75,20 @@ jobs:
         inputs:
           filePath: '.scripts/check-schedules.ps1'
           pwsh: true
+
+  - job: CheckYamlSchema
+    displayName: 'Check YAML schema is up to date'
+    dependsOn: CheckSchedules
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Compare local yamlschema.json with remote'
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        inputs:
+          filePath: '.scripts/check-yamlschema.ps1'
+          arguments: '-AccessToken $env:SYSTEM_ACCESSTOKEN'
+          pwsh: true
