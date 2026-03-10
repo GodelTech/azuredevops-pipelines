@@ -52,9 +52,14 @@ function ConvertTo-CanonicalJson([string]$json) {
     Parse the JSON into a live object then re-serialise with sorted keys and
     consistent indentation so that two semantically identical documents compare
     equal regardless of original whitespace or key ordering.
+    Returns a hashtable with:
+      Compressed - single-line JSON for equality comparison
+      Pretty     - indented JSON (one value per line) for human-readable diff
     #>
-    $obj = $json | ConvertFrom-Json
-    return ($obj | ConvertTo-Json -Depth 100 -Compress)
+    $obj        = $json | ConvertFrom-Json
+    $compressed = $obj | ConvertTo-Json -Depth 100 -Compress
+    $pretty     = $obj | ConvertTo-Json -Depth 100
+    return @{ Compressed = $compressed; Pretty = $pretty }
 }
 
 # ── Verify local file exists ──────────────────────────────────────────────────
@@ -116,14 +121,14 @@ Write-Host "Comparing schemas..."
 
 try {
     $localJson  = Get-Content -Path $SchemaPath -Raw
-    $localNorm  = ConvertTo-CanonicalJson $localJson
+    $localCanon = ConvertTo-CanonicalJson $localJson
 } catch {
     Write-Host "ERROR: Failed to parse local schema: $_" -ForegroundColor Red
     exit 2
 }
 
 try {
-    $remoteNorm = ConvertTo-CanonicalJson $response.Content
+    $remoteCanon = ConvertTo-CanonicalJson $response.Content
 } catch {
     Write-Host "ERROR: Failed to parse remote schema: $_" -ForegroundColor Red
     exit 2
@@ -131,7 +136,7 @@ try {
 
 # ── Compare ───────────────────────────────────────────────────────────────────
 
-if ($localNorm -eq $remoteNorm) {
+if ($localCanon.Compressed -eq $remoteCanon.Compressed) {
     Write-Host "Schema check passed - local yamlschema.json matches the remote schema." -ForegroundColor Green
     exit 0
 }
@@ -140,8 +145,9 @@ if ($localNorm -eq $remoteNorm) {
 $localFile  = [System.IO.Path]::GetTempFileName()
 $remoteFile = [System.IO.Path]::GetTempFileName()
 try {
-    Set-Content -Path $localFile  -Value $localNorm  -Encoding UTF8
-    Set-Content -Path $remoteFile -Value $remoteNorm -Encoding UTF8
+    # Write pretty-printed JSON so diff can show meaningful line-numbered hunks
+    Set-Content -Path $localFile  -Value $localCanon.Pretty  -Encoding UTF8
+    Set-Content -Path $remoteFile -Value $remoteCanon.Pretty -Encoding UTF8
 
     Write-Host ""
     Write-Host "Schema check FAILED - local and remote schemas differ." -ForegroundColor Red
@@ -155,8 +161,8 @@ try {
             Write-Host $_ -ForegroundColor $color
         }
     } else {
-        $localLen  = $localNorm.Length
-        $remoteLen = $remoteNorm.Length
+        $localLen  = $localCanon.Compressed.Length
+        $remoteLen = $remoteCanon.Compressed.Length
         Write-Host "  Local  : $localLen characters" -ForegroundColor Yellow
         Write-Host "  Remote : $remoteLen characters" -ForegroundColor Yellow
     }
