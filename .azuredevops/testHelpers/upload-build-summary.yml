@@ -26,13 +26,13 @@ parameters:
 
 steps:
   - ${{ each variable in parameters.outputVariables }}:
-    - template: '../../azuredevops/build/check-output-variables.yml'
-      parameters:
-        enableBuildDebug: ${{ parameters.enableBuildDebug }}
-        variableName: ${{ variable.name }}
-        variableValue: ${{ variable.value }}
-        expectedValue: ${{ variable.expectedValue }}
-        stepResult: ${{ coalesce(variable.stepResult, 'Failed') }}
+      - template: '../../azuredevops/build/check-output-variables.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          variableName: ${{ variable.name }}
+          variableValue: ${{ variable.value }}
+          expectedValue: ${{ variable.expectedValue }}
+          stepResult: ${{ coalesce(variable.stepResult, 'Failed') }}
 
   - template: '../../azuredevops/build/upload-summary.yml'
     parameters:
