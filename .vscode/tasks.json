@@ -5,6 +5,7 @@
       "label": "Build",
       "dependsOn": [
         "npm install",
+        "Check YAML Lint",
         "Check Prettier",
         "Check Triggers",
         "Check Schedules",
@@ -22,6 +23,21 @@
       "type": "shell",
       "command": "npm",
       "args": ["install"],
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check YAML Lint",
+      "type": "shell",
+      "command": "python",
+      "args": ["-m", "yamllint", "."],
       "presentation": {
         "echo": false,
         "reveal": "always",
