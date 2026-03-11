@@ -101,7 +101,7 @@ jobs:
     displayName: 'Check cancel build'
     pool:
       vmImage: ${{ parameters.vmImage }}
-    dependsOn: CheckTestCoverage
+    dependsOn: CheckSchedules
     steps:
       - checkout: self
 
@@ -129,7 +129,7 @@ jobs:
     displayName: 'Check test coverage'
     pool:
       vmImage: ${{ parameters.vmImage }}
-    dependsOn: CheckSchedules
+    dependsOn: CheckUploadBuildSummary
     steps:
       - checkout: self
 
