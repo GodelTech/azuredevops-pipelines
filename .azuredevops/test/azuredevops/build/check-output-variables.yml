@@ -55,7 +55,7 @@ stages:
             parameters:
               enableBuildDebug: ${{ parameters.enableBuildDebug }}
               variableName: 'testOutput'
-              variableValue: '$(set_output_variable_step.testOutput)'
+              variableValue: $(set_output_variable_step.testOutput)
               expectedValue: 'testValue'
               stepResult: 'Failed'
 

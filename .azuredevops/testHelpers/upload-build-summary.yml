@@ -19,7 +19,21 @@ parameters:
     type: string
     default: '_No description provided_'
 
+  - name: outputVariables
+    displayName: 'Output variables to check'
+    type: object
+    default: []
+
 steps:
+  - ${{ each variable in parameters.outputVariables }}:
+    - template: '../../azuredevops/build/check-output-variables.yml'
+      parameters:
+        enableBuildDebug: ${{ parameters.enableBuildDebug }}
+        variableName: ${{ variable.name }}
+        variableValue: ${{ variable.value }}
+        expectedValue: ${{ variable.expectedValue }}
+        stepResult: ${{ coalesce(variable.stepResult, 'Failed') }}
+
   - template: '../../azuredevops/build/upload-summary.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
