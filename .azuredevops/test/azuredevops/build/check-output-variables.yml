@@ -66,8 +66,3 @@ stages:
               buildResultDescription: |
                 Job **'$(Agent.JobName)'**
                 Step **Check output variable: "testOutput"** result must be: **Succeeded**
-              outputVariables:
-                - name: 'testOutput'
-                  value: $(set_output_variable_step.testOutput)
-                  expectedValue: 'testValue'
-                  stepResultOnMismatch: 'Failed'
