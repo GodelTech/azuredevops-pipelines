@@ -49,9 +49,11 @@ $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
 
 $missing = @()
 
+$normalizedScheduleBlock = $scheduleBlock -replace '\r\n', "`n"
+
 foreach ($file in $files) {
-    $content = Get-Content -Path $file.FullName -Raw
-    if ($content -notmatch [regex]::Escape($scheduleBlock)) {
+    $content = (Get-Content -Path $file.FullName -Raw) -replace '\r\n', "`n"
+    if ($content -notmatch [regex]::Escape($normalizedScheduleBlock)) {
         $missing += $file.FullName
     }
 }
