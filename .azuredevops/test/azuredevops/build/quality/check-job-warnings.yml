@@ -21,7 +21,7 @@ trigger:
     include:
       - .azuredevops/test/azuredevops/build/quality/check-job-warnings.yml
       - azuredevops/build/quality/check-job-warnings.yml
-      - azuredevops/build/cancel-build.yml
+      - .azuredevops/testHelpers/upload-build-summary.yml
 
 schedules:
   - cron: '0 0 1 * *'

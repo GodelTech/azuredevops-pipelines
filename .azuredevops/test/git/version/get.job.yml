@@ -22,6 +22,7 @@ trigger:
       - .azuredevops/test/git/version/get.job.yml
       - git/version/get.job.yml
       - azuredevops/build/quality/check-build-warnings.yml
+      - .azuredevops/testHelpers/upload-build-summary.yml
 
 schedules:
   - cron: '0 0 1 * *'

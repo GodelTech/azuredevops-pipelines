@@ -64,6 +64,9 @@ if ($missing.Count -eq 0) {
 } else {
     Write-Host "The following files are missing the schedule block:" -ForegroundColor Red
     $missing | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
+    Write-Host ""
+    Write-Host "Required schedule block:" -ForegroundColor Cyan
+    Write-Host $scheduleBlock -ForegroundColor Cyan
 }
 
 $color = if ($missing.Count -eq 0) { 'Green' } else { 'Red' }

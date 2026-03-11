@@ -127,7 +127,7 @@ foreach ($file in $files) {
     if ($content -match '(?m)^trigger:\s*none\s*$') {
         $fileIssues += "trigger is 'none' - a paths-based trigger is required"
     } else {
-        $triggerPaths = Get-TriggerIncludePaths -content $content
+        $triggerPaths = @(Get-TriggerIncludePaths -content $content)
 
         if ($triggerPaths.Count -eq 0) {
             $fileIssues += "trigger.paths.include is missing or empty"
@@ -138,6 +138,24 @@ foreach ($file in $files) {
             }
 
             # The pipeline must also re-trigger when any referenced template changes
+            $templatePaths = @(Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot)
+            foreach ($templatePath in $templatePaths) {
+                if ($templatePath -notin $triggerPaths) {
+                    $fileIssues += "trigger.paths.include missing template: '$templatePath'"
+                }
+            }
+
+            # The trigger must not include paths that are not the pipeline itself or a referenced template
+            # (glob patterns containing '*' are intentional wildcards and are exempt from this check)
+            # CI.yml is also exempt as it legitimately watches non-template config files
+            $allowedPaths = @($selfPath) + $templatePaths
+            if ($file.Name -ne 'CI.yml') {
+                foreach ($triggerPath in $triggerPaths) {
+                    if ($triggerPath -notlike '*`**' -and $triggerPath -notin $allowedPaths) {
+                        $fileIssues += "trigger.paths.include has unreferenced path: '$triggerPath'"
+                    }
+                }
+            }
         }
     }
 
