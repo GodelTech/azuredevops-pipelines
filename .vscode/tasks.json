@@ -64,6 +64,21 @@
       "problemMatcher": []
     },
     {
+      "label": "Fix Prettier",
+      "type": "shell",
+      "command": "npx",
+      "args": ["prettier", ".", "--write"],
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Check Triggers",
       "type": "shell",
       "command": "powershell",
