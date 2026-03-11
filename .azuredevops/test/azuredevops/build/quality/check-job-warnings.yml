@@ -75,7 +75,11 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           checkWarnings: true
 
-      - template: '../../../../../azuredevops/build/cancel-build.yml'
+      - template: '../../../../../.azuredevops/testHelpers/upload-build-summary.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          condition: failed()
+          expectedBuildResult: 'Canceled'
+          buildResultDescription: |
+            Job **'$(Agent.JobName)'**
+            Step **'Warnings quality check'** result must be: **Failed**
+          cancelBuildCondition: failed()

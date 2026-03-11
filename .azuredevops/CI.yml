@@ -97,6 +97,34 @@ jobs:
           filePath: '.scripts/check-schedules.ps1'
           pwsh: true
 
+  - job: CheckCancelBuild
+    displayName: 'Check cancel build'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckTestCoverage
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-cancel-build'
+        inputs:
+          filePath: '.scripts/check-cancel-build.ps1'
+          pwsh: true
+
+  - job: CheckUploadBuildSummary
+    displayName: 'Check upload build summary'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckCancelBuild
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-upload-build-summary'
+        inputs:
+          filePath: '.scripts/check-upload-build-summary.ps1'
+          pwsh: true
+
   - job: CheckTestCoverage
     displayName: 'Check test coverage'
     pool:

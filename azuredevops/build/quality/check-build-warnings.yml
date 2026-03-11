@@ -19,6 +19,11 @@ parameters:
     type: string
     default: 'hasWarnings'
 
+  - name: stepWarningCountOutputVariableName
+    displayName: 'Step output variable name to set with total warning count'
+    type: string
+    default: 'warningCount'
+
   - name: stepResultOnWarnings
     displayName: 'Step result to set if warnings are found'
     type: string
@@ -33,13 +38,18 @@ steps:
       $headers = @{ Authorization = "Bearer $(System.AccessToken)" }
       $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/timeline?api-version=7.1"
       $timeline = Invoke-RestMethod -Uri $url -Headers $headers
-      $hasWarnings = $timeline.records | Where-Object { $_.warningCount -gt 0 }
-      if ($hasWarnings) {
-        Write-Host "##[warning]Build completed with warnings"
+      $warningRecords = $timeline.records | Where-Object { $_.warningCount -gt 0 }
+      $totalWarnings = ($warningRecords | Measure-Object -Property warningCount -Sum).Sum
+      if (-not $totalWarnings) { $totalWarnings = 0 }
+      Write-Host "Total warnings: $totalWarnings"
+      if ($warningRecords) {
+        Write-Host "##[warning]Build completed with $totalWarnings warning(s)"
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]true"
-        Write-Host "##vso[task.complete result=${{ parameters.stepResultOnWarnings }};]Build completed with warnings"
+        Write-Host "##vso[task.setvariable variable=${{ parameters.stepWarningCountOutputVariableName }};isOutput=true]$totalWarnings"
+        Write-Host "##vso[task.complete result=${{ parameters.stepResultOnWarnings }};]Build completed with $totalWarnings warning(s)"
       } else {
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]false"
+        Write-Host "##vso[task.setvariable variable=${{ parameters.stepWarningCountOutputVariableName }};isOutput=true]0"
       }
     displayName: 'Check for build warnings'
     name: ${{ parameters.stepName }}

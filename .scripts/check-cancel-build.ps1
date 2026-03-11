@@ -82,7 +82,7 @@ foreach ($file in $files) {
 # ── Report results ──────────────────────────────────────────────────────────────────────────────
 
 if ($found.Count -eq 0) {
-    Write-Host "No files reference the cancel-build template directly." -ForegroundColor Green
+    Write-Host "No files reference '$cancelBuildTemplatePath' template directly." -ForegroundColor Green
 } else {
     Write-Host "The following files must not reference '$cancelBuildTemplatePath' directly:" -ForegroundColor Red
     $found | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }

@@ -60,3 +60,7 @@ jobs:
           checkWarnings: true
           stepName: ${{ variables.checkBuildWarningStepName }}
           stepResultOnWarnings: ${{ variables.checkBuildWarningStepResultOnWarnings }}
+
+      - template: '../../../../.azuredevops/testHelpers/upload-build-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
