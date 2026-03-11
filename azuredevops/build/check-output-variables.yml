@@ -29,6 +29,11 @@ parameters:
       - SucceededWithIssues
       - Failed
 
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
+
 steps:
   - pwsh: |
       $variableName  = '${{ parameters.variableName }}'
@@ -65,3 +70,5 @@ steps:
         }
       }
     displayName: 'Check output variable: "${{ parameters.variableName }}"'
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}

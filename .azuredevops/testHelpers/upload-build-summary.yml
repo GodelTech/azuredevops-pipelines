@@ -24,6 +24,11 @@ parameters:
     type: object
     default: []
 
+  - name: cancelBuildCondition
+    displayName: 'Cancel build condition (only applicable when expected build result is "Canceled")'
+    type: string
+    default: ''
+
 steps:
   - ${{ each variable in parameters.outputVariables }}:
       - template: '../../azuredevops/build/check-output-variables.yml'
@@ -33,6 +38,7 @@ steps:
           variableValue: ${{ variable.value }}
           expectedValue: ${{ variable.expectedValue }}
           stepResult: ${{ coalesce(variable.stepResult, 'Failed') }}
+          condition: ${{ coalesce(variable.condition, 'always()') }}
 
   - template: '../../azuredevops/build/upload-summary.yml'
     parameters:
@@ -46,3 +52,10 @@ steps:
         **Build result description:**
         ${{ parameters.buildResultDescription }}
       condition: always()
+
+  - ${{ if eq(parameters.expectedBuildResult, 'Canceled') }}:
+      - template: '../../azuredevops/build/cancel-build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.cancelBuildCondition, '') }}:
+            condition: ${{ parameters.cancelBuildCondition }}
