@@ -57,7 +57,7 @@ stages:
               variableName: 'testOutput'
               variableValue: $(set_output_variable_step.testOutput)
               expectedValue: 'testValue'
-              stepResult: 'Failed'
+              stepResultOnMismatch: 'Failed'
 
           - template: '../../../../azuredevops/build/upload-summary.yml'
             parameters:

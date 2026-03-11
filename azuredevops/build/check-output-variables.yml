@@ -20,7 +20,7 @@ parameters:
     type: string
     default: ''
 
-  - name: stepResult
+  - name: stepResultOnMismatch
     displayName: 'Step result when actual value does not match expected value'
     type: string
     default: 'Failed'
@@ -36,10 +36,10 @@ parameters:
 
 steps:
   - pwsh: |
-      $variableName  = '${{ parameters.variableName }}'
-      $variableValue = '${{ parameters.variableValue }}'
-      $expectedValue = '${{ parameters.expectedValue }}'
-      $stepResult = '${{ parameters.stepResult }}'
+      $variableName         = '${{ parameters.variableName }}'
+      $variableValue        = '${{ parameters.variableValue }}'
+      $expectedValue        = '${{ parameters.expectedValue }}'
+      $stepResultOnMismatch = '${{ parameters.stepResultOnMismatch }}'
 
       Write-Host "Variable : $variableName"
       Write-Host "Value    : $variableValue"
@@ -52,7 +52,7 @@ steps:
         } else {
           $message = "Variable '$variableName' value '$variableValue' does not match expected '$expectedValue'"
 
-          switch ($stepResult) {
+          switch ($stepResultOnMismatch) {
             'SucceededWithIssues' {
               Write-Host "##[warning]$message"
               Write-Host "Result   : MISMATCH (warning)"

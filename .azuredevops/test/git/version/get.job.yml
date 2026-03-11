@@ -35,7 +35,7 @@ variables:
   gitvVersionJobName: 'GitVersion'
   gitVersionStepName: 'git_version_step'
   checkBuildWarningStepName: 'check_build_warnings_step'
-  checkBuildWarningStepResult: 'SucceededWithIssues'
+  checkBuildWarningStepResultOnWarnings: 'SucceededWithIssues'
 
 jobs:
   - template: '../../../../git/version/get.job.yml'
@@ -59,4 +59,4 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           checkWarnings: true
           stepName: ${{ variables.checkBuildWarningStepName }}
-          stepResult: ${{ variables.checkBuildWarningStepResult }}
+          stepResultOnWarnings: ${{ variables.checkBuildWarningStepResultOnWarnings }}

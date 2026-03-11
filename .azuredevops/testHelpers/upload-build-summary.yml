@@ -37,7 +37,7 @@ steps:
           variableName: ${{ variable.name }}
           variableValue: ${{ variable.value }}
           expectedValue: ${{ variable.expectedValue }}
-          stepResult: ${{ coalesce(variable.stepResult, 'Failed') }}
+          stepResultOnMismatch: ${{ coalesce(variable.stepResultOnMismatch, 'Failed') }}
           condition: ${{ coalesce(variable.condition, 'always()') }}
 
   - template: '../../azuredevops/build/upload-summary.yml'

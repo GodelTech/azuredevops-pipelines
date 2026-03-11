@@ -19,7 +19,7 @@ parameters:
     type: string
     default: 'hasWarnings'
 
-  - name: stepResult
+  - name: stepResultOnWarnings
     displayName: 'Step result to set if warnings are found'
     type: string
     default: 'SucceededWithIssues'
@@ -37,7 +37,7 @@ steps:
       if ($hasWarnings) {
         Write-Host "##[warning]Build completed with warnings"
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]true"
-        Write-Host "##vso[task.complete result=${{ parameters.stepResult }};]Build completed with warnings"
+        Write-Host "##vso[task.complete result=${{ parameters.stepResultOnWarnings }};]Build completed with warnings"
       } else {
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]false"
       }
