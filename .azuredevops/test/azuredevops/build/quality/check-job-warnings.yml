@@ -55,7 +55,6 @@ jobs:
       - template: '../../../../../azuredevops/build/quality/check-job-warnings.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          checkWarnings: true
 
   - job: SetAndCheckBuildWarnings
     displayName: 'Set and check build warnings'
@@ -73,7 +72,6 @@ jobs:
       - template: '../../../../../azuredevops/build/quality/check-job-warnings.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          checkWarnings: true
 
       - template: '../../../../../.azuredevops/testHelpers/upload-build-summary.yml'
         parameters:

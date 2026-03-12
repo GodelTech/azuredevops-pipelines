@@ -4,20 +4,16 @@ parameters:
     type: boolean
     default: false
 
-  - name: checkWarnings
-    displayName: 'Check warnings'
-    type: boolean
-    default: true
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
 
 steps:
   - task: BuildQualityChecks@10
     displayName: 'Warnings quality check'
-    condition: |
-      and
-      (
-        succeeded(),
-        eq(${{ parameters.checkWarnings }}, true)
-      )
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
     inputs:
       checkWarnings: true
       warningTaskFilters: '/.*/'

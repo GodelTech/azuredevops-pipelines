@@ -58,7 +58,6 @@ jobs:
       - template: '../../../../azuredevops/build/quality/check-build-warnings.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          checkWarnings: true
           stepName: ${{ variables.checkBuildWarningStepName }}
           stepResultOnWarnings: ${{ variables.checkBuildWarningStepResultOnWarnings }}
 

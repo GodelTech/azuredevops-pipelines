@@ -4,11 +4,6 @@ parameters:
     type: boolean
     default: false
 
-  - name: checkWarnings
-    displayName: 'Check warnings'
-    type: boolean
-    default: true
-
   - name: stepName
     displayName: 'Step name to use as reference'
     type: string
@@ -24,6 +19,11 @@ parameters:
     type: string
     default: 'warningCount'
 
+  - name: warningThreshold
+    displayName: 'Maximum number of warnings allowed before triggering step result'
+    type: number
+    default: 0
+
   - name: stepResultOnWarnings
     displayName: 'Step result to set if warnings are found'
     type: string
@@ -33,6 +33,11 @@ parameters:
       - SucceededWithIssues
       - Failed
 
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
+
 steps:
   - pwsh: |
       $headers = @{ Authorization = "Bearer $(System.AccessToken)" }
@@ -40,22 +45,27 @@ steps:
       $timeline = Invoke-RestMethod -Uri $url -Headers $headers
       $warningRecords = $timeline.records | Where-Object { $_.warningCount -gt 0 }
       $totalWarnings = ($warningRecords | Measure-Object -Property warningCount -Sum).Sum
-      if (-not $totalWarnings) { $totalWarnings = 0 }
-      Write-Host "Total warnings: $totalWarnings"
-      if ($warningRecords) {
-        Write-Host "##[warning]Build completed with $totalWarnings warning(s)"
+
+      if (-not $totalWarnings) {
+        $totalWarnings = 0
+      }
+
+      $warningThreshold = ${{ parameters.warningThreshold }}
+      Write-Host "Total warnings : $totalWarnings"
+      Write-Host "Threshold      : $warningThreshold"
+
+      if ($totalWarnings -gt $warningThreshold) {
+        $warningMessage = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
+
+        Write-Host "##[warning]$warningMessage"
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]true"
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepWarningCountOutputVariableName }};isOutput=true]$totalWarnings"
-        Write-Host "##vso[task.complete result=${{ parameters.stepResultOnWarnings }};]Build completed with $totalWarnings warning(s)"
+        Write-Host "##vso[task.complete result=${{ parameters.stepResultOnWarnings }};]$warningMessage"
       } else {
         Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]false"
-        Write-Host "##vso[task.setvariable variable=${{ parameters.stepWarningCountOutputVariableName }};isOutput=true]0"
+        Write-Host "##vso[task.setvariable variable=${{ parameters.stepWarningCountOutputVariableName }};isOutput=true]$totalWarnings"
       }
     displayName: 'Check for build warnings'
     name: ${{ parameters.stepName }}
-    condition: |
-      and
-      (
-        succeeded(),
-        eq(${{ parameters.checkWarnings }}, true)
-      )
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
