@@ -4,6 +4,11 @@ parameters:
     type: boolean
     default: false
 
+  - name: stepName
+    displayName: 'Step name to use as reference'
+    type: string
+    default: 'check-output-variable_step'
+
   - name: variableName
     displayName: 'Variable name (for display purposes)'
     type: string

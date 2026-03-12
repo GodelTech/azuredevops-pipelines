@@ -21,7 +21,7 @@ trigger:
     include:
       - .azuredevops/test/azuredevops/build/quality/check-build-warnings.yml
       - azuredevops/build/quality/check-build-warnings.yml
-      - azuredevops/build/check-output-variables.yml
+      - azuredevops/build/check-output-variable.yml
       - .azuredevops/testHelpers/build-summary-validation.yml
 
 schedules:
@@ -53,7 +53,7 @@ jobs:
           stepName: ${{ variables.checkBuildWarningStepName }}
           stepResultOnWarnings: 'Failed'
 
-      - template: '../../../../../azuredevops/build/check-output-variables.yml'
+      - template: '../../../../../azuredevops/build/check-output-variable.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           variableName: ${{ variables.hasWarningsOutputVariableExpression }}
