@@ -60,22 +60,22 @@ steps:
 
       $lines = @()
 
-      if ($title.Trim() -ne '') {
+      if ($null -ne $title) {
          $lines += "# $title"
          $lines += ""
       }
 
-      if ($content.Trim() -ne '') {
+      if ($null -ne $content) {
         $lines += $content
         $lines += ""
       }
 
       foreach ($block in $contentBlocks) {
-        if ($block.title.Trim() -ne '') {
+        if ($null -ne $block.title) {
           $lines += "## $($block.title)"
           $lines += ""
         }
-        if ($block.content.Trim() -ne '') {
+        if ($null -ne $block.content) {
           $lines += $block.content
         }
       }
