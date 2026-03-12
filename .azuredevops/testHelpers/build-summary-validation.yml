@@ -31,6 +31,7 @@ parameters:
     #   - name: myJob.myStep.myVar
     #     value: $[dependencies.myJob.outputs['myStep.myVar']]
     #     expectedValue: 'expectedResult'
+    #     stepName: 'check_output_variable_step'
     #     skipValidation: false
     #     logIssueOnMismatch: true
     #     stepResultOnMismatch: 'SucceededWithIssues'
@@ -54,6 +55,7 @@ steps:
           variableName: ${{ variable.name }}
           variableValue: ${{ variable.value }}
           expectedValue: ${{ variable.expectedValue }}
+          stepName: ${{ coalesce(variable.stepName, 'check_output_variable_step') }}
           skipValidation: ${{ coalesce(variable.skipValidation, false) }}
           logIssueOnMismatch: ${{ coalesce(variable.logIssueOnMismatch, true) }}
           stepResultOnMismatch: ${{ coalesce(variable.stepResultOnMismatch, 'Failed') }}
@@ -76,9 +78,11 @@ steps:
             content: |
               | Variable | Value | Expected |
               | --- | --- | --- |
+          # yamllint disable rule:line-length
           - ${{ each variable in parameters.outputVariables }}:
               - content: |
-                  | ${{ variable.name }} | ${{ variable.value }} | ${{ variable.expectedValue }} |
+                  | ${{ variable.name }} | ${{ variable.value }} | ${{ variable.expectedValue }} | $(steps.${{ coalesce(variable.stepName, 'check_output_variable_step') }}.outputs['matchResult']) |
+          # yamllint enable rule:line-length
       condition: always()
 
   - template: '../../azuredevops/build/quality/check-build-warnings.yml'

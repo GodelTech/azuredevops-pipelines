@@ -7,7 +7,7 @@ parameters:
   - name: stepName
     displayName: 'Step name to use as reference'
     type: string
-    default: 'check-output-variable_step'
+    default: 'check_output_variable_step'
 
   - name: variableName
     displayName: 'Variable name (for display purposes)'
@@ -64,11 +64,15 @@ steps:
 
       if ($skipValidation) {
         Write-Host "Result   : SKIPPED (validation disabled)"
+        Write-Host "##vso[task.setvariable variable=matchResult;isOutput=true]Skipped"
       } else {
         if ($variableValue -eq $expectedValue) {
           Write-Host "Result   : MATCH"
+          Write-Host "##vso[task.setvariable variable=matchResult;isOutput=true]Matched"
         } else {
           $message = "Variable '$variableName' value '$variableValue' does not match expected '$expectedValue'"
+
+          Write-Host "##vso[task.setvariable variable=matchResult;isOutput=true]Mismatched"
 
           switch ($stepResultOnMismatch) {
             'SucceededWithIssues' {
@@ -101,5 +105,6 @@ steps:
         }
       }
     displayName: 'Check output variable: "${{ parameters.variableName }}"'
+    name: ${{ parameters.stepName }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
