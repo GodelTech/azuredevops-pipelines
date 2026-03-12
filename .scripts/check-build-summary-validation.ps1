@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
     Verifies that the last step of the last job in every Azure DevOps test pipeline
-    references the upload-build-summary helper template.
+    references the build-summary-validation helper template.
 
 .DESCRIPTION
     Walks all *.yml files under the .azuredevops folder (excluding testHelpers and CI.yml)
     and checks that the last template: reference in each file resolves to
-    '.azuredevops/testHelpers/upload-build-summary.yml'.
+    '.azuredevops/testHelpers/build-summary-validation.yml'.
     Exits with code 1 if any files fail the check so the build fails.
 
 .PARAMETER AzureDevOpsPath
@@ -15,10 +15,10 @@
 
 .EXAMPLE
     # Run from the repository root
-    .\.scripts\check-upload-build-summary.ps1
+    .\.scripts\check-build-summary-validation.ps1
 
     # Run against a custom folder
-    .\.scripts\check-upload-build-summary.ps1 -AzureDevOpsPath 'C:\repo\.azuredevops'
+    .\.scripts\check-build-summary-validation.ps1 -AzureDevOpsPath 'C:\repo\.azuredevops'
 #>
 param(
     [string]$AzureDevOpsPath = ''
@@ -35,7 +35,7 @@ if ($AzureDevOpsPath -eq '') {
 }
 
 # The canonical repo-relative path that must be the last template step
-$uploadSummaryTemplatePath = '.azuredevops/testHelpers/upload-build-summary.yml'
+$buildSummaryValidationTemplatePath = '.azuredevops/testHelpers/build-summary-validation.yml'
 
 # ── Helper ────────────────────────────────────────────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ foreach ($file in $files) {
     $content = Get-Content -Path $file.FullName -Raw
     $lastTemplate = Get-LastRepoRelativeTemplatePath -content $content -filePath $file.FullName -repoRoot $repoRoot
 
-    if ($lastTemplate -ne $uploadSummaryTemplatePath) {
+    if ($lastTemplate -ne $buildSummaryValidationTemplatePath) {
         $actual = if ($lastTemplate) { "'$lastTemplate'" } else { 'no template reference found' }
         $issues += [PSCustomObject]@{ File = $file.FullName; Actual = $actual }
     }
@@ -85,9 +85,9 @@ foreach ($file in $files) {
 # ── Report results ──────────────────────────────────────────────────────────────────────────────
 
 if ($issues.Count -eq 0) {
-    Write-Host "All files have '$uploadSummaryTemplatePath' as the last step." -ForegroundColor Green
+    Write-Host "All files have '$buildSummaryValidationTemplatePath' as the last step." -ForegroundColor Green
 } else {
-    Write-Host "The following files do not have '$uploadSummaryTemplatePath' as the last step of the last job:" -ForegroundColor Red
+    Write-Host "The following files do not have '$buildSummaryValidationTemplatePath' as the last step of the last job:" -ForegroundColor Red
     foreach ($issue in $issues) {
         Write-Host "  $($issue.File)" -ForegroundColor Yellow
         Write-Host "    last template: $($issue.Actual)" -ForegroundColor White
@@ -95,6 +95,6 @@ if ($issues.Count -eq 0) {
 }
 
 $color = if ($issues.Count -eq 0) { 'Green' } else { 'Red' }
-Write-Host "Check Upload Build Summary: $($issues.Count) error(s)" -ForegroundColor $color
+Write-Host "Check Build Summary Validation: $($issues.Count) error(s)" -ForegroundColor $color
 
 if ($issues.Count -gt 0) { exit 1 }

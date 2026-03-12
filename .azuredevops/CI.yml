@@ -111,8 +111,8 @@ jobs:
           filePath: '.scripts/check-cancel-build.ps1'
           pwsh: true
 
-  - job: CheckUploadBuildSummary
-    displayName: 'Check upload build summary'
+  - job: CheckBuildSummaryValidation
+    displayName: 'Check build summary validation'
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn: CheckCancelBuild
@@ -120,16 +120,16 @@ jobs:
       - checkout: self
 
       - task: PowerShell@2
-        displayName: 'Run check-upload-build-summary'
+        displayName: 'Run check-build-summary-validation'
         inputs:
-          filePath: '.scripts/check-upload-build-summary.ps1'
+          filePath: '.scripts/check-build-summary-validation.ps1'
           pwsh: true
 
   - job: CheckTestCoverage
     displayName: 'Check test coverage'
     pool:
       vmImage: ${{ parameters.vmImage }}
-    dependsOn: CheckUploadBuildSummary
+    dependsOn: CheckBuildSummaryValidation
     steps:
       - checkout: self
 

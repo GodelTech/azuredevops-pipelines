@@ -10,7 +10,7 @@
         "Check Triggers",
         "Check Schedules",
         "Check Cancel Build",
-        "Check Upload Build Summary",
+        "Check Build Summary Validation",
         "Check Test Coverage"
       ],
       "dependsOrder": "sequence",
@@ -141,14 +141,14 @@
       "problemMatcher": []
     },
     {
-      "label": "Check Upload Build Summary",
+      "label": "Check Build Summary Validation",
       "type": "shell",
       "command": "powershell",
       "args": [
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "${workspaceFolder}\\.scripts\\check-upload-build-summary.ps1"
+        "${workspaceFolder}\\.scripts\\check-build-summary-validation.ps1"
       ],
       "presentation": {
         "echo": false,

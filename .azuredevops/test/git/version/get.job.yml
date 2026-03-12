@@ -22,7 +22,7 @@ trigger:
       - .azuredevops/test/git/version/get.job.yml
       - git/version/get.job.yml
       - azuredevops/build/quality/check-build-warnings.yml
-      - .azuredevops/testHelpers/upload-build-summary.yml
+      - .azuredevops/testHelpers/build-summary-validation.yml
 
 schedules:
   - cron: '0 0 1 * *'
@@ -61,6 +61,6 @@ jobs:
           stepName: ${{ variables.checkBuildWarningStepName }}
           stepResultOnWarnings: ${{ variables.checkBuildWarningStepResultOnWarnings }}
 
-      - template: '../../../../.azuredevops/testHelpers/upload-build-summary.yml'
+      - template: '../../../../.azuredevops/testHelpers/build-summary-validation.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}

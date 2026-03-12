@@ -22,7 +22,7 @@ trigger:
       - .azuredevops/test/azuredevops/build/quality/check-build-warnings.yml
       - azuredevops/build/quality/check-build-warnings.yml
       - azuredevops/build/check-output-variables.yml
-      - .azuredevops/testHelpers/upload-build-summary.yml
+      - .azuredevops/testHelpers/build-summary-validation.yml
 
 schedules:
   - cron: '0 0 1 * *'
@@ -93,7 +93,7 @@ jobs:
           stepOutputVariableName: ${{ variables.checkBuildWarningStepOutputVariableName }}
           stepResultOnWarnings: ${{ variables.checkBuildWarningStepResultOnWarnings }}
 
-      - template: '../../../../../.azuredevops/testHelpers/upload-build-summary.yml'
+      - template: '../../../../../.azuredevops/testHelpers/build-summary-validation.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           expectedBuildResult: 'Canceled'
