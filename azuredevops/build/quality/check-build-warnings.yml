@@ -9,16 +9,6 @@ parameters:
     type: string
     default: 'check_build_warnings_step'
 
-  - name: stepOutputVariableName
-    displayName: 'Step output variable name to set if warnings are found'
-    type: string
-    default: 'hasWarnings'
-
-  - name: stepWarningCountOutputVariableName
-    displayName: 'Step output variable name to set with total warning count'
-    type: string
-    default: 'warningCount'
-
   - name: warningThreshold
     displayName: 'Maximum number of warnings allowed before triggering step result'
     type: number
@@ -58,12 +48,12 @@ steps:
         $warningMessage = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
 
         Write-Host "##[warning]$warningMessage"
-        Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]true"
-        Write-Host "##vso[task.setvariable variable=${{ parameters.stepWarningCountOutputVariableName }};isOutput=true]$totalWarnings"
+        Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]true"
+        Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
         Write-Host "##vso[task.complete result=${{ parameters.stepResultOnWarnings }};]$warningMessage"
       } else {
-        Write-Host "##vso[task.setvariable variable=${{ parameters.stepOutputVariableName }};isOutput=true]false"
-        Write-Host "##vso[task.setvariable variable=${{ parameters.stepWarningCountOutputVariableName }};isOutput=true]$totalWarnings"
+        Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]false"
+        Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
       }
     displayName: 'Check for build warnings'
     name: ${{ parameters.stepName }}

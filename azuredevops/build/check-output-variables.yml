@@ -10,15 +10,25 @@ parameters:
 
   - name: variableValue
     displayName: 'Variable value'
-    # use $(steps.<name>.outputs[''<var>'']) for same-job
-    # use $[dependencies.<job>.outputs[''<step>.<var>'']] for cross-job
     type: string
+    # Example:
+    # variableValue: $(steps.<stepName>.outputs['<varName>'])         # same-job
+    # variableValue: $[dependencies.<job>.outputs['<step>.<var>']]    # cross-job
 
   - name: expectedValue
     displayName: 'Expected value'
-    # leave empty to log only without assertion
     type: string
     default: ''
+
+  - name: skipValidation
+    displayName: 'Skip validation (only log variable value)'
+    type: boolean
+    default: false
+
+  - name: logIssueOnMismatch
+    displayName: 'Log issue on mismatch (if validation is not skipped)'
+    type: boolean
+    default: true
 
   - name: stepResultOnMismatch
     displayName: 'Step result when actual value does not match expected value'
@@ -36,17 +46,20 @@ parameters:
 
 steps:
   - pwsh: |
-      $variableName         = '${{ parameters.variableName }}'
-      $variableValue        = '${{ parameters.variableValue }}'
-      $expectedValue        = '${{ parameters.expectedValue }}'
-      $stepResultOnMismatch = '${{ parameters.stepResultOnMismatch }}'
+      $variableName          = '${{ parameters.variableName }}'
+      $variableValue         = '${{ parameters.variableValue }}'
+      $expectedValue         = '${{ parameters.expectedValue }}'
+      $stepResultOnMismatch  = '${{ parameters.stepResultOnMismatch }}'
+      $skipValidation        = [System.Convert]::ToBoolean('${{ parameters.skipValidation }}')
+      $logIssueOnMismatch    = [System.Convert]::ToBoolean('${{ parameters.logIssueOnMismatch }}')
 
       Write-Host "Variable : $variableName"
       Write-Host "Value    : $variableValue"
+      Write-Host "Expected : $expectedValue"
 
-      if ($expectedValue -ne '') {
-        Write-Host "Expected : $expectedValue"
-
+      if ($skipValidation) {
+        Write-Host "Result   : SKIPPED (validation disabled)"
+      } else {
         if ($variableValue -eq $expectedValue) {
           Write-Host "Result   : MATCH"
         } else {
@@ -54,16 +67,29 @@ steps:
 
           switch ($stepResultOnMismatch) {
             'SucceededWithIssues' {
-              Write-Host "##[warning]$message"
+              if ($logIssueOnMismatch) {
+                Write-Host "##vso[task.logissue type=warning]$message"
+              } else {
+                Write-Host "##[warning]$message"
+              }
               Write-Host "Result   : MISMATCH (warning)"
               Write-Host "##vso[task.complete result=SucceededWithIssues;]$message"
             }
             'Failed' {
-              Write-Host "##[error]$message"
+              if ($logIssueOnMismatch) {
+                Write-Host "##vso[task.logissue type=error]$message"
+              } else {
+                Write-Host "##[error]$message"
+              }
               Write-Host "Result   : MISMATCH (failure)"
               Write-Host "##vso[task.complete result=Failed;]$message"
             }
             default {
+              if ($logIssueOnMismatch) {
+                Write-Host "##vso[task.logissue type=warning]$message"
+              } else {
+                Write-Host "##[warning]$message"
+              }
               Write-Host "Result   : MISMATCH (ignored)"
             }
           }

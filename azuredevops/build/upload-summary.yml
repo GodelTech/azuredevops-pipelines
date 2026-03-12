@@ -14,6 +14,20 @@ parameters:
     type: string
     default: ''
 
+  - name: contentBlocks
+    displayName: 'Content blocks to include in the summary'
+    type: object
+    default: []
+    # Example:
+    # contentBlocks:
+    #   - title: 'Test Results'
+    #     content: |
+    #       | Suite | Passed | Failed |
+    #       | --- | --- | --- |
+    #       | Unit | 42 | 0 |
+    #   - title: 'Coverage'
+    #     content: '**Line coverage:** 95%'
+
   - name: showSystemInfo
     displayName: 'Show system info table with build details'
     type: boolean
@@ -38,6 +52,7 @@ steps:
   - pwsh: |
       $title    = $env:SUMMARY_TITLE
       $content  = $env:SUMMARY_CONTENT
+      $contentBlocks = $env:SUMMARY_CONTENT_BLOCKS | ConvertFrom-Json
       $showSystemInfo = $env:SUMMARY_SHOW_SYSTEM_INFO
       $fileName = $env:SUMMARY_FILENAME
 
@@ -52,10 +67,21 @@ steps:
 
       if ($content.Trim() -ne '') {
         $lines += $content
+        $lines += ""
+      }
+
+      foreach ($block in $contentBlocks) {
+        if ($block.title.Trim() -ne '') {
+          $lines += "## $($block.title)"
+          $lines += ""
+        }
+        if ($block.content.Trim() -ne '') {
+          $lines += $block.content
+        }
       }
 
       if ($showSystemInfo -eq 'true') {
-         if ($lines.Count -gt 0) {
+         if ($lines.Count -gt 0 -and $lines[-1] -ne '') {
            $lines += ""
          }
 
@@ -81,5 +107,6 @@ steps:
     env:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
+      SUMMARY_CONTENT_BLOCKS: ${{ parameters.contentBlocks | ConvertTo-Json }}
       SUMMARY_SHOW_SYSTEM_INFO: ${{ parameters.showSystemInfo }}
       SUMMARY_FILENAME: ${{ parameters.fileName }}

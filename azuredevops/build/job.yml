@@ -31,6 +31,14 @@ parameters:
     displayName: 'Steps to run in the job'
     type: stepList
     default: []
+    # Example:
+    # jobSteps:
+    #   - script: echo 'Hello, World!'
+    #     displayName: 'Print hello'
+    #   - task: DotNetCoreCLI@2
+    #     displayName: 'Build'
+    #     inputs:
+    #       command: 'build'
 
 jobs:
   - job: ${{ parameters.jobName }}

@@ -23,6 +23,16 @@ parameters:
     displayName: 'Output variables to check'
     type: object
     default: []
+    # Example:
+    # outputVariables:
+    #   - name: myStep.myVar
+    #     value: $(steps.myStep.outputs['myVar'])
+    #     expectedValue: 'expectedResult'
+    #   - name: myStep.myVar
+    #     value: $[dependencies.myJob.outputs['myStep.myVar']]
+    #     expectedValue: 'expectedResult'
+    #     stepResultOnMismatch: 'SucceededWithIssues'
+    #     condition: always()
 
   - name: warningThreshold
     displayName: 'Maximum number of warnings'
@@ -56,6 +66,17 @@ steps:
 
         **Build result description:**
         ${{ parameters.buildResultDescription }}
+
+        $(buildSummaryVariablesTable)
+      ${{ if gt(length(parameters.outputVariables), 0) }}:
+        contentBlocks:
+          - title: 'Output variables details'
+            content: |
+              | Variable | Value | Expected |
+              | --- | --- | --- |
+          - ${{ each variable in parameters.outputVariables }}:
+              - content: |
+                  | ${{ variable.name }} | ${{ variable.value }} | ${{ variable.expectedValue }} |
       condition: always()
 
   - template: '../../azuredevops/build/quality/check-build-warnings.yml'
