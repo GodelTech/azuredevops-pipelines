@@ -107,6 +107,6 @@ steps:
     env:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
-      SUMMARY_CONTENT_BLOCKS: ${{ parameters.contentBlocks | ConvertTo-Json }}
+      SUMMARY_CONTENT_BLOCKS: ${{ convertToJson(parameters.contentBlocks) }}
       SUMMARY_SHOW_SYSTEM_INFO: ${{ parameters.showSystemInfo }}
       SUMMARY_FILENAME: ${{ parameters.fileName }}
