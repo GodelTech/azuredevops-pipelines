@@ -81,7 +81,7 @@ steps:
           # yamllint disable rule:line-length
           - ${{ each variable in parameters.outputVariables }}:
               - content: |
-                  | ${{ variable.name }} | ${{ variable.value }} | ${{ variable.expectedValue }} | $(steps.${{ coalesce(variable.stepName, 'check_output_variable_step') }}.outputs['matchResult']) |
+                  | ${{ variable.name }} | ${{ variable.value }} | ${{ variable.expectedValue }} | $(${{ coalesce(variable.stepName, 'check_output_variable_step') }}.matchResult) |
           # yamllint enable rule:line-length
       condition: always()
 

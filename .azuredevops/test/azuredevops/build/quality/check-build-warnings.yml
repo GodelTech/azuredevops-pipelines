@@ -102,6 +102,7 @@ jobs:
           buildResultDescription: |
             Job **'$(Agent.JobName)'**
             Step **'${{ variables.checkBuildWarningStepName }}'** result must be: **${{ variables.checkBuildWarningStepResultOnWarnings }}**
+          warningThreshold: 1
           cancelBuildCondition: |
             and
             (
