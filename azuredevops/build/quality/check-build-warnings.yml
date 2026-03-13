@@ -9,6 +9,22 @@ parameters:
     type: string
     default: 'check_build_warnings_step'
 
+  - name: expectedWarnings
+    displayName: 'List of expected warning messages to verify are present'
+    type: object
+    default: []
+    # Example:
+    # expectedWarnings:
+    #   - message: 'Expected warning text'
+    #     stepName: 'My step display name'   # optional
+    #     jobName: 'MyJob'                   # optional
+    #     stageName: 'MyStage'               # optional
+
+  - name: failOnMissingExpectedWarnings
+    displayName: 'Fail step if any expected warnings are not found'
+    type: boolean
+    default: true
+
   - name: warningThreshold
     displayName: 'Maximum number of warnings allowed before triggering step result'
     type: number
@@ -35,63 +51,181 @@ parameters:
 
 steps:
   - pwsh: |
-      $warningThreshold     = [int]$env:WARNING_THRESHOLD
-      $logIssueOnWarnings   = [System.Convert]::ToBoolean($env:LOG_ISSUE_ON_WARNINGS)
-      $stepResultOnWarnings = $env:STEP_RESULT_ON_WARNINGS
+      $expectedWarnings              = $env:EXPECTED_WARNINGS | ConvertFrom-Json
+      $failOnMissingExpectedWarnings = [System.Convert]::ToBoolean($env:FAIL_ON_MISSING_EXPECTED_WARNINGS)
+      $warningThreshold              = [int]$env:WARNING_THRESHOLD
+      $logIssueOnWarnings            = [System.Convert]::ToBoolean($env:LOG_ISSUE_ON_WARNINGS)
+      $stepResultOnWarnings          = $env:STEP_RESULT_ON_WARNINGS
+
+      if ($warningThreshold -lt $expectedWarnings.Count) {
+        $message = "'warningThreshold' ($warningThreshold) is less than 'expectedWarnings' count ($($expectedWarnings.Count)). Increase 'warningThreshold' to at least $($expectedWarnings.Count)."
+        Write-Host "##vso[task.logissue type=error]$message"
+        Write-Host "##vso[task.complete result=Failed;]$message"
+        exit 0
+      }
 
       $headers = @{ Authorization = "Bearer $(System.AccessToken)" }
       $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/timeline?api-version=7.1"
       $timeline = Invoke-RestMethod -Uri $url -Headers $headers
-      $warningRecords = $timeline.records | Where-Object { $_.warningCount -gt 0 }
-      $totalWarnings = ($warningRecords | Measure-Object -Property warningCount -Sum).Sum
 
-      if (-not $totalWarnings) {
-        $totalWarnings = 0
+      function Get-TasksForExpected {
+        param($expected, $taskRecords, $jobRecords, $stageRecords)
+
+        $tasks = $taskRecords
+
+        if (-not [string]::IsNullOrWhiteSpace($expected.stepName)) {
+          $tasks = $tasks | Where-Object { $_.name -eq $expected.stepName }
+          if ($tasks.Count -eq 0) { return $null, "Step '$($expected.stepName)' not found in timeline" }
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($expected.jobName)) {
+          $matchingJobs = $jobRecords | Where-Object { $_.name -eq $expected.jobName }
+          if ($matchingJobs.Count -eq 0) { return $null, "Job '$($expected.jobName)' not found in timeline" }
+          $jobIds = $matchingJobs | Select-Object -ExpandProperty id
+          $tasks  = $tasks | Where-Object { $jobIds -contains $_.parentId }
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($expected.stageName)) {
+          $matchingStages = $stageRecords | Where-Object { $_.name -eq $expected.stageName }
+          if ($matchingStages.Count -eq 0) { return $null, "Stage '$($expected.stageName)' not found in timeline" }
+          $stageIds    = $matchingStages | Select-Object -ExpandProperty id
+          $jobsInStage = $jobRecords | Where-Object { $stageIds -contains $_.parentId }
+          $jobIds      = $jobsInStage | Select-Object -ExpandProperty id
+          $tasks       = $tasks | Where-Object { $jobIds -contains $_.parentId }
+        }
+
+        return $tasks, $null
       }
+
+      function Get-LocationString {
+        param($expected)
+        $parts = @()
+        if (-not [string]::IsNullOrWhiteSpace($expected.stageName)) { $parts += "stage '$($expected.stageName)'" }
+        if (-not [string]::IsNullOrWhiteSpace($expected.jobName))   { $parts += "job '$($expected.jobName)'" }
+        if (-not [string]::IsNullOrWhiteSpace($expected.stepName))  { $parts += "step '$($expected.stepName)'" }
+        return if ($parts.Count -gt 0) { ' in ' + ($parts -join ' / ') } else { '' }
+      }
+
+      function Test-ExpectedWarnings {
+        param($expectedWarnings, $taskRecords, $jobRecords, $stageRecords)
+
+        $mismatches = @()
+
+        foreach ($expected in $expectedWarnings) {
+          $tasks, $error = Get-TasksForExpected $expected $taskRecords $jobRecords $stageRecords
+          if ($null -ne $error) {
+            $mismatches += $error
+            continue
+          }
+
+          $allIssues = $tasks | ForEach-Object { $_.issues } | Where-Object { $null -ne $_ -and $_.type -eq 'warning' }
+          $found     = $allIssues | Where-Object { $_.message -eq $expected.message }
+
+          if ($found.Count -eq 0) {
+            $locationStr = Get-LocationString $expected
+            $mismatches += "Expected warning not found$($locationStr): '$($expected.message)'"
+          } else {
+            Write-Host "Expected warning found: '$($expected.message)'"
+          }
+        }
+
+        return $mismatches
+      }
+
+      function Write-ExpectedWarningsMismatches {
+        param($mismatches, [bool]$failOnMissingExpectedWarnings, [bool]$logIssueOnWarnings, [string]$stepResultOnWarnings)
+
+        foreach ($mismatch in $mismatches) {
+          if ($logIssueOnWarnings) {
+            $issueType = if ($failOnMissingExpectedWarnings -and $stepResultOnWarnings -eq 'Failed') { 'error' } else { 'warning' }
+            Write-Host "##vso[task.logissue type=$issueType]$mismatch"
+          } else {
+            Write-Host "##[warning]$mismatch"
+          }
+        }
+
+      }
+
+      function Set-WarningOutputVariables {
+        param([int]$totalWarnings, [int]$warningThreshold, [bool]$logIssueOnWarnings, [string]$stepResultOnWarnings)
+
+        if ($totalWarnings -gt $warningThreshold) {
+          $message = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
+
+          Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]true"
+          Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
+          Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]true"
+
+          if ($logIssueOnWarnings) {
+            $issueType = if ($stepResultOnWarnings -eq 'Failed') { 'error' } else { 'warning' }
+            Write-Host "##vso[task.logissue type=$issueType]$message"
+          } else {
+            Write-Host "##[warning]$message"
+          }
+
+        } elseif ($totalWarnings -gt 0) {
+          $message = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
+
+          Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]true"
+          Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
+          Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]false"
+
+          if ($logIssueOnWarnings) {
+            Write-Host "##vso[task.logissue type=warning]$message"
+          } else {
+            Write-Host "##[warning]$message"
+          }
+        } else {
+          Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]false"
+          Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
+          Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]false"
+        }
+      }
+
+      function Invoke-FinalTaskComplete {
+        param($mismatches, [bool]$failOnMissingExpectedWarnings, [int]$totalWarnings, [int]$warningThreshold, [string]$stepResultOnWarnings)
+
+        if ($failOnMissingExpectedWarnings -and $mismatches.Count -gt 0) {
+          $message = "$($mismatches.Count) expected warning(s) not found"
+          Write-Host "##vso[task.complete result=Failed;]$message"
+          return
+        }
+
+        if ($totalWarnings -gt $warningThreshold) {
+          $message = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
+          Write-Host "##vso[task.complete result=$stepResultOnWarnings;]$message"
+        }
+      }
+
+      # ── Check expected warnings ───────────────────────────────────────────────────────────────
+      $taskRecords  = $timeline.records | Where-Object { $_.type -eq 'Task' }
+      $jobRecords   = $timeline.records | Where-Object { $_.type -eq 'Job' -or $_.type -eq 'Phase' }
+      $stageRecords = $timeline.records | Where-Object { $_.type -eq 'Stage' }
+
+      $mismatches = Test-ExpectedWarnings $expectedWarnings $taskRecords $jobRecords $stageRecords
+
+      Write-ExpectedWarningsMismatches $mismatches $failOnMissingExpectedWarnings $logIssueOnWarnings $stepResultOnWarnings
+
+      # ── Check warning threshold ───────────────────────────────────────────────────────────────
+      $warningRecords = $timeline.records | Where-Object { $_.warningCount -gt 0 }
+      $totalWarnings  = ($warningRecords | Measure-Object -Property warningCount -Sum).Sum
+
+      if (-not $totalWarnings) { $totalWarnings = 0 }
 
       Write-Host "Total warnings : $totalWarnings"
       Write-Host "Threshold      : $warningThreshold"
 
-      if ($totalWarnings -gt $warningThreshold) {
-        $message = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
+      Set-WarningOutputVariables $totalWarnings $warningThreshold $logIssueOnWarnings $stepResultOnWarnings
 
-        Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]true"
-        Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
-        Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]true"
-
-        if ($logIssueOnWarnings) {
-          if ($stepResultOnWarnings -eq 'Failed') {
-            Write-Host "##vso[task.logissue type=error]$message"
-          } else {
-            Write-Host "##vso[task.logissue type=warning]$message"
-          }
-        } else {
-          Write-Host "##[warning]$message"
-        }
-
-        Write-Host "##vso[task.complete result=$stepResultOnWarnings;]$message"
-      } elseif ($totalWarnings -gt 0) {
-        $message = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
-
-        Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]true"
-        Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
-        Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]false"
-
-        if ($logIssueOnWarnings) {
-          Write-Host "##vso[task.logissue type=warning]$message"
-        } else {
-          Write-Host "##[warning]$message"
-        }
-      } else {
-        Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]false"
-        Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
-        Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]false"
-      }
+      # ── Finalize task result  ─────────────────────────────────────────────────────────────────
+      Invoke-FinalTaskComplete $mismatches $failOnMissingExpectedWarnings $totalWarnings $warningThreshold $stepResultOnWarnings
     displayName: 'Check for build warnings'
     name: ${{ parameters.stepName }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
     env:
+      EXPECTED_WARNINGS: ${{ convertToJson(parameters.expectedWarnings) }}
+      FAIL_ON_MISSING_EXPECTED_WARNINGS: ${{ parameters.failOnMissingExpectedWarnings }}
       WARNING_THRESHOLD: ${{ parameters.warningThreshold }}
       LOG_ISSUE_ON_WARNINGS: ${{ parameters.logIssueOnWarnings }}
       STEP_RESULT_ON_WARNINGS: ${{ parameters.stepResultOnWarnings }}
