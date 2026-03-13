@@ -29,7 +29,7 @@ parameters:
     #     value: $(myStep.myVar)
     #     expectedValue: 'expectedResult'
     #   - displayName: myJob.myStep.myVar
-    #     value: $[dependencies.myJob.outputs['myStep.myVar']]
+    #     value: $[ dependencies.myJob.outputs['myStep.myVar'] ]
     #     expectedValue: 'expectedResult'
     #     stepName: 'check_output_variable_step'
     #     skipValidation: false

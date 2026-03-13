@@ -17,8 +17,8 @@ parameters:
     displayName: 'Variable value'
     type: string
     # Example:
-    # variableValue: $(<stepName>.<varName>)                                      # same-job
-    # variableValue: $[dependencies.<jobName>.outputs['<stepName>.<varName>']]    # cross-job
+    # variableValue: $(<stepName>.<varName>)                                        # same-job
+    # variableValue: $[ dependencies.<jobName>.outputs['<stepName>.<varName>'] ]    # cross-job
 
   - name: expectedValue
     displayName: 'Expected value'

@@ -90,6 +90,9 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
         - CheckBuildWarningsExist
+      variables:
+        checkBuildWarningsExistResult: $[ dependencies.CheckBuildWarningsExist.result ]
+        checkBuildWarningsHasWarnings: $[ dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}'] ]
       expectedBuildResult: 'Canceled'
       outputVariables:
         - displayName: "dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}']"
@@ -103,6 +106,6 @@ jobs:
         and
         (
           succeeded(),
-          eq($[ dependencies.CheckBuildWarningsExist.result ], 'SucceededWithIssues'),
-          eq($[ dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}']], 'true')
+          eq(variables['checkBuildWarningsExistResult'], 'SucceededWithIssues'),
+          eq(variables['checkBuildWarningsHasWarnings'], 'true')
         )
