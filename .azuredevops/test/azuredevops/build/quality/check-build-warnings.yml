@@ -101,7 +101,7 @@ jobs:
       buildResultDescription: |
         Job **'Check build warnings (exist)'**
         Step **'Check for build warnings'** result must be: **${{ variables.checkBuildWarningStepResultOnWarnings }}**
-      warningThreshold: 1
+      warningThreshold: 2
       cancelBuildCondition: |
         and
         (
