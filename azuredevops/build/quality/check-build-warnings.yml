@@ -58,7 +58,8 @@ steps:
       $stepResultOnWarnings          = $env:STEP_RESULT_ON_WARNINGS
 
       if ($warningThreshold -lt $expectedWarnings.Count) {
-        $message = "'warningThreshold' ($warningThreshold) is less than 'expectedWarnings' count ($($expectedWarnings.Count)). Increase 'warningThreshold' to at least $($expectedWarnings.Count)."
+        $message = "'warningThreshold' ({0}) is less than 'expectedWarnings' count ({1}). Increase 'warningThreshold' to at least {1}." `
+                   -f $warningThreshold, $expectedWarnings.Count
         Write-Host "##vso[task.logissue type=error]$message"
         Write-Host "##vso[task.complete result=Failed;]$message"
         exit 0
