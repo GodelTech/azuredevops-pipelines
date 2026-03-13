@@ -103,6 +103,6 @@ jobs:
         and
         (
           succeeded(),
-          eq(dependencies.CheckBuildWarningsExist.result, 'SucceededWithIssues'),
-          eq(dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}'], 'true')
+          eq($[ dependencies.CheckBuildWarningsExist.result ], 'SucceededWithIssues'),
+          eq($[ dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}']], 'true')
         )
