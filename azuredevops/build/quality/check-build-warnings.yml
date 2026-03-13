@@ -14,6 +14,11 @@ parameters:
     type: number
     default: 0
 
+  - name: logIssueOnWarnings
+    displayName: 'Log issue on warnings'
+    type: boolean
+    default: true
+
   - name: stepResultOnWarnings
     displayName: 'Step result to set if warnings are found'
     type: string
@@ -30,6 +35,10 @@ parameters:
 
 steps:
   - pwsh: |
+      $warningThreshold     = [int]$env:WARNING_THRESHOLD
+      $logIssueOnWarnings   = [System.Convert]::ToBoolean($env:LOG_ISSUE_ON_WARNINGS)
+      $stepResultOnWarnings = $env:STEP_RESULT_ON_WARNINGS
+
       $headers = @{ Authorization = "Bearer $(System.AccessToken)" }
       $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/timeline?api-version=7.1"
       $timeline = Invoke-RestMethod -Uri $url -Headers $headers
@@ -40,22 +49,49 @@ steps:
         $totalWarnings = 0
       }
 
-      $warningThreshold = ${{ parameters.warningThreshold }}
       Write-Host "Total warnings : $totalWarnings"
       Write-Host "Threshold      : $warningThreshold"
 
       if ($totalWarnings -gt $warningThreshold) {
-        $warningMessage = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
+        $message = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
 
-        Write-Host "##[warning]$warningMessage"
         Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]true"
         Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
-        Write-Host "##vso[task.complete result=${{ parameters.stepResultOnWarnings }};]$warningMessage"
+        Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]true"
+
+        if ($logIssueOnWarnings) {
+          if ($stepResultOnWarnings -eq 'Failed') {
+            Write-Host "##vso[task.logissue type=error]$message"
+          } else {
+            Write-Host "##vso[task.logissue type=warning]$message"
+          }
+        } else {
+          Write-Host "##[warning]$message"
+        }
+
+        Write-Host "##vso[task.complete result=$stepResultOnWarnings;]$message"
+      } elseif ($totalWarnings -gt 0) {
+        $message = "Build completed with $totalWarnings warning(s) (threshold: $warningThreshold)"
+
+        Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]true"
+        Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
+        Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]false"
+
+        if ($logIssueOnWarnings) {
+          Write-Host "##vso[task.logissue type=warning]$message"
+        } else {
+          Write-Host "##[warning]$message"
+        }
       } else {
         Write-Host "##vso[task.setvariable variable=hasWarnings;isOutput=true]false"
         Write-Host "##vso[task.setvariable variable=warningCount;isOutput=true]$totalWarnings"
+        Write-Host "##vso[task.setvariable variable=isThresholdExceeded;isOutput=true]false"
       }
     displayName: 'Check for build warnings'
     name: ${{ parameters.stepName }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
+    env:
+      WARNING_THRESHOLD: ${{ parameters.warningThreshold }}
+      LOG_ISSUE_ON_WARNINGS: ${{ parameters.logIssueOnWarnings }}
+      STEP_RESULT_ON_WARNINGS: ${{ parameters.stepResultOnWarnings }}

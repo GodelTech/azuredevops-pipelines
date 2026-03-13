@@ -80,4 +80,5 @@ jobs:
           buildResultDescription: |
             Job **'$(Agent.JobName)'**
             Step **'Warnings quality check'** result must be: **Failed**
+          warningThreshold: 2
           cancelBuildCondition: failed()

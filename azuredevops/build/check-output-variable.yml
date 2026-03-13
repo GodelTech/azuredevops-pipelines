@@ -51,12 +51,12 @@ parameters:
 
 steps:
   - pwsh: |
-      $variableName          = '${{ parameters.variableName }}'
-      $variableValue         = '${{ parameters.variableValue }}'
-      $expectedValue         = '${{ parameters.expectedValue }}'
-      $stepResultOnMismatch  = '${{ parameters.stepResultOnMismatch }}'
-      $skipValidation        = [System.Convert]::ToBoolean('${{ parameters.skipValidation }}')
-      $logIssueOnMismatch    = [System.Convert]::ToBoolean('${{ parameters.logIssueOnMismatch }}')
+      $variableName          = $env:VARIABLE_NAME
+      $variableValue         = $env:VARIABLE_VALUE
+      $expectedValue         = $env:EXPECTED_VALUE
+      $stepResultOnMismatch  = $env:STEP_RESULT_ON_MISMATCH
+      $skipValidation        = [System.Convert]::ToBoolean($env:SKIP_VALIDATION)
+      $logIssueOnMismatch    = [System.Convert]::ToBoolean($env:LOG_ISSUE_ON_MISMATCH)
 
       Write-Host "Variable : $variableName"
       Write-Host "Value    : $variableValue"
@@ -108,3 +108,10 @@ steps:
     name: ${{ parameters.stepName }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
+    env:
+      VARIABLE_NAME: ${{ parameters.variableName }}
+      VARIABLE_VALUE: ${{ parameters.variableValue }}
+      EXPECTED_VALUE: ${{ parameters.expectedValue }}
+      STEP_RESULT_ON_MISMATCH: ${{ parameters.stepResultOnMismatch }}
+      SKIP_VALIDATION: ${{ parameters.skipValidation }}
+      LOG_ISSUE_ON_MISMATCH: ${{ parameters.logIssueOnMismatch }}
