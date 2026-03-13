@@ -96,7 +96,7 @@ jobs:
       expectedBuildResult: 'Canceled'
       outputVariables:
         - displayName: "dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}']"
-          value: $[ dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}'] ]
+          value: $(variables['checkBuildWarningsExistResult'])
           expectedValue: 'true'
       buildResultDescription: |
         Job **'Check build warnings (exist)'**
