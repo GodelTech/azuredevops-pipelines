@@ -104,7 +104,8 @@ steps:
         if (-not [string]::IsNullOrWhiteSpace($expected.stageName)) { $parts += "stage '$($expected.stageName)'" }
         if (-not [string]::IsNullOrWhiteSpace($expected.jobName))   { $parts += "job '$($expected.jobName)'" }
         if (-not [string]::IsNullOrWhiteSpace($expected.stepName))  { $parts += "step '$($expected.stepName)'" }
-        return if ($parts.Count -gt 0) { ' in ' + ($parts -join ' / ') } else { '' }
+        if ($parts.Count -gt 0) { return ' in ' + ($parts -join ' / ') }
+        return ''
       }
 
       function Test-ExpectedWarnings {
