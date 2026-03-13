@@ -33,8 +33,7 @@ schedules:
     always: true
 
 variables:
-  checkBuildWarningStepName: 'check_build_warnings_step'
-  checkBuildWarningHasWarningsOutputVariable: 'hasWarnings'
+  checkBuildWarningHasWarningsOutputVariable: 'check_build_warnings_step.hasWarnings'
   checkBuildWarningStepResultOnWarnings: 'SucceededWithIssues'
 
 jobs:
@@ -42,22 +41,19 @@ jobs:
     displayName: 'Check build warnings (empty)'
     pool:
       vmImage: ${{ parameters.vmImage }}
-    variables:
-      hasWarningsOutputVariableExpression: '${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningHasWarningsOutputVariable }}'
     steps:
       - checkout: none
 
       - template: '../../../../../azuredevops/build/quality/check-build-warnings.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          stepName: ${{ variables.checkBuildWarningStepName }}
           stepResultOnWarnings: 'Failed'
 
       - template: '../../../../../azuredevops/build/check-output-variable.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          variableName: ${{ variables.hasWarningsOutputVariableExpression }}
-          variableValue: $(${{ variables.hasWarningsOutputVariableExpression }})
+          variableDisplayName: ${{ variables.checkBuildWarningHasWarningsOutputVariable }}
+          variableValue: $(${{ variables.checkBuildWarningHasWarningsOutputVariable }})
           expectedValue: 'false'
           stepResultOnMismatch: 'Failed'
 
@@ -80,15 +76,12 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     dependsOn:
       - SetBuildWarning
-    variables:
-      hasWarningsOutputVariableExpression: '${{ variables.checkBuildWarningStepName }}.${{ variables.checkBuildWarningHasWarningsOutputVariable }}'
     steps:
       - checkout: none
 
       - template: '../../../../../azuredevops/build/quality/check-build-warnings.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          stepName: ${{ variables.checkBuildWarningStepName }}
           stepResultOnWarnings: ${{ variables.checkBuildWarningStepResultOnWarnings }}
 
   - template: '../../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
@@ -99,17 +92,17 @@ jobs:
         - CheckBuildWarningsExist
       expectedBuildResult: 'Canceled'
       outputVariables:
-        - name: ${{ variables.hasWarningsOutputVariableExpression }}
-          value: $(${{ variables.hasWarningsOutputVariableExpression }})
+        - displayName: "dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}']"
+          value: $[ dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}'] ]
           expectedValue: 'true'
       buildResultDescription: |
-        Job **'$(Agent.JobName)'**
-        Step **'${{ variables.checkBuildWarningStepName }}'** result must be: **${{ variables.checkBuildWarningStepResultOnWarnings }}**
+        Job **'Check build warnings (exist)'**
+        Step **'Check for build warnings'** result must be: **${{ variables.checkBuildWarningStepResultOnWarnings }}**
       warningThreshold: 1
       cancelBuildCondition: |
         and
         (
-          succeededOrFailed(),
-          eq(variables['Agent.JobStatus'], 'SucceededWithIssues'),
-          eq(variables['${{ variables.hasWarningsOutputVariableExpression }}'], 'true')
+          succeeded(),
+          eq(dependencies.CheckBuildWarningsExist.result, 'SucceededWithIssues'),
+          eq(dependencies.CheckBuildWarningsExist.outputs['${{ variables.checkBuildWarningHasWarningsOutputVariable }}'], 'true')
         )

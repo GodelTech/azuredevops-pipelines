@@ -9,8 +9,8 @@ parameters:
     type: string
     default: 'check_output_variable_step'
 
-  - name: variableName
-    displayName: 'Variable name (for display purposes)'
+  - name: variableDisplayName
+    displayName: 'Variable display name'
     type: string
 
   - name: variableValue
@@ -51,14 +51,14 @@ parameters:
 
 steps:
   - pwsh: |
-      $variableName          = $env:VARIABLE_NAME
+      $variableDisplayName   = $env:VARIABLE_DISPLAY_NAME
       $variableValue         = $env:VARIABLE_VALUE
       $expectedValue         = $env:EXPECTED_VALUE
       $stepResultOnMismatch  = $env:STEP_RESULT_ON_MISMATCH
       $skipValidation        = [System.Convert]::ToBoolean($env:SKIP_VALIDATION)
       $logIssueOnMismatch    = [System.Convert]::ToBoolean($env:LOG_ISSUE_ON_MISMATCH)
 
-      Write-Host "Variable : $variableName"
+      Write-Host "Variable : $variableDisplayName"
       Write-Host "Value    : $variableValue"
       Write-Host "Expected : $expectedValue"
 
@@ -70,7 +70,7 @@ steps:
           Write-Host "Result   : MATCH"
           Write-Host "##vso[task.setvariable variable=matchResult;isOutput=true]Matched"
         } else {
-          $message = "Variable '$variableName' value '$variableValue' does not match expected '$expectedValue'"
+          $message = "Variable '$variableDisplayName' value '$variableValue' does not match expected '$expectedValue'"
 
           Write-Host "##vso[task.setvariable variable=matchResult;isOutput=true]Mismatched"
 
@@ -104,12 +104,12 @@ steps:
           }
         }
       }
-    displayName: 'Check output variable: "${{ parameters.variableName }}"'
+    displayName: 'Check output variable: "${{ parameters.variableDisplayName }}"'
     name: ${{ parameters.stepName }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
     env:
-      VARIABLE_NAME: ${{ parameters.variableName }}
+      VARIABLE_DISPLAY_NAME: ${{ parameters.variableDisplayName }}
       VARIABLE_VALUE: ${{ parameters.variableValue }}
       EXPECTED_VALUE: ${{ parameters.expectedValue }}
       STEP_RESULT_ON_MISMATCH: ${{ parameters.stepResultOnMismatch }}

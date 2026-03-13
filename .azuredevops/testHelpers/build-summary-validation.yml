@@ -25,10 +25,10 @@ parameters:
     default: []
     # Example:
     # outputVariables:
-    #   - name: myStep.myVar
+    #   - displayName: myStep.myVar
     #     value: $(steps.myStep.outputs['myVar'])
     #     expectedValue: 'expectedResult'
-    #   - name: myJob.myStep.myVar
+    #   - displayName: myJob.myStep.myVar
     #     value: $[dependencies.myJob.outputs['myStep.myVar']]
     #     expectedValue: 'expectedResult'
     #     stepName: 'check_output_variable_step'
@@ -52,7 +52,7 @@ steps:
       - template: '../../azuredevops/build/check-output-variable.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          variableName: ${{ variable.name }}
+          variableDisplayName: ${{ variable.displayName }}
           variableValue: ${{ variable.value }}
           expectedValue: ${{ variable.expectedValue }}
           stepName: ${{ coalesce(variable.stepName, 'check_output_variable_step') }}
@@ -81,7 +81,7 @@ steps:
           # yamllint disable rule:line-length
           - ${{ each variable in parameters.outputVariables }}:
               - content: |
-                  | ${{ variable.name }} | ${{ variable.value }} | ${{ variable.expectedValue }} | $(${{ coalesce(variable.stepName, 'check_output_variable_step') }}.matchResult) |
+                  | ${{ variable.displayName }} | ${{ variable.value }} | ${{ variable.expectedValue }} | $(${{ coalesce(variable.stepName, 'check_output_variable_step') }}.matchResult) |
           # yamllint enable rule:line-length
       condition: always()
 

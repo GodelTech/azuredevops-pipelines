@@ -54,7 +54,7 @@ stages:
           - template: '../../../../azuredevops/build/check-output-variable.yml'
             parameters:
               enableBuildDebug: ${{ parameters.enableBuildDebug }}
-              variableName: 'testOutput'
+              variableDisplayName: 'testOutput'
               variableValue: $(set_output_variable_step.testOutput)
               expectedValue: 'testValue'
               stepResultOnMismatch: 'Failed'
@@ -64,7 +64,7 @@ stages:
               enableBuildDebug: ${{ parameters.enableBuildDebug }}
               expectedBuildResult: 'Succeeded'
               outputVariables:
-                - name: 'set_output_variable_step.testOutput'
+                - displayName: 'set_output_variable_step.testOutput'
                   value: $(set_output_variable_step.testOutput)
                   expectedValue: 'testValue'
               buildResultDescription: |
