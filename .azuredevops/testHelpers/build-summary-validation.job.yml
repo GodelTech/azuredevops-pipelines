@@ -1,0 +1,63 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+
+  - name: dependsOn
+    displayName: 'Job depends on'
+    type: object
+    default: []
+
+  - name: expectedBuildResult
+    displayName: 'Expected build result'
+    type: string
+    default: 'Succeeded'
+    values:
+      - Succeeded
+      - PartiallySucceeded
+      - Failed
+      - Canceled
+
+  - name: buildResultDescription
+    displayName: 'Build result description'
+    type: string
+    default: '_No description provided_'
+
+  - name: outputVariables
+    displayName: 'Output variables to check'
+    type: object
+    default: []
+
+  - name: warningThreshold
+    displayName: 'Maximum number of warnings'
+    type: number
+    default: 0
+
+  - name: cancelBuildCondition
+    displayName: 'Cancel build condition (only applicable when expected build result is "Canceled")'
+    type: string
+    default: ''
+
+jobs:
+  - job: BuildSummaryValidation
+    displayName: 'Build summary validation'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: ${{ parameters.dependsOn }}
+    steps:
+      - checkout: none
+
+      - template: 'build-summary-validation.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          expectedBuildResult: ${{ parameters.expectedBuildResult }}
+          buildResultDescription: ${{ parameters.buildResultDescription }}
+          outputVariables: ${{ parameters.outputVariables }}
+          warningThreshold: ${{ parameters.warningThreshold }}
+          cancelBuildCondition: ${{ parameters.cancelBuildCondition }}

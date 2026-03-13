@@ -63,6 +63,10 @@ stages:
             parameters:
               enableBuildDebug: ${{ parameters.enableBuildDebug }}
               expectedBuildResult: 'Succeeded'
+              outputVariables:
+                - name: 'set_output_variable_step.testOutput'
+                  value: $(set_output_variable_step.testOutput)
+                  expectedValue: 'testValue'
               buildResultDescription: |
                 Job **'$(Agent.JobName)'**
                 Step **Check output variable: "testOutput"** result must be: **Succeeded**

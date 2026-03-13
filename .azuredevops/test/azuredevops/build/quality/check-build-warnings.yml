@@ -22,7 +22,7 @@ trigger:
       - .azuredevops/test/azuredevops/build/quality/check-build-warnings.yml
       - azuredevops/build/quality/check-build-warnings.yml
       - azuredevops/build/check-output-variable.yml
-      - .azuredevops/testHelpers/build-summary-validation.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
   - cron: '0 0 1 * *'
@@ -91,22 +91,25 @@ jobs:
           stepName: ${{ variables.checkBuildWarningStepName }}
           stepResultOnWarnings: ${{ variables.checkBuildWarningStepResultOnWarnings }}
 
-      - template: '../../../../../.azuredevops/testHelpers/build-summary-validation.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          expectedBuildResult: 'Canceled'
-          outputVariables:
-            - name: ${{ variables.hasWarningsOutputVariableExpression }}
-              value: $(${{ variables.hasWarningsOutputVariableExpression }})
-              expectedValue: 'true'
-          buildResultDescription: |
-            Job **'$(Agent.JobName)'**
-            Step **'${{ variables.checkBuildWarningStepName }}'** result must be: **${{ variables.checkBuildWarningStepResultOnWarnings }}**
-          warningThreshold: 1
-          cancelBuildCondition: |
-            and
-            (
-              succeededOrFailed(),
-              eq(variables['Agent.JobStatus'], 'SucceededWithIssues'),
-              eq(variables['${{ variables.hasWarningsOutputVariableExpression }}'], 'true')
-            )
+  - template: '../../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - CheckBuildWarningsExist
+      expectedBuildResult: 'Canceled'
+      outputVariables:
+        - name: ${{ variables.hasWarningsOutputVariableExpression }}
+          value: $(${{ variables.hasWarningsOutputVariableExpression }})
+          expectedValue: 'true'
+      buildResultDescription: |
+        Job **'$(Agent.JobName)'**
+        Step **'${{ variables.checkBuildWarningStepName }}'** result must be: **${{ variables.checkBuildWarningStepResultOnWarnings }}**
+      warningThreshold: 1
+      cancelBuildCondition: |
+        and
+        (
+          succeededOrFailed(),
+          eq(variables['Agent.JobStatus'], 'SucceededWithIssues'),
+          eq(variables['${{ variables.hasWarningsOutputVariableExpression }}'], 'true')
+        )

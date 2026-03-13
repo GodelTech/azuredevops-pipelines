@@ -140,6 +140,11 @@ foreach ($file in $files) {
             # The pipeline must also re-trigger when any referenced template changes
             $templatePaths = @(Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot)
             foreach ($templatePath in $templatePaths) {
+                $templateFullPath = Join-Path $repoRoot $templatePath
+                if (-not (Test-Path -Path $templateFullPath)) {
+                    $fileIssues += "template file does not exist: '$templatePath'"
+                    continue
+                }
                 if ($templatePath -notin $triggerPaths) {
                     $fileIssues += "trigger.paths.include missing template: '$templatePath'"
                 }
