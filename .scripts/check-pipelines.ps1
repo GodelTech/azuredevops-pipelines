@@ -29,6 +29,11 @@
     Defaults to '.azuredevops/test' relative to the repository root
     (one level above this script).
 
+.PARAMETER WarningExitCode
+    Exit code to use when duplicate pipelines are found for a YAML file.
+    Defaults to 1 (duplicate pipelines fail the build).
+    Set to 0 to treat duplicate pipelines as informational only.
+
 .EXAMPLE
     # Run from the repository root
     .\.scripts\check-pipelines.ps1
@@ -36,14 +41,18 @@
     # Run with explicit credentials
     .\.scripts\check-pipelines.ps1 -Organization godeltech -Project OpenSource -AccessToken <PAT>
 
+    # Fail the build on duplicate pipelines
+    .\.scripts\check-pipelines.ps1 -AccessToken $env:SYSTEM_ACCESSTOKEN -WarningExitCode 1
+
     # In Azure DevOps pipelines pass:
     .\.scripts\check-pipelines.ps1 -AccessToken $env:SYSTEM_ACCESSTOKEN
 #>
 param(
-    [string]$Organization = 'godeltech',
-    [string]$Project      = 'OpenSource',
-    [string]$AccessToken  = '',
-    [string]$TestPath     = ''
+    [string]$Organization    = 'godeltech',
+    [string]$Project         = 'OpenSource',
+    [string]$AccessToken     = '',
+    [string]$TestPath        = '',
+    [int]   $WarningExitCode = 1
 )
 
 Set-StrictMode -Version Latest
@@ -143,19 +152,36 @@ foreach ($pipeline in $allPipelines) {
 
     if ($detail.configuration -and $detail.configuration.path) {
         $normalised = $detail.configuration.path.TrimStart('/').Replace('\', '/').ToLowerInvariant()
-        $pipelinePaths[$normalised] = $pipeline.name
+        if (-not $pipelinePaths.ContainsKey($normalised)) {
+            $pipelinePaths[$normalised] = [System.Collections.Generic.List[object]]::new()
+        }
+        $pipelinePaths[$normalised].Add([PSCustomObject]@{ Name = $pipeline.name; Id = $pipeline.id })
     }
 }
 
 # ── Check each local test file ────────────────────────────────────────────────────────────────
-$issues = @()
+$issues   = @()
+$warnings = @()
 
 foreach ($file in $testFiles) {
     $repoRelative = $file.FullName.Substring($repoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
     $normalised = $repoRelative.ToLowerInvariant()
 
     if ($pipelinePaths.ContainsKey($normalised)) {
-        Write-Host "  [OK]      $repoRelative  ->  '$($pipelinePaths[$normalised])'" -ForegroundColor Green
+        $matches = $pipelinePaths[$normalised]
+        if ($matches.Count -gt 1) {
+            Write-Host "  [WARNING] $repoRelative  ($($matches.Count) pipelines found)" -ForegroundColor Yellow
+            $warnings += [PSCustomObject]@{ RelativePath = $repoRelative; Count = $matches.Count }
+        }
+        else {
+            Write-Host "  [OK]      $repoRelative" -ForegroundColor Green
+        }
+        foreach ($match in $matches) {
+            $buildUrl = "https://dev.azure.com/$Organization/$Project/_build?definitionId=$($match.Id)"
+            $color = if ($matches.Count -gt 1) { 'Yellow' } else { 'Green' }
+            Write-Host "            Name: $($match.Name)" -ForegroundColor $color
+            Write-Host "            URL:  $buildUrl" -ForegroundColor $color
+        }
     }
     else {
         Write-Host "  [MISSING] $repoRelative" -ForegroundColor Red
@@ -164,15 +190,31 @@ foreach ($file in $testFiles) {
 }
 
 # ── Report results ────────────────────────────────────────────────────────────────────────────
-if ($issues.Count -eq 0) {
+if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
     Write-Host ''
     Write-Host 'All test pipeline YAML files have a corresponding Azure DevOps pipeline.' -ForegroundColor Green
 }
-else {
+
+if ($warnings.Count -gt 0) {
+    Write-Host ''
+    Write-Host 'The following test YAML files have more than one Azure DevOps pipeline:' -ForegroundColor Yellow
+    foreach ($warning in $warnings) {
+        Write-Host "  - $($warning.RelativePath)  ($($warning.Count) pipelines found)" -ForegroundColor Yellow
+    }
+}
+
+if ($issues.Count -gt 0) {
     Write-Host ''
     Write-Host 'The following test YAML files do not have a corresponding Azure DevOps pipeline:' -ForegroundColor Red
     foreach ($issue in $issues) {
         Write-Host "  - $($issue.RelativePath)" -ForegroundColor Red
     }
+}
+
+if ($issues.Count -gt 0) {
     exit 1
+}
+
+if ($warnings.Count -gt 0 -and $WarningExitCode -ne 0) {
+    exit $WarningExitCode
 }
