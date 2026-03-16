@@ -21,7 +21,7 @@ trigger:
     include:
       - .azuredevops/test/git/version/get.job.yml
       - git/version/get.job.yml
-      - .azuredevops/testHelpers/build-summary-validation.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
   - cron: '0 0 1 * *'
@@ -34,8 +34,8 @@ schedules:
 variables:
   gitvVersionJobName: 'GitVersion'
   gitVersionStepName: 'git_version_step'
-  checkBuildWarningStepName: 'check_build_warnings_step'
-  checkBuildWarningStepResultOnWarnings: 'SucceededWithIssues'
+  gitVersionSemVer: '${{ variables.gitVersionStepName }}.semVer'
+  gitVersionFullSemVer: '${{ variables.gitVersionStepName }}.fullSemVer'
 
 jobs:
   - template: '../../../../git/version/get.job.yml'
@@ -45,15 +45,23 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       stepName: ${{ variables.gitVersionStepName }}
 
-  - job: BuildQualityChecks
-    displayName: 'Build quality checks'
-    pool:
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
-    dependsOn:
-      - ${{ variables.gitvVersionJobName }}
-    steps:
-      - checkout: none
-
-      - template: '../../../../.azuredevops/testHelpers/build-summary-validation.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      dependsOn:
+        - ${{ variables.gitvVersionJobName }}
+      variables:
+        gitvVersionSemVer: $[ dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionSemVer }}'] ]
+        gitvVersionFullSemVer: $[ dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionFullSemVer }}'] ]
+      expectedBuildResult: 'Succeeded'
+      outputVariables:
+        - displayName: "dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionSemVer }}']"
+          value: $(gitvVersionSemVer)
+          skipValidation: true
+        - displayName: "dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionFullSemVer }}']"
+          value: $(gitvVersionFullSemVer)
+          skipValidation: true
+      buildResultDescription: |
+        Job **'Git version'**
+        Step **'Determine Git version'** result must be: **Succeeded**
