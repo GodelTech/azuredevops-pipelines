@@ -58,6 +58,7 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
+    condition: always()
     ${{ if gt(length(parameters.variables), 0) }}:
       variables: ${{ parameters.variables }}
     steps:
