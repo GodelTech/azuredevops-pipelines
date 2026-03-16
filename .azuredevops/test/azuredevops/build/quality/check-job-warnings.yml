@@ -73,12 +73,22 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
 
-      - template: '../../../../../.azuredevops/testHelpers/build-summary-validation.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          expectedBuildResult: 'Canceled'
-          buildResultDescription: |
-            Job **'$(Agent.JobName)'**
-            Step **'Warnings quality check'** result must be: **Failed**
-          warningThreshold: 2
-          cancelBuildCondition: failed()
+  - template: '../../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - SetAndCheckBuildWarnings
+      variables:
+        setAndCheckBuildWarningsResult: $[ dependencies.SetAndCheckBuildWarnings.result ]
+      expectedBuildResult: 'Canceled'
+      buildResultDescription: |
+        Job **'Set and check build warnings'**
+        Step **'Warnings quality check'** result must be: **Failed**
+      warningThreshold: 2
+      cancelBuildCondition: |
+        and
+        (
+          failed(),
+          eq(variables['setAndCheckBuildWarningsResult'], 'Failed')
+        )
