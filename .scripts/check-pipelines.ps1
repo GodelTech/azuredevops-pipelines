@@ -36,11 +36,13 @@
 
 .PARAMETER RepositoryFullName
     Expected repository full name that the pipeline's configuration.repository.fullName must match.
-    Example: 'GodelTech/azuredevops-pipelines'.
+    Defaults to 'GodelTech/azuredevops-pipelines'.
+    Set to '' to skip the repository full name check.
 
 .PARAMETER RepositoryType
     Expected repository type that the pipeline's configuration.repository.type must match.
-    Example: 'gitHub'.
+    Defaults to 'gitHub'.
+    Set to '' to skip the repository type check.
 
 .EXAMPLE
     # Run from the repository root
@@ -59,15 +61,13 @@
     .\.scripts\check-pipelines.ps1 -AccessToken $env:SYSTEM_ACCESSTOKEN
 #>
 param(
-    [string]$Organization       = 'godeltech',
-    [string]$Project            = 'OpenSource',
-    [string]$AccessToken        = '',
-    [string]$TestPath           = '',
-    [int]   $WarningExitCode    = 1,
-    [Parameter(Mandatory)]
-    [string]$RepositoryFullName,
-    [Parameter(Mandatory)]
-    [string]$RepositoryType
+    [string]$Organization        = 'godeltech',
+    [string]$Project             = 'OpenSource',
+    [string]$AccessToken         = '',
+    [string]$TestPath            = '',
+    [int]   $WarningExitCode     = 1,
+    [string]$RepositoryFullName  = 'GodelTech/azuredevops-pipelines',
+    [string]$RepositoryType      = 'gitHub'
 )
 
 Set-StrictMode -Version Latest
