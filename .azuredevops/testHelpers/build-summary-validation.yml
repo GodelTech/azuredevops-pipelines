@@ -37,17 +37,6 @@ parameters:
     #     stepResultOnMismatch: 'SucceededWithIssues'
     #     condition: always()
 
-  - name: expectedWarnings
-    displayName: 'List of expected warning messages to verify are present'
-    type: object
-    default: []
-    # Example:
-    # expectedWarnings:
-    #   - message: 'Expected warning text'
-    #     stepName: 'My step display name'   # optional
-    #     jobName: 'MyJob'                   # optional
-    #     stageName: 'MyStage'               # optional
-
   - name: warningThreshold
     displayName: 'Maximum number of warnings'
     type: number
@@ -100,7 +89,6 @@ steps:
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       stepName: 'upload_build_summary_check_warnings_step'
-      expectedWarnings: ${{ parameters.expectedWarnings }}
       warningThreshold: ${{ parameters.warningThreshold }}
       stepResultOnWarnings: 'Failed'
       condition: always()

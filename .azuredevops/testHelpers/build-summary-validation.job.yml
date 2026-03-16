@@ -42,11 +42,6 @@ parameters:
     type: object
     default: []
 
-  - name: expectedWarnings
-    displayName: 'List of expected warning messages to verify are present'
-    type: object
-    default: []
-
   - name: warningThreshold
     displayName: 'Maximum number of warnings'
     type: number
@@ -74,6 +69,5 @@ jobs:
           expectedBuildResult: ${{ parameters.expectedBuildResult }}
           buildResultDescription: ${{ parameters.buildResultDescription }}
           outputVariables: ${{ parameters.outputVariables }}
-          expectedWarnings: ${{ parameters.expectedWarnings }}
           warningThreshold: ${{ parameters.warningThreshold }}
           cancelBuildCondition: ${{ parameters.cancelBuildCondition }}
