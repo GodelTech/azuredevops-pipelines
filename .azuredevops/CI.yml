@@ -8,6 +8,16 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
+  - name: organization
+    displayName: 'Azure DevOps organization'
+    type: string
+    default: 'godeltech'
+
+  - name: project
+    displayName: 'Azure DevOps project'
+    type: string
+    default: 'OpenSource'
+
 trigger:
   batch: true
   paths:
@@ -137,4 +147,23 @@ jobs:
         displayName: 'Run check-test-coverage'
         inputs:
           filePath: '.scripts/check-test-coverage.ps1'
+          pwsh: true
+
+  - job: CheckPipelines
+    displayName: 'Check pipelines'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckTestCoverage
+    condition: always()
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-pipelines'
+        inputs:
+          filePath: '.scripts/check-pipelines.ps1'
+          arguments: >-
+            -Organization '${{ parameters.organization }}'
+            -Project '${{ parameters.project }}'
+            -AccessToken $(System.AccessToken)
           pwsh: true
