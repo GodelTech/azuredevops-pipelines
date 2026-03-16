@@ -34,12 +34,23 @@
     Defaults to 1 (duplicate pipelines fail the build).
     Set to 0 to treat duplicate pipelines as informational only.
 
+.PARAMETER RepositoryFullName
+    Expected repository full name that the pipeline's configuration.repository.fullName must match.
+    Example: 'GodelTech/azuredevops-pipelines'.
+
+.PARAMETER RepositoryType
+    Expected repository type that the pipeline's configuration.repository.type must match.
+    Example: 'gitHub'.
+
 .EXAMPLE
     # Run from the repository root
     .\.scripts\check-pipelines.ps1
 
     # Run with explicit credentials
     .\.scripts\check-pipelines.ps1 -Organization godeltech -Project OpenSource -AccessToken <PAT>
+
+    # Check repository as well
+    .\.scripts\check-pipelines.ps1 -RepositoryFullName 'GodelTech/azuredevops-pipelines' -RepositoryType gitHub
 
     # Fail the build on duplicate pipelines
     .\.scripts\check-pipelines.ps1 -AccessToken $env:SYSTEM_ACCESSTOKEN -WarningExitCode 1
@@ -48,11 +59,15 @@
     .\.scripts\check-pipelines.ps1 -AccessToken $env:SYSTEM_ACCESSTOKEN
 #>
 param(
-    [string]$Organization    = 'godeltech',
-    [string]$Project         = 'OpenSource',
-    [string]$AccessToken     = '',
-    [string]$TestPath        = '',
-    [int]   $WarningExitCode = 1
+    [string]$Organization       = 'godeltech',
+    [string]$Project            = 'OpenSource',
+    [string]$AccessToken        = '',
+    [string]$TestPath           = '',
+    [int]   $WarningExitCode    = 1,
+    [Parameter(Mandatory)]
+    [string]$RepositoryFullName,
+    [Parameter(Mandatory)]
+    [string]$RepositoryType
 )
 
 Set-StrictMode -Version Latest
@@ -155,7 +170,12 @@ foreach ($pipeline in $allPipelines) {
         if (-not $pipelinePaths.ContainsKey($normalised)) {
             $pipelinePaths[$normalised] = [System.Collections.Generic.List[object]]::new()
         }
-        $pipelinePaths[$normalised].Add([PSCustomObject]@{ Name = $pipeline.name; Id = $pipeline.id })
+        $pipelinePaths[$normalised].Add([PSCustomObject]@{
+            Name               = $pipeline.name
+            Id                 = $pipeline.id
+            RepositoryFullName = if ($detail.configuration.repository) { $detail.configuration.repository.fullName } else { '' }
+            RepositoryType     = if ($detail.configuration.repository) { $detail.configuration.repository.type } else { '' }
+        })
     }
 }
 
@@ -168,19 +188,31 @@ foreach ($file in $testFiles) {
     $normalised = $repoRelative.ToLowerInvariant()
 
     if ($pipelinePaths.ContainsKey($normalised)) {
-        $matches = $pipelinePaths[$normalised]
-        if ($matches.Count -gt 1) {
+        $matches = @($pipelinePaths[$normalised] | Where-Object {
+            ($RepositoryFullName -eq '' -or $_.RepositoryFullName -ieq $RepositoryFullName) -and
+            ($RepositoryType     -eq '' -or $_.RepositoryType     -ieq $RepositoryType)
+        })
+        if ($matches.Count -eq 0) {
+            Write-Host "  [MISSING] $repoRelative" -ForegroundColor Red
+            $issues += [PSCustomObject]@{ File = $file.FullName; RelativePath = $repoRelative }
+        }
+        elseif ($matches.Count -gt 1) {
             Write-Host "  [WARNING] $repoRelative  ($($matches.Count) pipelines found)" -ForegroundColor Yellow
             $warnings += [PSCustomObject]@{ RelativePath = $repoRelative; Count = $matches.Count }
+            foreach ($match in $matches) {
+                $buildUrl = "https://dev.azure.com/$Organization/$Project/_build?definitionId=$($match.Id)"
+                Write-Host "            Name:       $($match.Name)" -ForegroundColor Yellow
+                Write-Host "            Repository: $($match.RepositoryFullName) ($($match.RepositoryType))" -ForegroundColor Yellow
+                Write-Host "            URL:        $buildUrl" -ForegroundColor Yellow
+            }
         }
         else {
-            Write-Host "  [OK]      $repoRelative" -ForegroundColor Green
-        }
-        foreach ($match in $matches) {
+            $match = $matches[0]
             $buildUrl = "https://dev.azure.com/$Organization/$Project/_build?definitionId=$($match.Id)"
-            $color = if ($matches.Count -gt 1) { 'Yellow' } else { 'Green' }
-            Write-Host "            Name: $($match.Name)" -ForegroundColor $color
-            Write-Host "            URL:  $buildUrl" -ForegroundColor $color
+            Write-Host "  [OK]      $repoRelative" -ForegroundColor Green
+            Write-Host "            Name:       $($match.Name)" -ForegroundColor Green
+            Write-Host "            Repository: $($match.RepositoryFullName) ($($match.RepositoryType))" -ForegroundColor Green
+            Write-Host "            URL:        $buildUrl" -ForegroundColor Green
         }
     }
     else {

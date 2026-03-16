@@ -18,6 +18,16 @@ parameters:
     type: string
     default: 'OpenSource'
 
+  - name: repositoryFullName
+    displayName: 'Repository full name'
+    type: string
+    default: 'GodelTech/azuredevops-pipelines'
+
+  - name: repositoryType
+    displayName: 'Repository type'
+    type: string
+    default: 'gitHub'
+
 trigger:
   batch: true
   paths:
@@ -166,4 +176,6 @@ jobs:
             -Organization '${{ parameters.organization }}'
             -Project '${{ parameters.project }}'
             -AccessToken $(System.AccessToken)
+            -RepositoryFullName '${{ parameters.repositoryFullName }}'
+            -RepositoryType '${{ parameters.repositoryType }}'
           pwsh: true
