@@ -98,4 +98,9 @@ steps:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if ne(parameters.cancelBuildCondition, '') }}:
-            condition: ${{ parameters.cancelBuildCondition }}
+            condition: |
+              and
+              (
+                eq(variables['Agent.JobStatus'], 'Succeeded'),
+                ${{ parameters.cancelBuildCondition }}
+              )
