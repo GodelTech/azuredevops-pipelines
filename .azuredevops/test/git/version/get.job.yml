@@ -58,9 +58,11 @@ jobs:
       outputVariables:
         - displayName: "dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionSemVer }}']"
           value: $(gitvVersionSemVer)
+          stepName: 'check_output_variable_step_SemVer'
           skipValidation: true
         - displayName: "dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionFullSemVer }}']"
           value: $(gitvVersionFullSemVer)
+          stepName: 'check_output_variable_step_FullSemVer'
           skipValidation: true
       buildResultDescription: |
         Job **'Git version'**
