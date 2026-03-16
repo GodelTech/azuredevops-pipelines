@@ -76,7 +76,7 @@ steps:
           $lines += ""
         }
         if ($null -ne $block.content) {
-          $lines += $block.content
+          $lines += $block.content.TrimEnd()
         }
       }
 
