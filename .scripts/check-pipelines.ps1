@@ -173,8 +173,8 @@ foreach ($pipeline in $allPipelines) {
         $pipelinePaths[$normalised].Add([PSCustomObject]@{
             Name               = $pipeline.name
             Id                 = $pipeline.id
-            RepositoryFullName = if ($detail.configuration.repository) { $detail.configuration.repository.fullName } else { '' }
-            RepositoryType     = if ($detail.configuration.repository) { $detail.configuration.repository.type } else { '' }
+            RepositoryFullName = if ($detail.configuration.repository -and $detail.configuration.repository.PSObject.Properties['fullName']) { $detail.configuration.repository.fullName } else { '' }
+            RepositoryType     = if ($detail.configuration.repository -and $detail.configuration.repository.PSObject.Properties['type']) { $detail.configuration.repository.type } else { '' }
         })
     }
 }
