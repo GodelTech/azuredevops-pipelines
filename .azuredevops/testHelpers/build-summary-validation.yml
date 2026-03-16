@@ -76,8 +76,8 @@ steps:
         contentBlocks:
           - title: 'Output variables details'
             content: |
-              | Variable | Value | Expected |
-              | --- | --- | --- |
+              | Variable | Value | Expected | Result |
+              | --- | --- | --- | --- |
           # yamllint disable rule:line-length
           - ${{ each variable in parameters.outputVariables }}:
               - content: |
