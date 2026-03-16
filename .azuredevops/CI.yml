@@ -164,7 +164,6 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn: CheckTestCoverage
-    condition: always()
     steps:
       - checkout: self
 

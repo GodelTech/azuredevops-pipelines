@@ -1,0 +1,71 @@
+# test-azuredevops-build-job.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/job.yml
+      - azuredevops/build/job.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - template: '../../../../azuredevops/build/job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      jobName: JobWithCheckout
+      jobDisplayName: 'Job with checkout'
+      vmImage: ${{ parameters.vmImage }}
+      jobSteps:
+        - bash: |
+            echo 'Job with checkout'
+          displayName: 'Print message'
+
+  - template: '../../../../azuredevops/build/job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      jobName: JobWithoutCheckout
+      jobDisplayName: 'Job without checkout'
+      vmImage: ${{ parameters.vmImage }}
+      checkOutSourceCode: false
+      jobSteps:
+        - bash: |
+            echo 'Job without checkout'
+          displayName: 'Print message'
+
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - JobWithCheckout
+        - JobWithoutCheckout
+      expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Job with checkout'**
+        Step **'Print message'** result must be: **Succeeded**
+
+        Job **'Job without checkout'**
+        Step **'Print message'** result must be: **Succeeded**

@@ -1,0 +1,96 @@
+# test-azuredevops-build-upload-summary.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/upload-summary.yml
+      - azuredevops/build/upload-summary.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: UploadSummaryWithTitle
+    displayName: 'Upload summary (with title and content)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          title: 'Test Summary'
+          content: 'Test content'
+
+  - job: UploadSummaryWithContentBlocks
+    displayName: 'Upload summary (with content blocks)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - UploadSummaryWithTitle
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          contentBlocks:
+            - title: 'Block 1'
+              content: 'Block 1 content'
+            - title: 'Block 2'
+              content: 'Block 2 content'
+
+  - job: UploadSummaryWithSystemInfo
+    displayName: 'Upload summary (with system info)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - UploadSummaryWithContentBlocks
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          showSystemInfo: true
+          title: 'System Info Summary'
+
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - UploadSummaryWithSystemInfo
+      expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Upload summary (with title and content)'**
+        Step **'Upload build summary'** result must be: **Succeeded**
+
+        Job **'Upload summary (with content blocks)'**
+        Step **'Upload build summary'** result must be: **Succeeded**
+
+        Job **'Upload summary (with system info)'**
+        Step **'Upload build summary'** result must be: **Succeeded**

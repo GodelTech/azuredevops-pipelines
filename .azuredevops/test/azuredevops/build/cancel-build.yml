@@ -1,0 +1,69 @@
+# test-azuredevops-build-cancel-build.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/cancel-build.yml
+      - azuredevops/build/cancel-build.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: CancelBuildWithFalseCondition
+    displayName: 'Cancel build (condition is false)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/cancel-build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          condition: 'eq(1, 2)'
+
+  - job: CancelBuild
+    displayName: 'Cancel build'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - CancelBuildWithFalseCondition
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/cancel-build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - CancelBuild
+      expectedBuildResult: 'Canceled'
+      buildResultDescription: |
+        Job **'Cancel build'**
+        Step **'Cancel build'** result must be: **Succeeded**

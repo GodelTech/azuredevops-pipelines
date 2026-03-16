@@ -12,6 +12,10 @@
     Path to the folder that contains Azure DevOps pipeline YAML files.
     Defaults to '.azuredevops' relative to the repository root (one level above this script).
 
+.PARAMETER ExcludeFiles
+    List of repo-root-relative paths (forward-slash separated) to exclude from the check.
+    Use this for files that are permitted to reference the cancel-build template directly.
+
 .EXAMPLE
     # Run from the repository root
     .\.scripts\check-cancel-build.ps1
@@ -20,7 +24,10 @@
     .\.scripts\check-cancel-build.ps1 -AzureDevOpsPath 'C:\repo\.azuredevops'
 #>
 param(
-    [string]$AzureDevOpsPath = ''
+    [string]$AzureDevOpsPath = '',
+    [string[]]$ExcludeFiles   = @(
+        '.azuredevops/test/azuredevops/build/cancel-build.yml'
+    )
 )
 
 Set-StrictMode -Version Latest
@@ -71,6 +78,9 @@ $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
 $found = @()
 
 foreach ($file in $files) {
+    $repoRelative = $file.FullName.Substring($repoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
+    if ($repoRelative -in $ExcludeFiles) { continue }
+
     $content = Get-Content -Path $file.FullName -Raw
     $templatePaths = Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot
 
