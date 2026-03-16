@@ -21,7 +21,7 @@ trigger:
     include:
       - .azuredevops/test/azuredevops/build/check-output-variable.yml
       - azuredevops/build/check-output-variable.yml
-      - .azuredevops/testHelpers/build-summary-validation.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
   - cron: '0 0 1 * *'
@@ -31,42 +31,45 @@ schedules:
         - main
     always: true
 
-stages:
-  - stage: FirstStage
-    displayName: 'First stage'
-    jobs:
-      - job: SetOutputVariable
-        displayName: 'Set output variable'
-        pool:
-          vmImage: ${{ parameters.vmImage }}
-        steps:
-          - checkout: none
+jobs:
+  - job: SetOutputVariable
+    displayName: 'Set output variable'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
 
-          - bash: |
-              echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
-            displayName: 'Set output variable "testOutput"'
-            name: set_output_variable_step
+      - bash: |
+          echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
+        displayName: 'Set output variable "testOutput"'
+        name: set_output_variable_step
 
-          - bash: |
-              echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
-            displayName: 'Show output variable "testOutput"'
+      - bash: |
+          echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
+        displayName: 'Show output variable "testOutput"'
 
-          - template: '../../../../azuredevops/build/check-output-variable.yml'
-            parameters:
-              enableBuildDebug: ${{ parameters.enableBuildDebug }}
-              variableDisplayName: 'testOutput'
-              variableValue: $(set_output_variable_step.testOutput)
-              expectedValue: 'testValue'
-              stepResultOnMismatch: 'Failed'
+      - template: '../../../../azuredevops/build/check-output-variable.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          variableDisplayName: 'testOutput'
+          variableValue: $(set_output_variable_step.testOutput)
+          expectedValue: 'testValue'
+          stepResultOnMismatch: 'Failed'
 
-          - template: '../../../../.azuredevops/testHelpers/build-summary-validation.yml'
-            parameters:
-              enableBuildDebug: ${{ parameters.enableBuildDebug }}
-              expectedBuildResult: 'Succeeded'
-              outputVariables:
-                - displayName: 'set_output_variable_step.testOutput'
-                  value: $(set_output_variable_step.testOutput)
-                  expectedValue: 'testValue'
-              buildResultDescription: |
-                Job **'$(Agent.JobName)'**
-                Step **Check output variable: "testOutput"** result must be: **Succeeded**
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - SetOutputVariable
+      variables:
+        setOutputVariableResult: $[ dependencies.SetOutputVariable.result ]
+        setOutputVariableTestOutput: $[ dependencies.SetOutputVariable.outputs['set_output_variable_step.testOutput'] ]
+      expectedBuildResult: 'Succeeded'
+      outputVariables:
+        - displayName: "dependencies.SetOutputVariable.outputs['set_output_variable_step.testOutput']"
+          value: $(setOutputVariableTestOutput)
+          expectedValue: 'testValue'
+      buildResultDescription: |
+        Job **'Set output variable'**
+        Step **'Check output variable: "testOutput"'** result must be: **Succeeded**
