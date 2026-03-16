@@ -87,8 +87,4 @@ jobs:
         Step **'Warnings quality check'** result must be: **Failed**
       warningThreshold: 4
       cancelBuildCondition: |
-        and
-        (
-          failed(),
-          eq(variables['setAndCheckBuildWarningsResult'], 'Failed')
-        )
+        eq(variables['setAndCheckBuildWarningsResult'], 'Failed')

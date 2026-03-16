@@ -105,7 +105,6 @@ jobs:
       cancelBuildCondition: |
         and
         (
-          succeeded(),
           eq(variables['checkBuildWarningsExistResult'], 'SucceededWithIssues'),
           eq(variables['checkBuildWarningsHasWarnings'], 'true')
         )

@@ -101,6 +101,6 @@ steps:
             condition: |
               and
               (
-                eq(variables['Agent.JobStatus'], 'Succeeded'),
+                succeeded(),
                 ${{ parameters.cancelBuildCondition }}
               )
