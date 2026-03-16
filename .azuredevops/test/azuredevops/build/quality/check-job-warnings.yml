@@ -85,7 +85,7 @@ jobs:
       buildResultDescription: |
         Job **'Set and check build warnings'**
         Step **'Warnings quality check'** result must be: **Failed**
-      warningThreshold: 2
+      warningThreshold: 4
       cancelBuildCondition: |
         and
         (
