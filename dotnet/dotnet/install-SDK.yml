@@ -1,0 +1,32 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)'
+
+  - name: versions
+    displayName: '.NET SDK versions'
+    type: object
+    default: []
+
+steps:
+  - ${{ if eq(length(parameters.versions), 0) }}:
+      - task: UseDotNet@2
+        displayName: 'Use .NET SDK from global.json'
+        inputs:
+          packageType: 'sdk'
+          useGlobalJson: true
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
+
+  - ${{ each version in parameters.versions }}:
+      - task: UseDotNet@2
+        displayName: 'Use .NET Core SDK "${{ version }}"'
+        inputs:
+          packageType: 'sdk'
+          version: ${{ version }}

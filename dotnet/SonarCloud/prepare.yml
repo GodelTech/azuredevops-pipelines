@@ -1,0 +1,63 @@
+# source: https://github.com/SonarSource/sonar-scanner-azdo/blob/master/its/fixtures/pipeline-sonarcloud-v4-dotnet-embedded-unix.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable SonarCloud analysis'
+    type: boolean
+    default: true
+
+  - name: serviceConnection
+    displayName: 'SonarCloud service connection name'
+    type: string
+    default: 'SonarCloud'
+
+  - name: organization
+    displayName: 'SonarCloud organization'
+    type: string
+    default: ''
+
+  - name: projectKey
+    displayName: 'SonarCloud project key'
+    type: string
+    default: ''
+
+  - name: projectName
+    displayName: 'SonarCloud project name'
+    type: string
+    default: ''
+
+  - name: projectBaseDir
+    displayName: '.NET project base directory'
+    type: string
+    default: '$(Build.SourcesDirectory)'
+
+  - name: coverageReportPath
+    displayName: 'Coverage report path'
+    type: string
+    default: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
+
+steps:
+  - task: SonarCloudPrepare@4
+    displayName: 'Prepare SonarCloud analysis'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    inputs:
+      SonarCloud: ${{ parameters.serviceConnection }}
+      organization: ${{ parameters.organization }}
+      scannerMode: 'dotnet'
+      projectKey: ${{ parameters.projectKey }}
+      projectName: ${{ parameters.projectName }}
+      # https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/analysis-parameters/parameters-not-settable-in-ui
+      # https://docs.sonarsource.com/sonarqube-cloud/enriching/test-coverage/generic-test-data
+      extraProperties: |
+        sonar.projectBaseDir="${{ parameters.projectBaseDir }}"
+        sonar.coverageReportPaths="${{ parameters.coverageReportPath }}"

@@ -1,0 +1,18 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+
+jobs:
+  - template: '../../git/version/get.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      jobName: 'GitVersion'
+      vmImage: ${{ parameters.vmImage }}
+      stepName: 'git_version_step'

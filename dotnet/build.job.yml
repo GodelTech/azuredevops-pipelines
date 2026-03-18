@@ -1,0 +1,75 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: jobName
+    displayName: 'Job name'
+    type: string
+    default: 'BuildDotnet'
+
+  - name: jobDisplayName
+    displayName: 'Job display name'
+    type: string
+    default: 'Build .NET'
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+
+  - name: dependsOn
+    displayName: 'Job depends on'
+    type: object
+    default: []
+
+  - name: sonarCloud
+    displayName: 'SonarCloud parameters'
+    type: object
+    default: { enable: false }
+
+  - name: dotnet
+    displayName: '.NET parameters'
+    type: object
+    default: {}
+
+jobs:
+  - job: ${{ parameters.jobName }}
+    displayName: ${{ parameters.jobDisplayName }}
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: ${{ parameters.dependsOn }}
+    steps:
+      - template: 'SonarCloud/prepare.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          enable: ${{ parameters.sonarCloud.enable }}
+          ${{ if ne(parameters.sonarCloud.serviceConnection, '') }}:
+            serviceConnection: ${{ parameters.sonarCloud.serviceConnection }}
+          ${{ if ne(parameters.sonarCloud.organization, '') }}:
+            organization: ${{ parameters.sonarCloud.organization }}
+          ${{ if ne(parameters.sonarCloud.projectKey, '') }}:
+            projectKey: ${{ parameters.sonarCloud.projectKey }}
+          ${{ if ne(parameters.sonarCloud.projectName, '') }}:
+            projectName: ${{ parameters.sonarCloud.projectName }}
+          ${{ if ne(parameters.sonarCloud.projectBaseDir, '') }}:
+            projectBaseDir: ${{ parameters.sonarCloud.projectBaseDir }}
+          ${{ if ne(parameters.sonarCloud.coverageReportPath, '') }}:
+            coverageReportPath: ${{ parameters.sonarCloud.coverageReportPath }}
+
+      - task: NuGetAuthenticate@1
+        displayName: 'Configure NuGet service connections'
+        condition: |
+          and(
+            succeeded(),
+            gt(length(parameters.dotnet.nuGetServiceConnections), 0)
+          )
+        inputs:
+          nuGetServiceConnections: ${{ join(',', parameters.dotnet.nuGetServiceConnections) }}
+
+      - template: 'dotnet/install-SDK.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.dotnet.workingDirectory }}
