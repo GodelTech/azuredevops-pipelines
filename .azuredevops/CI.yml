@@ -34,9 +34,11 @@ trigger:
     include:
       - .azuredevops/CI.yml
       - '.scripts/*'
-      - .yamllint
-      - .prettierrc
-      - '*.yml'
+      - '**/*.yml'
+      - '*'
+    exclude:
+      - README.md
+      - LICENSE
 
 pr:
   branches:
