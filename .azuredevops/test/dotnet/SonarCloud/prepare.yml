@@ -15,22 +15,22 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
-  - name: sonarCloudServiceConnection
+  - name: serviceConnection
     displayName: 'SonarCloud service connection name'
     type: string
     default: 'SonarCloud'
 
-  - name: sonarCloudOrganization
+  - name: organization
     displayName: 'SonarCloud organization'
     type: string
-    default: ''
+    default: 'godeltech'
 
-  - name: sonarCloudProjectKey
+  - name: projectKey
     displayName: 'SonarCloud project key'
     type: string
     default: ''
 
-  - name: sonarCloudProjectName
+  - name: projectName
     displayName: 'SonarCloud project name'
     type: string
     default: ''
@@ -75,10 +75,10 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           enable: true
-          serviceConnection: ${{ parameters.sonarCloudServiceConnection }}
-          organization: ${{ parameters.sonarCloudOrganization }}
-          projectKey: ${{ parameters.sonarCloudProjectKey }}
-          projectName: ${{ parameters.sonarCloudProjectName }}
+          serviceConnection: ${{ parameters.serviceConnection }}
+          organization: ${{ parameters.organization }}
+          projectKey: ${{ parameters.projectKey }}
+          projectName: ${{ parameters.projectName }}
           projectBaseDir: '$(Build.SourcesDirectory)/src'
           coverageReportPath: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
 
