@@ -27,7 +27,10 @@ parameters:
   - name: sonarCloud
     displayName: 'SonarCloud parameters'
     type: object
-    default: { enable: false }
+    # prettier-ignore
+    default: {
+      enable: false
+    }
 
   - name: dotnet
     displayName: '.NET parameters'

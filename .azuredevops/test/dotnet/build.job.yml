@@ -21,8 +21,6 @@ trigger:
     include:
       - .azuredevops/test/dotnet/build.job.yml
       - dotnet/build.job.yml
-      - dotnet/SonarCloud/prepare.yml
-      - dotnet/dotnet/install-SDK.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -58,3 +56,9 @@ jobs:
         - BuildDotnetDefaults
         - BuildDotnetWithWorkingDirectory
       expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Build .NET with defaults'**
+        Step **'Use .NET SDK'** result must be: **Succeeded**
+
+        Job **'Build .NET with custom working directory'**
+        Step **'Use .NET SDK'** result must be: **Succeeded**
