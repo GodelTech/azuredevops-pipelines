@@ -1,0 +1,78 @@
+# test-dotnet-SonarCloud-prepare.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/SonarCloud/prepare.yml
+      - dotnet/SonarCloud/prepare.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: PrepareSonarCloudDisabled
+    displayName: 'Prepare SonarCloud disabled'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../dotnet/SonarCloud/prepare.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          enable: false
+
+  - job: PrepareSonarCloudWithCustomParameters
+    displayName: 'Prepare SonarCloud with custom parameters'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../dotnet/SonarCloud/prepare.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          enable: true
+          serviceConnection: 'MySonarCloud'
+          organization: 'my-organization'
+          projectKey: 'my-project-key'
+          projectName: 'My Project'
+          projectBaseDir: '$(Build.SourcesDirectory)/src'
+          coverageReportPath: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
+
+  - template: '../../../testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - PrepareSonarCloudDisabled
+        - PrepareSonarCloudWithCustomParameters
+      expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Prepare SonarCloud disabled'**
+        Step **'Prepare SonarCloud analysis'** result must be: **Skipped**
+
+        Job **'Prepare SonarCloud with custom parameters'**
+        Step **'Prepare SonarCloud analysis'** result must be: **Succeeded**
