@@ -15,6 +15,26 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
+  - name: sonarCloudServiceConnection
+    displayName: 'SonarCloud service connection name'
+    type: string
+    default: 'SonarCloud'
+
+  - name: sonarCloudOrganization
+    displayName: 'SonarCloud organization'
+    type: string
+    default: ''
+
+  - name: sonarCloudProjectKey
+    displayName: 'SonarCloud project key'
+    type: string
+    default: ''
+
+  - name: sonarCloudProjectName
+    displayName: 'SonarCloud project name'
+    type: string
+    default: ''
+
 trigger:
   batch: true
   paths:
@@ -55,10 +75,10 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           enable: true
-          serviceConnection: 'SonarCloud'
-          organization: 'my-organization'
-          projectKey: 'my-project-key'
-          projectName: 'My Project'
+          serviceConnection: ${{ parameters.sonarCloudServiceConnection }}
+          organization: ${{ parameters.sonarCloudOrganization }}
+          projectKey: ${{ parameters.sonarCloudProjectKey }}
+          projectName: ${{ parameters.sonarCloudProjectName }}
           projectBaseDir: '$(Build.SourcesDirectory)/src'
           coverageReportPath: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
 
