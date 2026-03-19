@@ -28,12 +28,22 @@ parameters:
   - name: projectKey
     displayName: 'SonarCloud project key'
     type: string
-    default: 'GodelTech_azuredevops-pipelines_test_SonarCloud_prepare'
+    default: 'GodelTech_azuredevops-pipelines_test_dotnet_SonarCloud_prepare'
 
   - name: projectName
     displayName: 'SonarCloud project name'
     type: string
-    default: 'azuredevops-pipelines test SonarCloud prepare'
+    default: 'azuredevops-pipelines test dotnet SonarCloud prepare'
+
+  - name: projectBaseDir
+    displayName: '.NET project base directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+
+  - name: coverageReportPath
+    displayName: 'Coverage report path'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core/TestResults/Coverage/SonarQube.xml'
 
 trigger:
   batch: true
@@ -79,8 +89,8 @@ jobs:
           organization: ${{ parameters.organization }}
           projectKey: ${{ parameters.projectKey }}
           projectName: ${{ parameters.projectName }}
-          projectBaseDir: '$(Build.SourcesDirectory)/src'
-          coverageReportPath: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
+          projectBaseDir: ${{ parameters.projectBaseDir }}
+          coverageReportPath: ${{ parameters.coverageReportPath }}
 
   - template: '../../../testHelpers/build-summary-validation.job.yml'
     parameters:

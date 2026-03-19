@@ -20,7 +20,13 @@ parameters:
     type: object
     # prettier-ignore
     default: {
-      enable: false
+      enable: true,
+      serviceConnection: 'SonarCloud',
+      organization: 'godeltech',
+      projectKey: 'GodelTech_azuredevops-pipelines_test_dotnet_build_job',
+      projectName: 'azuredevops-pipelines test dotnet build.job',
+      projectBaseDir: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core',
+      coverageReportPath: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core/TestResults/Coverage/SonarQube.xml'
     }
 
   - name: dotnet
