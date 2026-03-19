@@ -1,0 +1,21 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: serviceConnections
+    displayName: 'NuGet service connections'
+    type: object
+    default: []
+
+steps:
+  - task: NuGetAuthenticate@1
+    displayName: 'Configure NuGet service connections'
+    condition: |
+      and(
+        succeeded(),
+        gt(${{ length(parameters.serviceConnections) }}, 0)
+      )
+    inputs:
+      nuGetServiceConnections: ${{ join(',', parameters.serviceConnections) }}

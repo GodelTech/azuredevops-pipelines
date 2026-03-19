@@ -61,15 +61,11 @@ jobs:
           ${{ if ne(parameters.sonarCloud.coverageReportPath, '') }}:
             coverageReportPath: ${{ parameters.sonarCloud.coverageReportPath }}
 
-      - task: NuGetAuthenticate@1
-        displayName: 'Configure NuGet service connections'
-        condition: |
-          and(
-            succeeded(),
-            gt(${{ length(coalesce(parameters.dotnet.nuGetServiceConnections, [])) }}, 0)
-          )
-        inputs:
-          nuGetServiceConnections: ${{ join(',', parameters.dotnet.nuGetServiceConnections) }}
+      - template: 'NuGet/authenticate.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if parameters.dotnet.nuGetServiceConnections }}:
+            nuGetServiceConnections: ${{ parameters.dotnet.nuGetServiceConnections }}
 
       - template: 'dotnet/install-SDK.yml'
         parameters:
