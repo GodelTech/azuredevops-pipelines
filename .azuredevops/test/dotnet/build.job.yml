@@ -54,13 +54,6 @@ jobs:
   - template: '../../../dotnet/build.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      jobName: BuildDotnetDefaults
-      jobDisplayName: 'Build .NET with defaults'
-      vmImage: ${{ parameters.vmImage }}
-
-  - template: '../../../dotnet/build.job.yml'
-    parameters:
-      enableBuildDebug: ${{ parameters.enableBuildDebug }}
       jobName: BuildDotnetDummyProject
       jobDisplayName: 'Build .NET dummy project'
       vmImage: ${{ parameters.vmImage }}
@@ -72,12 +65,8 @@ jobs:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - BuildDotnetDefaults
         - BuildDotnetDummyProject
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'Build .NET with defaults'**
-        Step **'Use .NET SDK'** result must be: **Succeeded**
-
         Job **'Build .NET dummy project'**
         Step **'Use .NET SDK'** result must be: **Succeeded**
