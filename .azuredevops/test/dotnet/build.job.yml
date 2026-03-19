@@ -15,6 +15,19 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
+  - name: sonarCloud
+    displayName: 'SonarCloud parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: false
+    }
+
+  - name: dotnet
+    displayName: '.NET parameters'
+    type: object
+    default: {}
+
 trigger:
   batch: true
   paths:
@@ -42,11 +55,11 @@ jobs:
   - template: '../../../dotnet/build.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      jobName: BuildDotnetWithWorkingDirectory
-      jobDisplayName: 'Build .NET with custom working directory'
+      jobName: BuildDotnetDummyProject
+      jobDisplayName: 'Build .NET dummy project'
       vmImage: ${{ parameters.vmImage }}
-      dotnet:
-        workingDirectory: '$(Build.SourcesDirectory)'
+      sonarCloud: ${{ parameters.sonarCloud }}
+      dotnet: ${{ parameters.dotnet }}
 
   - template: '../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
@@ -54,11 +67,11 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
         - BuildDotnetDefaults
-        - BuildDotnetWithWorkingDirectory
+        - BuildDotnetDummyProject
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
         Job **'Build .NET with defaults'**
         Step **'Use .NET SDK'** result must be: **Succeeded**
 
-        Job **'Build .NET with custom working directory'**
+        Job **'Build .NET dummy project'**
         Step **'Use .NET SDK'** result must be: **Succeeded**
