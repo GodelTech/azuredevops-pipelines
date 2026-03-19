@@ -70,3 +70,8 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.dotnet.workingDirectory }}
+
+      - script: dotnet restore
+        displayName: 'dotnet restore'
+        ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
+          workingDirectory: ${{ parameters.dotnet.workingDirectory }}
