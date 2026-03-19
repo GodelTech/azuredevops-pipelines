@@ -55,7 +55,7 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           enable: true
-          serviceConnection: 'MySonarCloud'
+          serviceConnection: 'SonarCloud'
           organization: 'my-organization'
           projectKey: 'my-project-key'
           projectName: 'My Project'
