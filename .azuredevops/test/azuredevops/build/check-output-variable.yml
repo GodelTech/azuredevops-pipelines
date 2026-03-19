@@ -39,12 +39,12 @@ jobs:
     steps:
       - checkout: none
 
-      - bash: |
+      - script: |
           echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
         displayName: 'Set output variable "testOutput"'
         name: set_output_variable_step
 
-      - bash: |
+      - script: |
           echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
         displayName: 'Show output variable "testOutput"'
 

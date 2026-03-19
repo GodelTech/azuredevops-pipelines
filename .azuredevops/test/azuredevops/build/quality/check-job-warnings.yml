@@ -39,7 +39,7 @@ jobs:
     steps:
       - checkout: none
 
-      - bash: |
+      - script: |
           echo "##vso[task.logissue type=warning]Test warning message (SetBuildWarning)."
         displayName: 'Set build warning'
 
@@ -65,7 +65,7 @@ jobs:
     steps:
       - checkout: none
 
-      - bash: |
+      - script: |
           echo "##vso[task.logissue type=warning]Test warning message (SetAndCheckBuildWarnings)."
         displayName: 'Set build warning'
 

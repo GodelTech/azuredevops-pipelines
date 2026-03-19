@@ -39,7 +39,7 @@ jobs:
       jobDisplayName: 'Job with checkout'
       vmImage: ${{ parameters.vmImage }}
       jobSteps:
-        - bash: |
+        - script: |
             echo 'Job with checkout'
           displayName: 'Print message'
 
@@ -51,7 +51,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       checkOutSourceCode: false
       jobSteps:
-        - bash: |
+        - script: |
             echo 'Job without checkout'
           displayName: 'Print message'
 

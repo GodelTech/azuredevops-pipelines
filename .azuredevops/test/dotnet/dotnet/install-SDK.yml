@@ -37,6 +37,12 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
+      - pwsh: |
+          Copy-Item '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core/global.json' `
+            -Destination '$(Build.SourcesDirectory)/global.json' `
+            -Force
+        displayName: 'Copy global.json to $(Build.SourcesDirectory)'
+
       - template: '../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
@@ -49,13 +55,15 @@ jobs:
       - template: '../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: '$(Build.SourcesDirectory)'
+          workingDirectory: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
 
   - job: InstallSDKVersions
     displayName: 'Install .NET SDK versions'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
+      - checkout: none
+
       - template: '../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
