@@ -44,7 +44,8 @@ jobs:
       - template: 'SonarCloud/prepare.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          enable: ${{ parameters.sonarCloud.enable }}
+          ${{ if parameters.sonarCloud.enable }}:
+            enable: ${{ parameters.sonarCloud.enable }}
           ${{ if ne(parameters.sonarCloud.serviceConnection, '') }}:
             serviceConnection: ${{ parameters.sonarCloud.serviceConnection }}
           ${{ if ne(parameters.sonarCloud.organization, '') }}:
