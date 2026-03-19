@@ -28,12 +28,12 @@ parameters:
   - name: projectKey
     displayName: 'SonarCloud project key'
     type: string
-    default: ''
+    default: 'GodelTech_azuredevops-pipelines_test_SonarCloud_prepare'
 
   - name: projectName
     displayName: 'SonarCloud project name'
     type: string
-    default: ''
+    default: 'azuredevops-pipelines test SonarCloud prepare'
 
 trigger:
   batch: true
