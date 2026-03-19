@@ -67,3 +67,4 @@ jobs:
       buildResultDescription: |
         Job **'Cancel build'**
         Step **'Cancel build'** result must be: **Succeeded**
+      warningThreshold: 1
