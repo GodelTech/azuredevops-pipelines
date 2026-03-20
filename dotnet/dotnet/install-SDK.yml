@@ -7,7 +7,7 @@ parameters:
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
-    default: '$(Build.SourcesDirectory)'
+    default: ''
 
   - name: versions
     displayName: '.NET SDK versions'
@@ -30,3 +30,5 @@ steps:
         inputs:
           packageType: 'sdk'
           version: ${{ version }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}

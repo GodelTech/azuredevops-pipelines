@@ -34,6 +34,11 @@ parameters:
     type: object
     default: {}
 
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
 jobs:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
@@ -54,10 +59,10 @@ jobs:
             projectKey: ${{ parameters.sonarCloud.projectKey }}
           ${{ if ne(parameters.sonarCloud.projectName, '') }}:
             projectName: ${{ parameters.sonarCloud.projectName }}
-          ${{ if ne(parameters.sonarCloud.projectBaseDir, '') }}:
-            projectBaseDir: ${{ parameters.sonarCloud.projectBaseDir }}
           ${{ if ne(parameters.sonarCloud.coverageReportPath, '') }}:
             coverageReportPath: ${{ parameters.sonarCloud.coverageReportPath }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
 
       - template: 'NuGet/authenticate.yml'
         parameters:
@@ -75,3 +80,19 @@ jobs:
         displayName: 'dotnet restore'
         ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
           workingDirectory: ${{ parameters.dotnet.workingDirectory }}
+
+      - template: 'dotnet/build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.dotnet.projects, '') }}:
+            projects: ${{ parameters.dotnet.projects }}
+          ${{ if ne(parameters.dotnet.configuration, '') }}:
+            configuration: ${{ parameters.dotnet.configuration }}
+          ${{ if ne(parameters.dotnet.verbosity, '') }}:
+            verbosity: ${{ parameters.dotnet.verbosity }}
+          ${{ if parameters.dotnet.noRestore }}:
+            noRestore: ${{ parameters.dotnet.noRestore }}
+          ${{ if parameters.dotnet.selfContained }}:
+            selfContained: ${{ parameters.dotnet.selfContained }}
+          ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.dotnet.workingDirectory }}

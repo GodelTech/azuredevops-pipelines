@@ -1,0 +1,60 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: projects
+    displayName: 'Projects to build'
+    type: string
+    default: ''
+
+  - name: configuration
+    displayName: 'Build configuration'
+    type: string
+    default: 'Release'
+
+  - name: verbosity
+    displayName: 'MSBuild verbosity level'
+    type: string
+    default: 'minimal'
+    values:
+      - quiet
+      - minimal
+      - normal
+      - detailed
+      - diagnostic
+
+  - name: noRestore
+    displayName: 'Do not restore packages before building'
+    type: boolean
+    default: true
+
+  - name: selfContained
+    displayName: 'Publish the .NET runtime with the application'
+    type: boolean
+    default: false
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - pwsh: |
+      $args = "--configuration ${{ parameters.configuration }}"
+      $args += " --verbosity ${{ parameters.verbosity }}"
+      if (${{ parameters.noRestore }}) { $args += " --no-restore" }
+      if (${{ parameters.selfContained }}) { $args += " --self-contained" }
+      Write-Host "##vso[task.setvariable variable=dotnetBuildArguments]$args"
+    displayName: 'Set dotnet build arguments'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
+    inputs:
+      command: 'build'
+      ${{ if ne(parameters.projects, '') }}:
+        projects: ${{ parameters.projects }}
+      arguments: $(dotnetBuildArguments)
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}

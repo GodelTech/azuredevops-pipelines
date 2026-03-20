@@ -31,15 +31,15 @@ parameters:
     type: string
     default: ''
 
-  - name: projectBaseDir
-    displayName: '.NET project base directory'
-    type: string
-    default: '$(Build.SourcesDirectory)'
-
   - name: coverageReportPath
     displayName: 'Coverage report path'
     type: string
     default: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
 
 steps:
   - task: SonarCloudPrepare@4
@@ -58,6 +58,10 @@ steps:
       projectName: ${{ parameters.projectName }}
       # https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/analysis-parameters/parameters-not-settable-in-ui
       # https://docs.sonarsource.com/sonarqube-cloud/enriching/test-coverage/generic-test-data
-      extraProperties: |
-        sonar.projectBaseDir="${{ parameters.projectBaseDir }}"
-        sonar.coverageReportPaths="${{ parameters.coverageReportPath }}"
+      ${{ if eq(parameters.workingDirectory, '') }}:
+        extraProperties: |
+          sonar.coverageReportPaths="${{ parameters.coverageReportPath }}"
+      ${{ else }}:
+        extraProperties: |
+          sonar.coverageReportPaths="${{ parameters.coverageReportPath }}"
+          sonar.projectBaseDir="${{ parameters.workingDirectory }}"

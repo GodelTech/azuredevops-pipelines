@@ -25,17 +25,18 @@ parameters:
       organization: 'godeltech',
       projectKey: 'GodelTech_azuredevops-pipelines_test_dotnet_build_job',
       projectName: 'azuredevops-pipelines test dotnet build.job',
-      projectBaseDir: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core',
       coverageReportPath: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core/TestResults/Coverage/SonarQube.xml'
     }
 
   - name: dotnet
     displayName: '.NET parameters'
     type: object
-    # prettier-ignore
-    default: {
-      workingDirectory: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
-    }
+    default: {}
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
 
 trigger:
   batch: true
@@ -62,6 +63,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       sonarCloud: ${{ parameters.sonarCloud }}
       dotnet: ${{ parameters.dotnet }}
+      workingDirectory: ${{ parameters.workingDirectory }}
 
   - template: '../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
