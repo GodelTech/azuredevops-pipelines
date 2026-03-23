@@ -49,7 +49,7 @@ jobs:
       - template: 'SonarCloud/prepare.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if parameters.sonarCloud.enable }}:
+          ${{ if ne(parameters.sonarCloud.enable, '') }}:
             enable: ${{ parameters.sonarCloud.enable }}
           ${{ if ne(parameters.sonarCloud.serviceConnection, '') }}:
             serviceConnection: ${{ parameters.sonarCloud.serviceConnection }}
@@ -90,9 +90,17 @@ jobs:
             configuration: ${{ parameters.dotnet.configuration }}
           ${{ if ne(parameters.dotnet.verbosity, '') }}:
             verbosity: ${{ parameters.dotnet.verbosity }}
-          ${{ if parameters.dotnet.noRestore }}:
+          ${{ if ne(parameters.dotnet.noRestore, '') }}:
             noRestore: ${{ parameters.dotnet.noRestore }}
-          ${{ if parameters.dotnet.selfContained }}:
+          ${{ if ne(parameters.dotnet.selfContained, '') }}:
             selfContained: ${{ parameters.dotnet.selfContained }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: 'dotnet/format.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.dotnet.checkCodeFormatting, '') }}:
+            enable: ${{ parameters.dotnet.checkCodeFormatting }}
+          ${{ if ne(parameters.dotnet.noRestore, '') }}:
+            noRestore: ${{ parameters.dotnet.noRestore }}

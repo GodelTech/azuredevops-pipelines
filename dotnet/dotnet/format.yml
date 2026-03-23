@@ -1,0 +1,35 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable dotnet format'
+    type: boolean
+    default: true
+
+  - name: noRestore
+    displayName: 'Do not restore packages before building'
+    type: boolean
+    default: true
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet format'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    inputs:
+      command: 'custom'
+      custom: 'format'
+      ${{ if eq(parameters.noRestore, true) }}:
+        arguments: >-
+          --verify-no-changes
+          --no-restore
+      ${{ else }}:
+        arguments: >-
+          --verify-no-changes
