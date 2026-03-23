@@ -44,10 +44,13 @@ steps:
   - pwsh: |
       $args = "--configuration ${{ parameters.configuration }}"
       $args += " --verbosity ${{ parameters.verbosity }}"
-      if (${{ parameters.noRestore }}) { $args += " --no-restore" }
-      if (${{ parameters.selfContained }}) { $args += " --self-contained" }
+      if ([System.Convert]::ToBoolean($env:NO_RESTORE)) { $args += " --no-restore" }
+      if ([System.Convert]::ToBoolean($env:SELF_CONTAINED)) { $args += " --self-contained" }
       Write-Host "##vso[task.setvariable variable=dotnetBuildArguments]$args"
     displayName: 'Set dotnet build arguments'
+    env:
+      NO_RESTORE: ${{ parameters.noRestore }}
+      SELF_CONTAINED: ${{ parameters.selfContained }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet build'
