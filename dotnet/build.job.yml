@@ -73,13 +73,13 @@ jobs:
       - template: 'dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
-            workingDirectory: ${{ parameters.dotnet.workingDirectory }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
 
       - script: dotnet restore
         displayName: 'dotnet restore'
-        ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
-          workingDirectory: ${{ parameters.dotnet.workingDirectory }}
+        ${{ if ne(parameters.workingDirectory, '') }}:
+          workingDirectory: ${{ parameters.workingDirectory }}
 
       - template: 'dotnet/build.yml'
         parameters:
@@ -94,5 +94,5 @@ jobs:
             noRestore: ${{ parameters.dotnet.noRestore }}
           ${{ if parameters.dotnet.selfContained }}:
             selfContained: ${{ parameters.dotnet.selfContained }}
-          ${{ if ne(parameters.dotnet.workingDirectory, '') }}:
-            workingDirectory: ${{ parameters.dotnet.workingDirectory }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
