@@ -1,0 +1,94 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable NuGet outdated packages check'
+    type: boolean
+    default: true
+
+  - name: includePrerelease
+    displayName: 'Include prerelease packages in the outdated check'
+    type: boolean
+    default: false
+
+  - name: includeTransitive
+    displayName: 'Include transitive packages in the outdated check'
+    type: boolean
+    default: false
+
+  - name: noRestore
+    displayName: 'Do not restore packages before checking'
+    type: boolean
+    default: true
+
+  - name: stepResult
+    displayName: 'Step result when outdated packages are found'
+    type: string
+    default: 'SucceededWithIssues'
+    values:
+      - Succeeded
+      - SucceededWithIssues
+      - Failed
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - pwsh: |
+      $includePrerelease = [System.Convert]::ToBoolean($env:INCLUDE_PRERELEASE)
+      $includeTransitive = [System.Convert]::ToBoolean($env:INCLUDE_TRANSITIVE)
+      $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
+      $stepResult = $env:STEP_RESULT
+
+      $command = 'dotnet list package --outdated --format json'
+      if ($includePrerelease) { $command += ' --include-prerelease' }
+      if ($includeTransitive) { $command += ' --include-transitive' }
+      if ($noRestore) { $command += ' --no-restore' }
+
+      $output = Invoke-Expression $command
+      Write-Host $output
+
+      $json = $output | ConvertFrom-Json
+      $outdatedPackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
+        $_.frameworks | Where-Object { $_ } | ForEach-Object {
+          @($_.topLevelPackages) + @($_.transitivePackages) | Where-Object { $_ }
+        }
+      } | Where-Object { $_.latestVersion -and $_.resolvedVersion -ne $_.latestVersion })
+
+      if ($outdatedPackages.Count -gt 0) {
+        $message = "Outdated NuGet packages found."
+        switch ($stepResult) {
+          'SucceededWithIssues' {
+            Write-Host "##vso[task.logissue type=warning]$message"
+            Write-Host "##vso[task.complete result=SucceededWithIssues;]$message"
+          }
+          'Failed' {
+            Write-Host "##vso[task.logissue type=error]$message"
+            Write-Host "##vso[task.complete result=Failed;]$message"
+          }
+          default {
+            Write-Host "##vso[task.logissue type=warning]$message"
+          }
+        }
+      } else {
+        Write-Host "All NuGet packages are up to date."
+      }
+    displayName: 'Check outdated NuGet packages'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    ${{ if ne(parameters.workingDirectory, '') }}:
+      workingDirectory: ${{ parameters.workingDirectory }}
+    env:
+      INCLUDE_PRERELEASE: ${{ parameters.includePrerelease }}
+      INCLUDE_TRANSITIVE: ${{ parameters.includeTransitive }}
+      NO_RESTORE: ${{ parameters.noRestore }}
+      STEP_RESULT: ${{ parameters.stepResult }}

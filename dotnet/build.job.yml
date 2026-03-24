@@ -100,7 +100,23 @@ jobs:
       - template: 'dotnet/format.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.dotnet.checkCodeFormatting, '') }}:
-            enable: ${{ parameters.dotnet.checkCodeFormatting }}
+          ${{ if ne(parameters.dotnet.checks.codeFormatting.enable, '') }}:
+            enable: ${{ parameters.dotnet.checks.codeFormatting.enable }}
           ${{ if ne(parameters.dotnet.noRestore, '') }}:
             noRestore: ${{ parameters.dotnet.noRestore }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: 'NuGet/check-packages.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.dotnet.checks.outdatedPackages, '') }}:
+            outdatedPackages: ${{ parameters.dotnet.checks.outdatedPackages }}
+          ${{ if ne(parameters.dotnet.checks.deprecatedPackages, '') }}:
+            deprecatedPackages: ${{ parameters.dotnet.checks.deprecatedPackages }}
+          ${{ if ne(parameters.dotnet.checks.vulnerablePackages, '') }}:
+            vulnerablePackages: ${{ parameters.dotnet.checks.vulnerablePackages }}
+          ${{ if ne(parameters.dotnet.noRestore, '') }}:
+            noRestore: ${{ parameters.dotnet.noRestore }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}

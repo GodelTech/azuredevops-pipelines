@@ -1,0 +1,91 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: outdatedPackages
+    displayName: 'Parameters for outdated packages check'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      includePrerelease: false,
+      includeTransitive: false,
+      stepResult: 'SucceededWithIssues'
+    }
+
+  - name: deprecatedPackages
+    displayName: 'Parameters for deprecated packages check'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      includeTransitive: true,
+      stepResult: 'Failed'
+    }
+
+  - name: vulnerablePackages
+    displayName: 'Parameters for vulnerable packages check'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      includeTransitive: true,
+      stepResult: 'Failed'
+    }
+
+  - name: noRestore
+    displayName: 'Do not restore packages before checking'
+    type: boolean
+    default: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - template: 'check-packages/check-outdated.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.outdatedPackages.enable, '') }}:
+        enable: ${{ parameters.outdatedPackages.enable }}
+      ${{ if ne(parameters.outdatedPackages.includePrerelease, '') }}:
+        includePrerelease: ${{ parameters.outdatedPackages.includePrerelease }}
+      ${{ if ne(parameters.outdatedPackages.includeTransitive, '') }}:
+        includeTransitive: ${{ parameters.outdatedPackages.includeTransitive }}
+      ${{ if ne(parameters.noRestore, '') }}:
+        noRestore: ${{ parameters.noRestore }}
+      ${{ if ne(parameters.outdatedPackages.stepResult, '') }}:
+        stepResult: ${{ parameters.outdatedPackages.stepResult }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  - template: 'check-packages/check-deprecated.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.deprecatedPackages.enable, '') }}:
+        enable: ${{ parameters.deprecatedPackages.enable }}
+      ${{ if ne(parameters.deprecatedPackages.includeTransitive, '') }}:
+        includeTransitive: ${{ parameters.deprecatedPackages.includeTransitive }}
+      ${{ if ne(parameters.noRestore, '') }}:
+        noRestore: ${{ parameters.noRestore }}
+      ${{ if ne(parameters.deprecatedPackages.stepResult, '') }}:
+        stepResult: ${{ parameters.deprecatedPackages.stepResult }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  - template: 'check-packages/check-vulnerable.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.vulnerablePackages.enable, '') }}:
+        enable: ${{ parameters.vulnerablePackages.enable }}
+      ${{ if ne(parameters.vulnerablePackages.includeTransitive, '') }}:
+        includeTransitive: ${{ parameters.vulnerablePackages.includeTransitive }}
+      ${{ if ne(parameters.noRestore, '') }}:
+        noRestore: ${{ parameters.noRestore }}
+      ${{ if ne(parameters.vulnerablePackages.stepResult, '') }}:
+        stepResult: ${{ parameters.vulnerablePackages.stepResult }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}

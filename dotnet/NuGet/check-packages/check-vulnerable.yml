@@ -1,0 +1,86 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable NuGet vulnerable packages check'
+    type: boolean
+    default: true
+
+  - name: includeTransitive
+    displayName: 'Include transitive packages in the vulnerable check'
+    type: boolean
+    default: true
+
+  - name: noRestore
+    displayName: 'Do not restore packages before checking'
+    type: boolean
+    default: true
+
+  - name: stepResult
+    displayName: 'Step result when vulnerable packages are found'
+    type: string
+    default: 'Failed'
+    values:
+      - Succeeded
+      - SucceededWithIssues
+      - Failed
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - pwsh: |
+      $includeTransitive = [System.Convert]::ToBoolean($env:INCLUDE_TRANSITIVE)
+      $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
+      $stepResult = $env:STEP_RESULT
+
+      $command = 'dotnet list package --vulnerable --format json'
+      if ($includeTransitive) { $command += ' --include-transitive' }
+      if ($noRestore) { $command += ' --no-restore' }
+
+      $output = Invoke-Expression $command
+      Write-Host $output
+
+      $json = $output | ConvertFrom-Json
+      $vulnerablePackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
+        $_.frameworks | Where-Object { $_ } | ForEach-Object {
+          @($_.topLevelPackages) + @($_.transitivePackages) | Where-Object { $_ }
+        }
+      } | Where-Object { $_.vulnerabilities -and $_.vulnerabilities.Count -gt 0 })
+
+      if ($vulnerablePackages.Count -gt 0) {
+        $message = "Vulnerable NuGet packages found."
+        switch ($stepResult) {
+          'SucceededWithIssues' {
+            Write-Host "##vso[task.logissue type=warning]$message"
+            Write-Host "##vso[task.complete result=SucceededWithIssues;]$message"
+          }
+          'Failed' {
+            Write-Host "##vso[task.logissue type=error]$message"
+            Write-Host "##vso[task.complete result=Failed;]$message"
+          }
+          default {
+            Write-Host "##vso[task.logissue type=warning]$message"
+          }
+        }
+      } else {
+        Write-Host "No vulnerable NuGet packages found."
+      }
+    displayName: 'Check vulnerable NuGet packages'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    ${{ if ne(parameters.workingDirectory, '') }}:
+      workingDirectory: ${{ parameters.workingDirectory }}
+    env:
+      INCLUDE_TRANSITIVE: ${{ parameters.includeTransitive }}
+      NO_RESTORE: ${{ parameters.noRestore }}
+      STEP_RESULT: ${{ parameters.stepResult }}
