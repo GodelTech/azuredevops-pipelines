@@ -56,17 +56,17 @@ steps:
       $selfContained = [System.Convert]::ToBoolean($env:SELF_CONTAINED)
       $publishBinlog = [System.Convert]::ToBoolean($env:PUBLISH_BINLOG)
 
-      $args = "--configuration ${{ parameters.configuration }}"
-      $args += " --verbosity ${{ parameters.verbosity }}"
-      if ($noRestore) { $args += " --no-restore" }
-      if ($selfContained) { $args += " --self-contained" }
+      $buildArgs = "--configuration ${{ parameters.configuration }}"
+      $buildArgs += " --verbosity ${{ parameters.verbosity }}"
+      if ($noRestore) { $buildArgs += " --no-restore" }
+      if ($selfContained) { $buildArgs += " --self-contained" }
       if ($publishBinlog) {
         $binlogDir = "$(Agent.TempDirectory)/dotnet-reports"
         New-Item -ItemType Directory -Force -Path $binlogDir | Out-Null
-        $args += " -bl:`"$binlogDir/msbuild.binlog`""
+        $buildArgs += " -bl:`"$binlogDir/msbuild.binlog`""
       }
 
-      Write-Host "##vso[task.setvariable variable=dotnetBuildArguments]$args"
+      Write-Host "##vso[task.setvariable variable=dotnetBuildArguments]$buildArgs"
     displayName: 'Set dotnet build arguments'
     env:
       NO_RESTORE: ${{ parameters.noRestore }}

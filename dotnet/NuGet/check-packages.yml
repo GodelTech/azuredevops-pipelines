@@ -12,6 +12,7 @@ parameters:
       enable: true,
       includePrerelease: false,
       includeTransitive: true,
+      artifactName: 'nuget-outdated-report',
       stepResult: 'SucceededWithIssues',
       transitiveStepResult: 'Succeeded'
     }
@@ -23,6 +24,7 @@ parameters:
     default: {
       enable: true,
       includeTransitive: true,
+      artifactName: 'nuget-deprecated-report',
       stepResult: 'Failed',
       transitiveStepResult: 'SucceededWithIssues'
     }
@@ -34,6 +36,7 @@ parameters:
     default: {
       enable: true,
       includeTransitive: true,
+      artifactName: 'nuget-vulnerable-report',
       stepResult: 'Failed',
       transitiveStepResult: 'Failed'
     }
@@ -65,6 +68,8 @@ steps:
         includeTransitive: ${{ parameters.outdatedPackages.includeTransitive }}
       noRestore: ${{ parameters.noRestore }}
       publishReport: ${{ parameters.publishReport }}
+      ${{ if ne(parameters.outdatedPackages.artifactName, '') }}:
+        artifactName: ${{ parameters.outdatedPackages.artifactName }}
       ${{ if ne(parameters.outdatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.outdatedPackages.stepResult }}
       ${{ if ne(parameters.outdatedPackages.transitiveStepResult, '') }}:
@@ -81,6 +86,8 @@ steps:
         includeTransitive: ${{ parameters.deprecatedPackages.includeTransitive }}
       noRestore: ${{ parameters.noRestore }}
       publishReport: ${{ parameters.publishReport }}
+      ${{ if ne(parameters.deprecatedPackages.artifactName, '') }}:
+        artifactName: ${{ parameters.deprecatedPackages.artifactName }}
       ${{ if ne(parameters.deprecatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.deprecatedPackages.stepResult }}
       ${{ if ne(parameters.deprecatedPackages.transitiveStepResult, '') }}:
@@ -97,6 +104,8 @@ steps:
         includeTransitive: ${{ parameters.vulnerablePackages.includeTransitive }}
       noRestore: ${{ parameters.noRestore }}
       publishReport: ${{ parameters.publishReport }}
+      ${{ if ne(parameters.vulnerablePackages.artifactName, '') }}:
+        artifactName: ${{ parameters.vulnerablePackages.artifactName }}
       ${{ if ne(parameters.vulnerablePackages.stepResult, '') }}:
         stepResult: ${{ parameters.vulnerablePackages.stepResult }}
       ${{ if ne(parameters.vulnerablePackages.transitiveStepResult, '') }}:

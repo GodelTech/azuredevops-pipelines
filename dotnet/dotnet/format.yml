@@ -36,14 +36,14 @@ steps:
 
       $reportDir = "$(Agent.TempDirectory)/dotnet-reports"
 
-      $args = '--verify-no-changes'
-      if ($noRestore) { $args += ' --no-restore' }
+      $formatArgs = '--verify-no-changes'
+      if ($noRestore) { $formatArgs += ' --no-restore' }
       if ($publishReport) {
         New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
-        $args += " --report `"$reportDir`""
+        $formatArgs += " --report `"$reportDir`""
       }
 
-      Write-Host "##vso[task.setvariable variable=dotnetFormatArguments]$args"
+      Write-Host "##vso[task.setvariable variable=dotnetFormatArguments]$formatArgs"
     displayName: 'Set dotnet format arguments'
     condition: |
       and

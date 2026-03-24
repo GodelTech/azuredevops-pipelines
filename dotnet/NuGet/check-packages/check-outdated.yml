@@ -17,7 +17,7 @@ parameters:
   - name: includeTransitive
     displayName: 'Include transitive packages in the outdated check'
     type: boolean
-    default: false
+    default: true
 
   - name: noRestore
     displayName: 'Do not restore packages before checking'
