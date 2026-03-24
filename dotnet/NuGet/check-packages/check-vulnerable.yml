@@ -22,7 +22,7 @@ parameters:
   - name: publishReport
     displayName: 'Publish NuGet vulnerable packages report as pipeline artifact'
     type: boolean
-    default: false
+    default: true
 
   - name: artifactName
     displayName: 'Artifact name for the report'

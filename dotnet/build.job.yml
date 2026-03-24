@@ -104,6 +104,8 @@ jobs:
             enable: ${{ parameters.dotnet.checks.codeFormatting.enable }}
           ${{ if ne(parameters.dotnet.noRestore, '') }}:
             noRestore: ${{ parameters.dotnet.noRestore }}
+          ${{ if ne(parameters.dotnet.checks.publishReport, '') }}:
+            publishReport: ${{ parameters.dotnet.checks.publishReport }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -118,5 +120,7 @@ jobs:
             vulnerablePackages: ${{ parameters.dotnet.checks.vulnerablePackages }}
           ${{ if ne(parameters.dotnet.noRestore, '') }}:
             noRestore: ${{ parameters.dotnet.noRestore }}
+          ${{ if ne(parameters.dotnet.checks.publishReport, '') }}:
+            publishReport: ${{ parameters.dotnet.checks.publishReport }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}

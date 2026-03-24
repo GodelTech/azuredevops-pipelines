@@ -43,7 +43,7 @@ parameters:
   - name: publishReport
     displayName: 'Publish packages check reports as pipeline artifacts'
     type: boolean
-    default: false
+    default: true
 
   - name: workingDirectory
     displayName: 'Working directory'

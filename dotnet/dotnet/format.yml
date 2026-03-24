@@ -14,13 +14,42 @@ parameters:
     type: boolean
     default: true
 
+  - name: publishReport
+    displayName: 'Publish dotnet format report as pipeline artifact'
+    type: boolean
+    default: true
+
+  - name: artifactName
+    displayName: 'Artifact name for the report'
+    type: string
+    default: 'dotnet-format-report'
+
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
     default: ''
 
 steps:
-  - task: DotNetCoreCLI@2
+  - pwsh: |
+      $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
+      $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
+      $artifactName = $env:ARTIFACT_NAME
+
+      $reportDir = "$(Agent.TempDirectory)/dotnet-reports"
+
+      $command = 'dotnet format --verify-no-changes'
+      if ($noRestore) { $command += ' --no-restore' }
+      if ($publishReport) {
+        New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
+        $command += " --report `"$reportDir`""
+      }
+
+      Invoke-Expression $command
+
+      if ($publishReport) {
+        $reportPath = "$reportDir/format-report.json"
+        Write-Host "##vso[artifact.upload containerfolder=dotnet-reports;artifactname=$artifactName]$reportPath"
+      }
     displayName: 'dotnet format'
     condition: |
       and
@@ -28,15 +57,9 @@ steps:
         succeeded(),
         eq(${{ parameters.enable }}, true)
       )
-    inputs:
-      command: 'custom'
-      custom: 'format'
-      ${{ if eq(parameters.noRestore, true) }}:
-        arguments: >-
-          --verify-no-changes
-          --no-restore
-      ${{ else }}:
-        arguments: >-
-          --verify-no-changes
-      ${{ if ne(parameters.workingDirectory, '') }}:
-        workingDirectory: ${{ parameters.workingDirectory }}
+    ${{ if ne(parameters.workingDirectory, '') }}:
+      workingDirectory: ${{ parameters.workingDirectory }}
+    env:
+      NO_RESTORE: ${{ parameters.noRestore }}
+      PUBLISH_REPORT: ${{ parameters.publishReport }}
+      ARTIFACT_NAME: ${{ parameters.artifactName }}
