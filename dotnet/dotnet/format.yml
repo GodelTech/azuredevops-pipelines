@@ -78,7 +78,7 @@ steps:
     condition: |
       and
       (
-        succeeded(),
+        succeededOrFailed(),
         eq(${{ parameters.enable }}, true),
         eq(${{ parameters.publishReport }}, true)
       )
