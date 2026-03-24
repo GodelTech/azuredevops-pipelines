@@ -42,10 +42,14 @@ parameters:
 
 steps:
   - pwsh: |
+      $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
+      $selfContained = [System.Convert]::ToBoolean($env:SELF_CONTAINED)
+
       $args = "--configuration ${{ parameters.configuration }}"
       $args += " --verbosity ${{ parameters.verbosity }}"
-      if ([System.Convert]::ToBoolean($env:NO_RESTORE)) { $args += " --no-restore" }
-      if ([System.Convert]::ToBoolean($env:SELF_CONTAINED)) { $args += " --self-contained" }
+      if ($noRestore) { $args += " --no-restore" }
+      if ($selfContained) { $args += " --self-contained" }
+
       Write-Host "##vso[task.setvariable variable=dotnetBuildArguments]$args"
     displayName: 'Set dotnet build arguments'
     env:

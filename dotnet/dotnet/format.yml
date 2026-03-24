@@ -10,9 +10,14 @@ parameters:
     default: true
 
   - name: noRestore
-    displayName: 'Do not restore packages before building'
+    displayName: 'Do not restore packages before formatting'
     type: boolean
     default: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
 
 steps:
   - task: DotNetCoreCLI@2
@@ -33,3 +38,5 @@ steps:
       ${{ else }}:
         arguments: >-
           --verify-no-changes
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
