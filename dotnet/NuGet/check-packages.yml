@@ -40,6 +40,11 @@ parameters:
     type: boolean
     default: true
 
+  - name: publishReport
+    displayName: 'Publish packages check reports as pipeline artifacts'
+    type: boolean
+    default: false
+
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
@@ -55,8 +60,8 @@ steps:
         includePrerelease: ${{ parameters.outdatedPackages.includePrerelease }}
       ${{ if ne(parameters.outdatedPackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.outdatedPackages.includeTransitive }}
-      ${{ if ne(parameters.noRestore, '') }}:
-        noRestore: ${{ parameters.noRestore }}
+      noRestore: ${{ parameters.noRestore }}
+      publishReport: ${{ parameters.publishReport }}
       ${{ if ne(parameters.outdatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.outdatedPackages.stepResult }}
       ${{ if ne(parameters.workingDirectory, '') }}:
@@ -69,8 +74,8 @@ steps:
         enable: ${{ parameters.deprecatedPackages.enable }}
       ${{ if ne(parameters.deprecatedPackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.deprecatedPackages.includeTransitive }}
-      ${{ if ne(parameters.noRestore, '') }}:
-        noRestore: ${{ parameters.noRestore }}
+      noRestore: ${{ parameters.noRestore }}
+      publishReport: ${{ parameters.publishReport }}
       ${{ if ne(parameters.deprecatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.deprecatedPackages.stepResult }}
       ${{ if ne(parameters.workingDirectory, '') }}:
@@ -83,8 +88,8 @@ steps:
         enable: ${{ parameters.vulnerablePackages.enable }}
       ${{ if ne(parameters.vulnerablePackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.vulnerablePackages.includeTransitive }}
-      ${{ if ne(parameters.noRestore, '') }}:
-        noRestore: ${{ parameters.noRestore }}
+      noRestore: ${{ parameters.noRestore }}
+      publishReport: ${{ parameters.publishReport }}
       ${{ if ne(parameters.vulnerablePackages.stepResult, '') }}:
         stepResult: ${{ parameters.vulnerablePackages.stepResult }}
       ${{ if ne(parameters.workingDirectory, '') }}:

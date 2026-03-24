@@ -19,6 +19,16 @@ parameters:
     type: boolean
     default: true
 
+  - name: publishReport
+    displayName: 'Publish NuGet deprecated packages report as pipeline artifact'
+    type: boolean
+    default: false
+
+  - name: artifactName
+    displayName: 'Artifact name for the report'
+    type: string
+    default: 'nuget-deprecated-report'
+
   - name: stepResult
     displayName: 'Step result when deprecated packages are found'
     type: string
@@ -37,6 +47,8 @@ steps:
   - pwsh: |
       $includeTransitive = [System.Convert]::ToBoolean($env:INCLUDE_TRANSITIVE)
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
+      $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
+      $artifactName = $env:ARTIFACT_NAME
       $stepResult = $env:STEP_RESULT
 
       $command = 'dotnet list package --deprecated --format json'
@@ -45,6 +57,12 @@ steps:
 
       $output = Invoke-Expression $command
       Write-Host $output
+
+      if ($publishReport) {
+        $reportPath = "$(Agent.TempDirectory)/nuget-reports/$artifactName.json"
+        $output | Set-Content -Path $reportPath -Encoding UTF8
+        Write-Host "##vso[artifact.upload containerfolder=nuget-reports;artifactname=$artifactName]$reportPath"
+      }
 
       $json = $output | ConvertFrom-Json
       $deprecatedPackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
@@ -83,4 +101,6 @@ steps:
     env:
       INCLUDE_TRANSITIVE: ${{ parameters.includeTransitive }}
       NO_RESTORE: ${{ parameters.noRestore }}
+      PUBLISH_REPORT: ${{ parameters.publishReport }}
+      ARTIFACT_NAME: ${{ parameters.artifactName }}
       STEP_RESULT: ${{ parameters.stepResult }}
