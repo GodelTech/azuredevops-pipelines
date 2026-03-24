@@ -55,7 +55,6 @@ steps:
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $selfContained = [System.Convert]::ToBoolean($env:SELF_CONTAINED)
       $publishBinlog = [System.Convert]::ToBoolean($env:PUBLISH_BINLOG)
-      $artifactName = $env:ARTIFACT_NAME
 
       $args = "--configuration ${{ parameters.configuration }}"
       $args += " --verbosity ${{ parameters.verbosity }}"
@@ -73,7 +72,6 @@ steps:
       NO_RESTORE: ${{ parameters.noRestore }}
       SELF_CONTAINED: ${{ parameters.selfContained }}
       PUBLISH_BINLOG: ${{ parameters.publishBinlog }}
-      ARTIFACT_NAME: ${{ parameters.artifactName }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet build'
@@ -88,7 +86,7 @@ steps:
   - pwsh: |
       $artifactName = $env:ARTIFACT_NAME
       $binlogPath = "$(Agent.TempDirectory)/dotnet-reports/msbuild.binlog"
-      Write-Host "##vso[artifact.upload containerfolder=dotnet-reports;artifactname=$artifactName]$binlogPath"
+      Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$binlogPath"
     displayName: 'Publish build binary log'
     condition: |
       and

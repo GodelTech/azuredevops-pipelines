@@ -62,7 +62,7 @@ steps:
         $reportPath = "$(Agent.TempDirectory)/nuget-reports/$artifactName.json"
         New-Item -ItemType Directory -Force -Path (Split-Path $reportPath) | Out-Null
         $output | Set-Content -Path $reportPath -Encoding UTF8
-        Write-Host "##vso[artifact.upload containerfolder=nuget-reports;artifactname=$artifactName]$reportPath"
+        Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$reportPath"
       }
 
       $json = $output | ConvertFrom-Json

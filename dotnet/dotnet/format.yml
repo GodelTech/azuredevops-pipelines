@@ -73,7 +73,7 @@ steps:
   - pwsh: |
       $artifactName = $env:ARTIFACT_NAME
       $reportPath = "$(Agent.TempDirectory)/dotnet-reports/format-report.json"
-      Write-Host "##vso[artifact.upload containerfolder=dotnet-reports;artifactname=$artifactName]$reportPath"
+      Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$reportPath"
     displayName: 'Publish format report'
     condition: |
       and
