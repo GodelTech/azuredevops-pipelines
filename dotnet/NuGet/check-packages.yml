@@ -11,8 +11,9 @@ parameters:
     default: {
       enable: true,
       includePrerelease: false,
-      includeTransitive: false,
-      stepResult: 'SucceededWithIssues'
+      includeTransitive: true,
+      stepResult: 'SucceededWithIssues',
+      transitiveStepResult: 'Succeeded'
     }
 
   - name: deprecatedPackages
@@ -22,7 +23,8 @@ parameters:
     default: {
       enable: true,
       includeTransitive: true,
-      stepResult: 'Failed'
+      stepResult: 'Failed',
+      transitiveStepResult: 'SucceededWithIssues'
     }
 
   - name: vulnerablePackages
@@ -32,7 +34,8 @@ parameters:
     default: {
       enable: true,
       includeTransitive: true,
-      stepResult: 'Failed'
+      stepResult: 'Failed',
+      transitiveStepResult: 'Failed'
     }
 
   - name: noRestore
@@ -64,6 +67,8 @@ steps:
       publishReport: ${{ parameters.publishReport }}
       ${{ if ne(parameters.outdatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.outdatedPackages.stepResult }}
+      ${{ if ne(parameters.outdatedPackages.transitiveStepResult, '') }}:
+        transitiveStepResult: ${{ parameters.outdatedPackages.transitiveStepResult }}
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -78,6 +83,8 @@ steps:
       publishReport: ${{ parameters.publishReport }}
       ${{ if ne(parameters.deprecatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.deprecatedPackages.stepResult }}
+      ${{ if ne(parameters.deprecatedPackages.transitiveStepResult, '') }}:
+        transitiveStepResult: ${{ parameters.deprecatedPackages.transitiveStepResult }}
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -92,5 +99,7 @@ steps:
       publishReport: ${{ parameters.publishReport }}
       ${{ if ne(parameters.vulnerablePackages.stepResult, '') }}:
         stepResult: ${{ parameters.vulnerablePackages.stepResult }}
+      ${{ if ne(parameters.vulnerablePackages.transitiveStepResult, '') }}:
+        transitiveStepResult: ${{ parameters.vulnerablePackages.transitiveStepResult }}
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}

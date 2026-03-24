@@ -30,9 +30,18 @@ parameters:
     default: 'nuget-deprecated-report'
 
   - name: stepResult
-    displayName: 'Step result when deprecated packages are found'
+    displayName: 'Step result when deprecated top-level packages are found'
     type: string
     default: 'Failed'
+    values:
+      - Succeeded
+      - SucceededWithIssues
+      - Failed
+
+  - name: transitiveStepResult
+    displayName: 'Step result when deprecated transitive packages are found'
+    type: string
+    default: 'SucceededWithIssues'
     values:
       - Succeeded
       - SucceededWithIssues
@@ -50,6 +59,7 @@ steps:
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
       $artifactName = $env:ARTIFACT_NAME
       $stepResult = $env:STEP_RESULT
+      $transitiveStepResult = $env:TRANSITIVE_STEP_RESULT
 
       $command = 'dotnet list package --deprecated --format json'
       if ($includeTransitive) { $command += ' --include-transitive' }
@@ -67,15 +77,33 @@ steps:
         Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$reportPath"
       }
 
-      $deprecatedPackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
+      $topLevelPackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
         $_.frameworks | Where-Object { $_ } | ForEach-Object {
-          @($_.topLevelPackages) + @($_.transitivePackages) | Where-Object { $_ }
+          @($_.topLevelPackages) | Where-Object { $_ }
         }
       } | Where-Object { $_.deprecationReasons -and $_.deprecationReasons.Count -gt 0 })
 
-      if ($deprecatedPackages.Count -gt 0) {
+      $transitivePackages = @()
+      if ($includeTransitive) {
+        $transitivePackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
+          $_.frameworks | Where-Object { $_ } | ForEach-Object {
+            @($_.transitivePackages) | Where-Object { $_ }
+          }
+        } | Where-Object { $_.deprecationReasons -and $_.deprecationReasons.Count -gt 0 })
+      }
+
+      $severity = @{ 'Failed' = 2; 'SucceededWithIssues' = 1; 'Succeeded' = 0 }
+      $finalResult = 'Succeeded'
+      if ($topLevelPackages.Count -gt 0 -and $severity[$stepResult] -gt $severity[$finalResult]) {
+        $finalResult = $stepResult
+      }
+      if ($transitivePackages.Count -gt 0 -and $severity[$transitiveStepResult] -gt $severity[$finalResult]) {
+        $finalResult = $transitiveStepResult
+      }
+
+      if ($topLevelPackages.Count -gt 0 -or $transitivePackages.Count -gt 0) {
         $message = "Deprecated NuGet packages found."
-        switch ($stepResult) {
+        switch ($finalResult) {
           'SucceededWithIssues' {
             Write-Host "##vso[task.logissue type=warning]$message"
             Write-Host "##vso[task.complete result=SucceededWithIssues;]$message"
@@ -106,3 +134,4 @@ steps:
       PUBLISH_REPORT: ${{ parameters.publishReport }}
       ARTIFACT_NAME: ${{ parameters.artifactName }}
       STEP_RESULT: ${{ parameters.stepResult }}
+      TRANSITIVE_STEP_RESULT: ${{ parameters.transitiveStepResult }}
