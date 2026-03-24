@@ -35,6 +35,16 @@ parameters:
     type: boolean
     default: false
 
+  - name: publishBinlog
+    displayName: 'Publish MSBuild binary log as pipeline artifact'
+    type: boolean
+    default: true
+
+  - name: artifactName
+    displayName: 'Artifact name for the binary log'
+    type: string
+    default: 'dotnet-build-binlog'
+
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
@@ -44,17 +54,26 @@ steps:
   - pwsh: |
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $selfContained = [System.Convert]::ToBoolean($env:SELF_CONTAINED)
+      $publishBinlog = [System.Convert]::ToBoolean($env:PUBLISH_BINLOG)
+      $artifactName = $env:ARTIFACT_NAME
 
       $args = "--configuration ${{ parameters.configuration }}"
       $args += " --verbosity ${{ parameters.verbosity }}"
       if ($noRestore) { $args += " --no-restore" }
       if ($selfContained) { $args += " --self-contained" }
+      if ($publishBinlog) {
+        $binlogDir = "$(Agent.TempDirectory)/dotnet-reports"
+        New-Item -ItemType Directory -Force -Path $binlogDir | Out-Null
+        $args += " -bl:`"$binlogDir/msbuild.binlog`""
+      }
 
       Write-Host "##vso[task.setvariable variable=dotnetBuildArguments]$args"
     displayName: 'Set dotnet build arguments'
     env:
       NO_RESTORE: ${{ parameters.noRestore }}
       SELF_CONTAINED: ${{ parameters.selfContained }}
+      PUBLISH_BINLOG: ${{ parameters.publishBinlog }}
+      ARTIFACT_NAME: ${{ parameters.artifactName }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet build'
@@ -65,3 +84,17 @@ steps:
       arguments: $(dotnetBuildArguments)
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
+
+  - pwsh: |
+      $artifactName = $env:ARTIFACT_NAME
+      $binlogPath = "$(Agent.TempDirectory)/dotnet-reports/msbuild.binlog"
+      Write-Host "##vso[artifact.upload containerfolder=dotnet-reports;artifactname=$artifactName]$binlogPath"
+    displayName: 'Publish build binary log'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.publishBinlog }}, true)
+      )
+    env:
+      ARTIFACT_NAME: ${{ parameters.artifactName }}

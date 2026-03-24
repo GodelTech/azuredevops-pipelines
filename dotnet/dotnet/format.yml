@@ -33,23 +33,29 @@ steps:
   - pwsh: |
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
-      $artifactName = $env:ARTIFACT_NAME
 
       $reportDir = "$(Agent.TempDirectory)/dotnet-reports"
 
-      $command = 'dotnet format --verify-no-changes'
-      if ($noRestore) { $command += ' --no-restore' }
+      $args = '--verify-no-changes'
+      if ($noRestore) { $args += ' --no-restore' }
       if ($publishReport) {
         New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
-        $command += " --report `"$reportDir`""
+        $args += " --report `"$reportDir`""
       }
 
-      Invoke-Expression $command
+      Write-Host "##vso[task.setvariable variable=dotnetFormatArguments]$args"
+    displayName: 'Set dotnet format arguments'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    env:
+      NO_RESTORE: ${{ parameters.noRestore }}
+      PUBLISH_REPORT: ${{ parameters.publishReport }}
 
-      if ($publishReport) {
-        $reportPath = "$reportDir/format-report.json"
-        Write-Host "##vso[artifact.upload containerfolder=dotnet-reports;artifactname=$artifactName]$reportPath"
-      }
+  - task: DotNetCoreCLI@2
     displayName: 'dotnet format'
     condition: |
       and
@@ -57,9 +63,24 @@ steps:
         succeeded(),
         eq(${{ parameters.enable }}, true)
       )
-    ${{ if ne(parameters.workingDirectory, '') }}:
-      workingDirectory: ${{ parameters.workingDirectory }}
+    inputs:
+      command: 'custom'
+      custom: 'format'
+      arguments: $(dotnetFormatArguments)
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  - pwsh: |
+      $artifactName = $env:ARTIFACT_NAME
+      $reportPath = "$(Agent.TempDirectory)/dotnet-reports/format-report.json"
+      Write-Host "##vso[artifact.upload containerfolder=dotnet-reports;artifactname=$artifactName]$reportPath"
+    displayName: 'Publish format report'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.publishReport }}, true)
+      )
     env:
-      NO_RESTORE: ${{ parameters.noRestore }}
-      PUBLISH_REPORT: ${{ parameters.publishReport }}
       ARTIFACT_NAME: ${{ parameters.artifactName }}

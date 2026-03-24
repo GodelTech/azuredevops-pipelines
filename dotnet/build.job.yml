@@ -94,6 +94,8 @@ jobs:
             noRestore: ${{ parameters.dotnet.noRestore }}
           ${{ if ne(parameters.dotnet.selfContained, '') }}:
             selfContained: ${{ parameters.dotnet.selfContained }}
+          ${{ if ne(parameters.dotnet.publishBinlog, '') }}:
+            publishBinlog: ${{ parameters.dotnet.publishBinlog }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
