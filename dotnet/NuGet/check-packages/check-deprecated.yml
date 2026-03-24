@@ -56,7 +56,9 @@ steps:
       if ($noRestore) { $command += ' --no-restore' }
 
       $output = Invoke-Expression $command
-      Write-Host $output
+      $json = $output | ConvertFrom-Json
+      $prettyOutput = $json | ConvertTo-Json -Depth 10
+      Write-Host $prettyOutput
 
       if ($publishReport) {
         $reportPath = "$(Agent.TempDirectory)/nuget-reports/$artifactName.json"
@@ -65,7 +67,6 @@ steps:
         Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$reportPath"
       }
 
-      $json = $output | ConvertFrom-Json
       $deprecatedPackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
         $_.frameworks | Where-Object { $_ } | ForEach-Object {
           @($_.topLevelPackages) + @($_.transitivePackages) | Where-Object { $_ }
