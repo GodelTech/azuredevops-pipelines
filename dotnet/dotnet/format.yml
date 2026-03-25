@@ -37,9 +37,9 @@ steps:
       $formatArgs = '--verify-no-changes'
       if ($noRestore) { $formatArgs += ' --no-restore' }
       if ($publishReport) {
-        $reportDir = "$(Agent.TempDirectory)/dotnet-reports"
+        $reportDir = "$(Build.ArtifactStagingDirectory)/dotnet-reports"
         New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
-        $formatArgs += " --report `"$reportDir`""
+        $formatArgs += " --report `"$reportDir/format-report.json`""
       }
 
       Write-Host "##vso[task.setvariable variable=dotnetFormatArguments]$formatArgs"
@@ -69,10 +69,7 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
-  - pwsh: |
-      $artifactName = $env:ARTIFACT_NAME
-      $reportPath = "$(Agent.TempDirectory)/dotnet-reports/format-report.json"
-      Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$reportPath"
+  - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/format-report.json'
     displayName: 'Publish format report'
     condition: |
       and
@@ -81,5 +78,4 @@ steps:
         eq(${{ parameters.enable }}, true),
         eq(${{ parameters.publishReport }}, true)
       )
-    env:
-      ARTIFACT_NAME: ${{ parameters.artifactName }}
+    artifact: ${{ parameters.artifactName }}

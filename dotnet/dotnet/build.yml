@@ -61,7 +61,7 @@ steps:
       if ($noRestore) { $buildArgs += " --no-restore" }
       if ($selfContained) { $buildArgs += " --self-contained" }
       if ($publishBinlog) {
-        $binlogDir = "$(Agent.TempDirectory)/dotnet-reports"
+        $binlogDir = "$(Build.ArtifactStagingDirectory)/dotnet-reports"
         New-Item -ItemType Directory -Force -Path $binlogDir | Out-Null
         $buildArgs += " -bl:`"$binlogDir/msbuild.binlog`""
       }
@@ -83,10 +83,7 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
-  - pwsh: |
-      $artifactName = $env:ARTIFACT_NAME
-      $binlogPath = "$(Agent.TempDirectory)/dotnet-reports/msbuild.binlog"
-      Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$binlogPath"
+  - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/msbuild.binlog'
     displayName: 'Publish build binary log'
     condition: |
       and
@@ -94,5 +91,4 @@ steps:
         succeededOrFailed(),
         eq(${{ parameters.publishBinlog }}, true)
       )
-    env:
-      ARTIFACT_NAME: ${{ parameters.artifactName }}
+    artifact: ${{ parameters.artifactName }}

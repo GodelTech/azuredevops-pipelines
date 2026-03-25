@@ -78,10 +78,9 @@ steps:
       Write-Host $prettyOutput
 
       if ($publishReport) {
-        $reportPath = "$(Agent.TempDirectory)/nuget-reports/$artifactName.json"
+        $reportPath = "$(Build.ArtifactStagingDirectory)/nuget-reports/${artifactName}.json"
         New-Item -ItemType Directory -Force -Path (Split-Path $reportPath) | Out-Null
         $output | Set-Content -Path $reportPath -Encoding UTF8
-        Write-Host "##vso[artifact.upload containerfolder=$artifactName;artifactname=$artifactName]$reportPath"
       }
 
       $topLevelPackages = @($json.projects | Where-Object { $_ } | ForEach-Object {
@@ -126,7 +125,7 @@ steps:
       } else {
         Write-Host "All NuGet packages are up to date."
       }
-    displayName: 'Check outdated NuGet packages'
+    displayName: 'Check NuGet outdated packages'
     condition: |
       and
       (
@@ -143,3 +142,14 @@ steps:
       ARTIFACT_NAME: ${{ parameters.artifactName }}
       STEP_RESULT: ${{ parameters.stepResult }}
       TRANSITIVE_STEP_RESULT: ${{ parameters.transitiveStepResult }}
+
+  - publish: '$(Build.ArtifactStagingDirectory)/nuget-reports/${{ parameters.artifactName }}.json'
+    displayName: 'Publish NuGet outdated packages report'
+    condition: |
+      and
+      (
+        succeededOrFailed(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.publishReport }}, true)
+      )
+    artifact: ${{ parameters.artifactName }}
