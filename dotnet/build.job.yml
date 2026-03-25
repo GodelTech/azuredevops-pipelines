@@ -78,12 +78,13 @@ jobs:
 
       - script: dotnet restore
         displayName: 'dotnet restore'
-        condition: |
-          and
-          (
-            succeeded(),
-            ne(${{ parameters.dotnet.restore.enable }}, false)
-          )
+        ${{ if ne(parameters.dotnet.restore.enable, '') }}:
+          condition: |
+            and
+            (
+              succeeded(),
+              ne(${{ parameters.dotnet.restore.enable }}, false)
+            )
         ${{ if ne(parameters.workingDirectory, '') }}:
           workingDirectory: ${{ parameters.workingDirectory }}
 
