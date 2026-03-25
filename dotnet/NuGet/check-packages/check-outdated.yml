@@ -108,7 +108,14 @@ steps:
       }
 
       if ($topLevelPackages.Count -gt 0 -or $transitivePackages.Count -gt 0) {
-        $message = "Outdated NuGet packages found."
+        $packageKind = if ($topLevelPackages.Count -gt 0 -and $transitivePackages.Count -gt 0) {
+          "'top-level' and 'transitive'"
+        } elseif ($topLevelPackages.Count -gt 0) {
+          "'top-level'"
+        } else {
+          "'transitive'"
+        }
+        $message = "Outdated NuGet $packageKind packages found."
         switch ($finalResult) {
           'SucceededWithIssues' {
             Write-Host "##vso[task.logissue type=warning]$message"
