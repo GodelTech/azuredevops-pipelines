@@ -34,11 +34,10 @@ steps:
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
 
-      $reportDir = "$(Agent.TempDirectory)/dotnet-reports"
-
       $formatArgs = '--verify-no-changes'
       if ($noRestore) { $formatArgs += ' --no-restore' }
       if ($publishReport) {
+        $reportDir = "$(Agent.TempDirectory)/dotnet-reports"
         New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
         $formatArgs += " --report `"$reportDir`""
       }
