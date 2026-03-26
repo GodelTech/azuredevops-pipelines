@@ -7,7 +7,7 @@
   - name: stepDisplayName
     displayName: 'Step display name'
     type: string
-    default: 'Append to build summary'
+    default: 'Append to job summary'
 
   - name: condition
     displayName: 'Condition'
@@ -29,7 +29,7 @@ steps:
       $title = $env:SUMMARY_TITLE
       $content = $env:SUMMARY_CONTENT
 
-      $filePath = "$(Agent.TempDirectory)/build-summary-sections.md"
+      $filePath = "$(Agent.TempDirectory)/job-summary.md"
 
       $lines = @()
 
@@ -45,7 +45,8 @@ steps:
 
       Add-Content -Path $filePath -Value ($lines -join "`n") -Encoding UTF8
 
-      Write-Host "Appended section '$title' to build summary."
+      Write-Host "Appended to job summary:"
+      Write-Host ($lines -join "`n")
     displayName: ${{ parameters.stepDisplayName }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}

@@ -48,7 +48,7 @@ parameters:
     default: 'nuget-deprecated-report'
 
   - name: appendSummary
-    displayName: 'Append section to build summary'
+    displayName: 'Append section to job summary'
     type: boolean
     default: true
 
@@ -133,7 +133,7 @@ steps:
       }
 
       if ($appendSummary) {
-        $summaryPath = "$(Agent.TempDirectory)/build-summary-sections.md"
+        $summaryPath = "$(Agent.TempDirectory)/job-summary.md"
         $summaryLines = @(
           "## NuGet Deprecated Packages",
           "",

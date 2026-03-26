@@ -46,7 +46,7 @@ parameters:
     default: 'dotnet-build-binlog'
 
   - name: appendSummary
-    displayName: 'Append section to build summary'
+    displayName: 'Append section to job summary'
     type: boolean
     default: true
 
@@ -88,9 +88,9 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../azuredevops/build/append-to-summary.yml'
+  - template: '../../azuredevops/build/append-to-job-summary.yml'
     parameters:
-      stepDisplayName: 'Append .NET build section to summary'
+      stepDisplayName: 'Append .NET build section to job summary'
       condition: |
         and
         (

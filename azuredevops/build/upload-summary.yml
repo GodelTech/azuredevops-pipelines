@@ -38,8 +38,8 @@ parameters:
     #   - title: 'Coverage'
     #     content: '**Line coverage:** 95%'
 
-  - name: includeAccumulatedContent
-    displayName: 'Include content accumulated in build-summary-sections.md'
+  - name: includeJobSummary
+    displayName: 'Include job summary from job-summary.md'
     type: boolean
     default: true
 
@@ -58,7 +58,7 @@ steps:
       $title = $env:SUMMARY_TITLE
       $content = $env:SUMMARY_CONTENT
       $contentBlocks = $env:SUMMARY_CONTENT_BLOCKS | ConvertFrom-Json
-      $includeAccumulatedContent = [System.Convert]::ToBoolean($env:SUMMARY_INCLUDE_ACCUMULATED_CONTENT)
+      $includeJobSummary = [System.Convert]::ToBoolean($env:SUMMARY_INCLUDE_JOB_SUMMARY)
       $showSystemInfo = [System.Convert]::ToBoolean($env:SUMMARY_SHOW_SYSTEM_INFO)
       $fileName = $env:SUMMARY_FILENAME
 
@@ -86,13 +86,13 @@ steps:
         }
       }
 
-      if ($includeAccumulatedContent) {
-        $accumulatedPath = "$(Agent.TempDirectory)/build-summary-sections.md"
-        if (Test-Path $accumulatedPath) {
+      if ($includeJobSummary) {
+        $jobSummaryPath = "$(Agent.TempDirectory)/job-summary.md"
+        if (Test-Path $jobSummaryPath) {
           if ($lines.Count -gt 0 -and $lines[-1] -ne '') {
             $lines += ""
           }
-          $lines += Get-Content -Path $accumulatedPath -Raw
+          $lines += Get-Content -Path $jobSummaryPath -Raw
         }
       }
 
@@ -124,6 +124,6 @@ steps:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
       SUMMARY_CONTENT_BLOCKS: ${{ convertToJson(parameters.contentBlocks) }}
-      SUMMARY_INCLUDE_ACCUMULATED_CONTENT: ${{ parameters.includeAccumulatedContent }}
+      SUMMARY_INCLUDE_JOB_SUMMARY: ${{ parameters.includeJobSummary }}
       SUMMARY_SHOW_SYSTEM_INFO: ${{ parameters.showSystemInfo }}
       SUMMARY_FILENAME: ${{ parameters.fileName }}

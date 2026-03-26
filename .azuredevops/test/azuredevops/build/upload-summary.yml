@@ -21,7 +21,7 @@ trigger:
     include:
       - .azuredevops/test/azuredevops/build/upload-summary.yml
       - azuredevops/build/upload-summary.yml
-      - azuredevops/build/append-to-summary.yml
+      - azuredevops/build/append-to-job-summary.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -64,8 +64,8 @@ jobs:
             - title: 'Block 2'
               content: 'Block 2 content'
 
-  - job: UploadSummaryWithAccumulatedContent
-    displayName: 'Upload summary (with accumulated content)'
+  - job: UploadSummaryWithJobSummary
+    displayName: 'Upload summary (with job summary)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn:
@@ -73,24 +73,24 @@ jobs:
     steps:
       - checkout: none
 
-      - template: '../../../../azuredevops/build/append-to-summary.yml'
+      - template: '../../../../azuredevops/build/append-to-job-summary.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          title: 'Accumulated Section'
-          content: 'Content added via append-to-summary.'
+          title: 'Job Summary Section'
+          content: 'Content added via append-to-job-summary.'
 
       - template: '../../../../azuredevops/build/upload-summary.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          title: 'Accumulated Content Summary'
-          includeAccumulatedContent: true
+          title: 'Job Summary'
+          includeJobSummary: true
 
   - job: UploadSummaryWithSystemInfo
     displayName: 'Upload summary (with system info)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn:
-      - UploadSummaryWithAccumulatedContent
+      - UploadSummaryWithJobSummary
     steps:
       - checkout: none
 
@@ -114,7 +114,7 @@ jobs:
         Job **'Upload summary (with content blocks)'**
         Step **'Upload build summary'** result must be: **Succeeded**
 
-        Job **'Upload summary (with accumulated content)'**
+        Job **'Upload summary (with job summary)'**
         Step **'Upload build summary'** result must be: **Succeeded**
 
         Job **'Upload summary (with system info)'**

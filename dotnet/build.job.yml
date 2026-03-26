@@ -160,6 +160,6 @@ jobs:
           ${{ else }}:
             condition: always()
           title: ${{ coalesce(parameters.buildSummary.title, '.NET Build Summary') }}
-          includeAccumulatedContent: true
+          includeJobSummary: true
           ${{ if ne(parameters.buildSummary.showSystemInfo, '') }}:
             showSystemInfo: ${{ parameters.buildSummary.showSystemInfo }}

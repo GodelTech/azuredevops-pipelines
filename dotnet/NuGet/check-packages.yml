@@ -52,7 +52,7 @@ parameters:
     default: true
 
   - name: appendSummary
-    displayName: 'Append section to build summary'
+    displayName: 'Append section to job summary'
     type: boolean
     default: true
 

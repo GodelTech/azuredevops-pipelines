@@ -1,4 +1,4 @@
-﻿# test-azuredevops-build-append-to-summary.yml
+﻿# test-azuredevops-build-append-to-job-summary.yml
 
 parameters:
   - name: enableBuildDebug
@@ -19,8 +19,8 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/azuredevops/build/append-to-summary.yml
-      - azuredevops/build/append-to-summary.yml
+      - .azuredevops/test/azuredevops/build/append-to-job-summary.yml
+      - azuredevops/build/append-to-job-summary.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -32,25 +32,25 @@ schedules:
     always: true
 
 jobs:
-  - job: AppendToSummary
-    displayName: 'Append to summary'
+  - job: AppendToJobSummary
+    displayName: 'Append to job summary'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - checkout: none
 
-      - template: '../../../../azuredevops/build/append-to-summary.yml'
+      - template: '../../../../azuredevops/build/append-to-job-summary.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          stepDisplayName: 'Append to summary'
+          stepDisplayName: 'Append to job summary'
           condition: succeededOrFailed()
           title: 'Test Section'
           content: 'Test content line.'
 
       - pwsh: |
-          $filePath = "$(Agent.TempDirectory)/build-summary-sections.md"
+          $filePath = "$(Agent.TempDirectory)/job-summary.md"
           Write-Host "##vso[task.uploadsummary]$filePath"
-        displayName: 'Upload build summary'
+        displayName: 'Upload job summary'
         condition: succeededOrFailed()
 
   - template: '../../../testHelpers/build-summary-validation.job.yml'
@@ -58,9 +58,9 @@ jobs:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - AppendToSummary
+        - AppendToJobSummary
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'Append to summary'**
-        Step **'Append to summary'** result must be: **Succeeded**
-        Step **'Upload build summary'** result must be: **Succeeded**
+        Job **'Append to job summary'**
+        Step **'Append to job summary'** result must be: **Succeeded**
+        Step **'Upload job summary'** result must be: **Succeeded**
