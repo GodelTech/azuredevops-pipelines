@@ -1,4 +1,4 @@
-# test-azuredevops-build-cancel-build.yml
+﻿# test-dotnet-NuGet-CI.job.yml
 
 parameters:
   - name: enableBuildDebug
@@ -19,8 +19,8 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/azuredevops/build/cancel-build.yml
-      - azuredevops/build/cancel-build.yml
+      - .azuredevops/test/dotnet/NuGet/CI.job.yml
+      - dotnet/NuGet/CI.job.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -32,26 +32,17 @@ schedules:
     always: true
 
 jobs:
-  - job: CancelBuild
-    displayName: 'Cancel build'
-    pool:
+  - template: '../../../../dotnet/NuGet/CI.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
-    steps:
-      - checkout: none
 
-      - template: '../../../../azuredevops/build/cancel-build.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          condition: succeeded()
-
-  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+  - template: '../../../testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - CancelBuild
-      expectedBuildResult: 'Canceled'
+        - GitVersion
+      expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'Cancel build'**
-        Step **'Cancel build'** result must be: **Succeeded**
-      warningThreshold: 1
+        Job **'GitVersion'** result must be: **Succeeded**

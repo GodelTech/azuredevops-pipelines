@@ -1,0 +1,70 @@
+﻿# test-dotnet-NuGet-check-packages.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/NuGet/check-packages.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/NuGet/check-packages.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: CheckPackages
+    displayName: 'Check NuGet packages'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - template: '../../../../dotnet/dotnet/install-SDK.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/restore.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/NuGet/check-packages.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+  - template: '../../../testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - CheckPackages
+      expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Check NuGet packages'** result must be: **Succeeded**

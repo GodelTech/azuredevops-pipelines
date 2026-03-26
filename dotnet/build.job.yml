@@ -34,6 +34,16 @@ parameters:
     type: object
     default: {}
 
+  - name: buildSummary
+    displayName: 'Build summary parameters'
+    type: object
+    default: {}
+    # Example:
+    # buildSummary:
+    #   enable: true
+    #   title: 'Build Summary'
+    #   showSystemInfo: true
+
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
@@ -76,17 +86,13 @@ jobs:
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
-      - script: dotnet restore
-        displayName: 'dotnet restore'
-        ${{ if ne(parameters.dotnet.restore.enable, '') }}:
-          condition: |
-            and
-            (
-              succeeded(),
-              ne(${{ parameters.dotnet.restore.enable }}, false)
-            )
-        ${{ if ne(parameters.workingDirectory, '') }}:
-          workingDirectory: ${{ parameters.workingDirectory }}
+      - template: 'dotnet/restore.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.dotnet.restore.enable, '') }}:
+            enable: ${{ parameters.dotnet.restore.enable }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
 
       - template: 'dotnet/build.yml'
         parameters:
@@ -103,6 +109,8 @@ jobs:
             selfContained: ${{ parameters.dotnet.selfContained }}
           ${{ if ne(parameters.dotnet.publishBinlog, '') }}:
             publishBinlog: ${{ parameters.dotnet.publishBinlog }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -115,8 +123,8 @@ jobs:
             noRestore: ${{ parameters.dotnet.noRestore }}
           ${{ if ne(parameters.dotnet.checks.publishReport, '') }}:
             publishReport: ${{ parameters.dotnet.checks.publishReport }}
-          ${{ if ne(parameters.dotnet.checks.codeFormatting.artifactName, '') }}:
-            artifactName: ${{ parameters.dotnet.checks.codeFormatting.artifactName }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -133,5 +141,25 @@ jobs:
             noRestore: ${{ parameters.dotnet.noRestore }}
           ${{ if ne(parameters.dotnet.checks.publishReport, '') }}:
             publishReport: ${{ parameters.dotnet.checks.publishReport }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Upload .NET build summary'
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            condition: |
+              and
+              (
+                always(),
+                eq(${{ parameters.buildSummary.enable }}, true)
+              )
+          ${{ else }}:
+            condition: always()
+          title: ${{ coalesce(parameters.buildSummary.title, '.NET Build Summary') }}
+          includeAccumulatedContent: true
+          ${{ if ne(parameters.buildSummary.showSystemInfo, '') }}:
+            showSystemInfo: ${{ parameters.buildSummary.showSystemInfo }}

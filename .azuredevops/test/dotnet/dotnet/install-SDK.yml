@@ -15,6 +15,11 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+
 trigger:
   batch: true
   paths:
@@ -38,10 +43,14 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - pwsh: |
-          Copy-Item '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core/global.json' `
+          $workingDirectory = $env:WORKING_DIRECTORY
+
+          Copy-Item "$workingDirectory/global.json" `
             -Destination '$(Build.SourcesDirectory)/global.json' `
             -Force
         displayName: 'Copy global.json to $(Build.SourcesDirectory)'
+        env:
+          WORKING_DIRECTORY: ${{ parameters.workingDirectory }}
 
       - template: '../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
@@ -55,7 +64,7 @@ jobs:
       - template: '../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+          workingDirectory: ${{ parameters.workingDirectory }}
 
   - job: InstallSDKVersions
     displayName: 'Install .NET SDK versions'

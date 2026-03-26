@@ -52,18 +52,19 @@ steps:
       - template: '../../azuredevops/build/check-output-variable.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepName: ${{ coalesce(variable.stepName, 'check_output_variable_step') }}
+          condition: ${{ coalesce(variable.condition, 'always()') }}
           variableDisplayName: ${{ variable.displayName }}
           variableValue: ${{ variable.value }}
           expectedValue: ${{ variable.expectedValue }}
-          stepName: ${{ coalesce(variable.stepName, 'check_output_variable_step') }}
           skipValidation: ${{ coalesce(variable.skipValidation, false) }}
           logIssueOnMismatch: ${{ coalesce(variable.logIssueOnMismatch, true) }}
           stepResultOnMismatch: ${{ coalesce(variable.stepResultOnMismatch, 'Failed') }}
-          condition: ${{ coalesce(variable.condition, 'always()') }}
 
   - template: '../../azuredevops/build/upload-summary.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      condition: always()
       title: 'Build Summary'
       content: |
         ### This is TEST build summary
@@ -83,7 +84,6 @@ steps:
               - content: |
                   | ${{ variable.displayName }} | ${{ variable.value }} | ${{ variable.expectedValue }} | $(${{ coalesce(variable.stepName, 'check_output_variable_step') }}.matchResult) |
           # yamllint enable rule:line-length
-      condition: always()
 
   - template: '../../azuredevops/build/quality/check-build-warnings.yml'
     parameters:

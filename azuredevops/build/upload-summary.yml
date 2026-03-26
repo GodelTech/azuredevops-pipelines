@@ -4,6 +4,16 @@ parameters:
     type: boolean
     default: false
 
+  - name: stepDisplayName
+    displayName: 'Step display name'
+    type: string
+    default: 'Upload build summary'
+
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
+
   - name: title
     displayName: 'Summary title'
     type: string
@@ -28,6 +38,11 @@ parameters:
     #   - title: 'Coverage'
     #     content: '**Line coverage:** 95%'
 
+  - name: includeAccumulatedContent
+    displayName: 'Include content accumulated in build-summary-sections.md'
+    type: boolean
+    default: true
+
   - name: showSystemInfo
     displayName: 'Show system info table with build details'
     type: boolean
@@ -38,22 +53,13 @@ parameters:
     type: string
     default: 'summary.md'
 
-  - name: stepDisplayName
-    displayName: 'Step display name'
-    type: string
-    default: 'Upload build summary'
-
-  - name: condition
-    displayName: 'Condition'
-    type: string
-    default: ''
-
 steps:
   - pwsh: |
-      $title    = $env:SUMMARY_TITLE
-      $content  = $env:SUMMARY_CONTENT
+      $title = $env:SUMMARY_TITLE
+      $content = $env:SUMMARY_CONTENT
       $contentBlocks = $env:SUMMARY_CONTENT_BLOCKS | ConvertFrom-Json
-      $showSystemInfo = $env:SUMMARY_SHOW_SYSTEM_INFO
+      $includeAccumulatedContent = [System.Convert]::ToBoolean($env:SUMMARY_INCLUDE_ACCUMULATED_CONTENT)
+      $showSystemInfo = [System.Convert]::ToBoolean($env:SUMMARY_SHOW_SYSTEM_INFO)
       $fileName = $env:SUMMARY_FILENAME
 
       $filePath = "$(Agent.TempDirectory)/$fileName"
@@ -80,7 +86,17 @@ steps:
         }
       }
 
-      if ($showSystemInfo -eq 'true') {
+      if ($includeAccumulatedContent) {
+        $accumulatedPath = "$(Agent.TempDirectory)/build-summary-sections.md"
+        if (Test-Path $accumulatedPath) {
+          if ($lines.Count -gt 0 -and $lines[-1] -ne '') {
+            $lines += ""
+          }
+          $lines += Get-Content -Path $accumulatedPath -Raw
+        }
+      }
+
+      if ($showSystemInfo) {
          if ($lines.Count -gt 0 -and $lines[-1] -ne '') {
            $lines += ""
          }
@@ -108,5 +124,6 @@ steps:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
       SUMMARY_CONTENT_BLOCKS: ${{ convertToJson(parameters.contentBlocks) }}
+      SUMMARY_INCLUDE_ACCUMULATED_CONTENT: ${{ parameters.includeAccumulatedContent }}
       SUMMARY_SHOW_SYSTEM_INFO: ${{ parameters.showSystemInfo }}
       SUMMARY_FILENAME: ${{ parameters.fileName }}

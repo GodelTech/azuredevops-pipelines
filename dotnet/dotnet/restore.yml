@@ -1,0 +1,27 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable dotnet restore'
+    type: boolean
+    default: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - script: dotnet restore
+    displayName: 'dotnet restore'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    ${{ if ne(parameters.workingDirectory, '') }}:
+      workingDirectory: ${{ parameters.workingDirectory }}

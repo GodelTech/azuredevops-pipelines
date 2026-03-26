@@ -9,6 +9,11 @@ parameters:
     type: string
     default: 'check_build_warnings_step'
 
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
+
   - name: warningThreshold
     displayName: 'Maximum number of warnings allowed before triggering step result'
     type: number
@@ -27,11 +32,6 @@ parameters:
       - Succeeded
       - SucceededWithIssues
       - Failed
-
-  - name: condition
-    displayName: 'Condition'
-    type: string
-    default: ''
 
 steps:
   - pwsh: |

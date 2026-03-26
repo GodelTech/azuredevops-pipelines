@@ -21,6 +21,7 @@ trigger:
     include:
       - .azuredevops/test/azuredevops/build/upload-summary.yml
       - azuredevops/build/upload-summary.yml
+      - azuredevops/build/append-to-summary.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -63,8 +64,8 @@ jobs:
             - title: 'Block 2'
               content: 'Block 2 content'
 
-  - job: UploadSummaryWithSystemInfo
-    displayName: 'Upload summary (with system info)'
+  - job: UploadSummaryWithAccumulatedContent
+    displayName: 'Upload summary (with accumulated content)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn:
@@ -72,11 +73,32 @@ jobs:
     steps:
       - checkout: none
 
+      - template: '../../../../azuredevops/build/append-to-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          title: 'Accumulated Section'
+          content: 'Content added via append-to-summary.'
+
       - template: '../../../../azuredevops/build/upload-summary.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          showSystemInfo: true
+          title: 'Accumulated Content Summary'
+          includeAccumulatedContent: true
+
+  - job: UploadSummaryWithSystemInfo
+    displayName: 'Upload summary (with system info)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - UploadSummaryWithAccumulatedContent
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
           title: 'System Info Summary'
+          showSystemInfo: true
 
   - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
@@ -90,6 +112,9 @@ jobs:
         Step **'Upload build summary'** result must be: **Succeeded**
 
         Job **'Upload summary (with content blocks)'**
+        Step **'Upload build summary'** result must be: **Succeeded**
+
+        Job **'Upload summary (with accumulated content)'**
         Step **'Upload build summary'** result must be: **Succeeded**
 
         Job **'Upload summary (with system info)'**

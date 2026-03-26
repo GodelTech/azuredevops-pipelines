@@ -1,0 +1,54 @@
+﻿parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: stepDisplayName
+    displayName: 'Step display name'
+    type: string
+    default: 'Append to build summary'
+
+  - name: condition
+    displayName: 'Condition'
+    type: string
+    default: ''
+
+  - name: title
+    displayName: 'Section title'
+    type: string
+    default: ''
+
+  - name: content
+    displayName: 'Markdown content to append'
+    type: string
+    default: ''
+
+steps:
+  - pwsh: |
+      $title = $env:SUMMARY_TITLE
+      $content = $env:SUMMARY_CONTENT
+
+      $filePath = "$(Agent.TempDirectory)/build-summary-sections.md"
+
+      $lines = @()
+
+      if (-not [string]::IsNullOrEmpty($title)) {
+        $lines += "## $title"
+        $lines += ""
+      }
+
+      if (-not [string]::IsNullOrEmpty($content)) {
+        $lines += $content.TrimEnd()
+        $lines += ""
+      }
+
+      Add-Content -Path $filePath -Value ($lines -join "`n") -Encoding UTF8
+
+      Write-Host "Appended section '$title' to build summary."
+    displayName: ${{ parameters.stepDisplayName }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
+    env:
+      SUMMARY_TITLE: ${{ parameters.title }}
+      SUMMARY_CONTENT: ${{ parameters.content }}

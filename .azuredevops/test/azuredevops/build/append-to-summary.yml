@@ -1,0 +1,66 @@
+﻿# test-azuredevops-build-append-to-summary.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/append-to-summary.yml
+      - azuredevops/build/append-to-summary.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: AppendToSummary
+    displayName: 'Append to summary'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/append-to-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Append to summary'
+          condition: succeededOrFailed()
+          title: 'Test Section'
+          content: 'Test content line.'
+
+      - pwsh: |
+          $filePath = "$(Agent.TempDirectory)/build-summary-sections.md"
+          Write-Host "##vso[task.uploadsummary]$filePath"
+        displayName: 'Upload build summary'
+        condition: succeededOrFailed()
+
+  - template: '../../../testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - AppendToSummary
+      expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Append to summary'**
+        Step **'Append to summary'** result must be: **Succeeded**
+        Step **'Upload build summary'** result must be: **Succeeded**

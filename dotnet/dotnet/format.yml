@@ -24,6 +24,11 @@ parameters:
     type: string
     default: 'dotnet-format-report'
 
+  - name: appendSummary
+    displayName: 'Append section to build summary'
+    type: boolean
+    default: true
+
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
@@ -68,6 +73,18 @@ steps:
       arguments: $(dotnetFormatArguments)
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
+
+  - template: '../../azuredevops/build/append-to-summary.yml'
+    parameters:
+      stepDisplayName: 'Append code format section to summary'
+      condition: |
+        and
+        (
+          succeededOrFailed(),
+          eq(${{ parameters.appendSummary }}, true)
+        )
+      title: 'Code Format'
+      content: 'Code format verification was executed.'
 
   - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/format-report.json'
     displayName: 'Publish format report'

@@ -51,6 +51,11 @@ parameters:
     type: boolean
     default: true
 
+  - name: appendSummary
+    displayName: 'Append section to build summary'
+    type: boolean
+    default: true
+
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
@@ -67,13 +72,14 @@ steps:
       ${{ if ne(parameters.outdatedPackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.outdatedPackages.includeTransitive }}
       noRestore: ${{ parameters.noRestore }}
-      publishReport: ${{ parameters.publishReport }}
-      ${{ if ne(parameters.outdatedPackages.artifactName, '') }}:
-        artifactName: ${{ parameters.outdatedPackages.artifactName }}
       ${{ if ne(parameters.outdatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.outdatedPackages.stepResult }}
       ${{ if ne(parameters.outdatedPackages.transitiveStepResult, '') }}:
         transitiveStepResult: ${{ parameters.outdatedPackages.transitiveStepResult }}
+      publishReport: ${{ parameters.publishReport }}
+      ${{ if ne(parameters.outdatedPackages.artifactName, '') }}:
+        artifactName: ${{ parameters.outdatedPackages.artifactName }}
+      appendSummary: ${{ parameters.appendSummary }}
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -85,13 +91,14 @@ steps:
       ${{ if ne(parameters.deprecatedPackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.deprecatedPackages.includeTransitive }}
       noRestore: ${{ parameters.noRestore }}
-      publishReport: ${{ parameters.publishReport }}
-      ${{ if ne(parameters.deprecatedPackages.artifactName, '') }}:
-        artifactName: ${{ parameters.deprecatedPackages.artifactName }}
       ${{ if ne(parameters.deprecatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.deprecatedPackages.stepResult }}
       ${{ if ne(parameters.deprecatedPackages.transitiveStepResult, '') }}:
         transitiveStepResult: ${{ parameters.deprecatedPackages.transitiveStepResult }}
+      publishReport: ${{ parameters.publishReport }}
+      ${{ if ne(parameters.deprecatedPackages.artifactName, '') }}:
+        artifactName: ${{ parameters.deprecatedPackages.artifactName }}
+      appendSummary: ${{ parameters.appendSummary }}
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -103,12 +110,13 @@ steps:
       ${{ if ne(parameters.vulnerablePackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.vulnerablePackages.includeTransitive }}
       noRestore: ${{ parameters.noRestore }}
-      publishReport: ${{ parameters.publishReport }}
-      ${{ if ne(parameters.vulnerablePackages.artifactName, '') }}:
-        artifactName: ${{ parameters.vulnerablePackages.artifactName }}
       ${{ if ne(parameters.vulnerablePackages.stepResult, '') }}:
         stepResult: ${{ parameters.vulnerablePackages.stepResult }}
       ${{ if ne(parameters.vulnerablePackages.transitiveStepResult, '') }}:
         transitiveStepResult: ${{ parameters.vulnerablePackages.transitiveStepResult }}
+      publishReport: ${{ parameters.publishReport }}
+      ${{ if ne(parameters.vulnerablePackages.artifactName, '') }}:
+        artifactName: ${{ parameters.vulnerablePackages.artifactName }}
+      appendSummary: ${{ parameters.appendSummary }}
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
