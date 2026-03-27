@@ -150,14 +150,16 @@ steps:
       }
 
       if ($appendSummary) {
+        $artifactsUrl = "$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts"
+
         $infoLines = @()
         if ($topLevelPackages.Count -eq 0 -and $transitivePackages.Count -eq 0) {
-          $infoLines += "✅ All NuGet packages are up to date."
+          $infoLines += "**✅ All NuGet packages are up to date.**"
         } else {
-          $infoLines += "⚠️ Outdated NuGet packages found."
+          $infoLines += "**⚠️ Outdated NuGet packages found.**"
         }
         if (-not $includeTransitive -and $warnIfTransitiveExcluded) {
-          $infoLines += "⚠️ Transitive packages are excluded from the outdated check."
+          $infoLines += "**⚠️ Transitive packages are excluded from the outdated check.**"
         }
         $infoLines += ""
 
@@ -172,7 +174,7 @@ steps:
           "| Top-level | $($topLevelPackages.Count) |",
           "| Transitive | $(if ($includeTransitive) { $transitivePackages.Count } else { 'SKIPPED' }) |",
           "",
-          "Report artifact: **$artifactName** (published if publish report is enabled)",
+          "Report artifact: [**$artifactName**]($artifactsUrl) (published if publish report is enabled)",
           ""
         )
 

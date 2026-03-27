@@ -98,13 +98,15 @@ steps:
           eq(${{ parameters.appendSummary }}, true)
         )
       title: '.NET Build'
+      # yamllint disable rule:line-length
       content: |
         | Property | Value |
         | --- | --- |
         | Configuration | ${{ parameters.configuration }} |
         | Verbosity | ${{ parameters.verbosity }} |
 
-        Binary log artifact: **${{ parameters.artifactName }}** (published if publish binary log is enabled)
+        Binary log artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts) (published if publish binary log is enabled)
+      # yamllint enable rule:line-length
 
   - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/msbuild.binlog'
     displayName: 'Publish build binary log'
