@@ -14,6 +14,11 @@ parameters:
     type: boolean
     default: true
 
+  - name: warnIfTransitiveExcluded
+    displayName: 'Warn when transitive packages are excluded from the deprecated check'
+    type: boolean
+    default: true
+
   - name: noRestore
     displayName: 'Do not restore packages before checking'
     type: boolean
@@ -60,12 +65,17 @@ parameters:
 steps:
   - pwsh: |
       $includeTransitive = [System.Convert]::ToBoolean($env:INCLUDE_TRANSITIVE)
+      $warnIfTransitiveExcluded = [System.Convert]::ToBoolean($env:WARN_IF_TRANSITIVE_EXCLUDED)
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $stepResult = $env:STEP_RESULT
       $transitiveStepResult = $env:TRANSITIVE_STEP_RESULT
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
       $artifactName = $env:ARTIFACT_NAME
       $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
+
+      if (-not $includeTransitive -and $warnIfTransitiveExcluded) {
+        Write-Host "##vso[task.logissue type=warning]Transitive packages are excluded from the deprecated check."
+      }
 
       $command = 'dotnet list package --deprecated --format json'
       if ($includeTransitive) { $command += ' --include-transitive' }
@@ -134,15 +144,31 @@ steps:
 
       if ($appendSummary) {
         $summaryPath = "$(Agent.TempDirectory)/job-summary.md"
+
+        $infoLines = @()
+        if ($topLevelPackages.Count -eq 0 -and $transitivePackages.Count -eq 0) {
+          $infoLines += "✅ No deprecated NuGet packages found."
+        } else {
+          $infoLines += "⚠️ Deprecated NuGet packages found."
+        }
+        if (-not $includeTransitive -and $warnIfTransitiveExcluded) {
+          $infoLines += "⚠️ Transitive packages are excluded from the deprecated check."
+        }
+        $infoLines += ""
+
         $summaryLines = @(
-          "## NuGet Deprecated Packages",
+          "## NuGet Deprecated Packages Check Results",
           "",
+          $infoLines,
           "| Type | Count |",
           "| --- | --- |",
           "| Top-level | $($topLevelPackages.Count) |",
-          "| Transitive | $($transitivePackages.Count) |",
+          "| Transitive | $(if ($includeTransitive) { $transitivePackages.Count } else { 'SKIPPED' }) |",
+          "",
+          "Report artifact: **$artifactName** (published if publish report is enabled)",
           ""
         )
+
         Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8
       }
     displayName: 'Check NuGet deprecated packages'
@@ -156,6 +182,7 @@ steps:
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
       INCLUDE_TRANSITIVE: ${{ parameters.includeTransitive }}
+      WARN_IF_TRANSITIVE_EXCLUDED: ${{ parameters.warnIfTransitiveExcluded }}
       NO_RESTORE: ${{ parameters.noRestore }}
       STEP_RESULT: ${{ parameters.stepResult }}
       TRANSITIVE_STEP_RESULT: ${{ parameters.transitiveStepResult }}

@@ -84,7 +84,10 @@ steps:
           eq(${{ parameters.appendSummary }}, true)
         )
       title: 'Code Format'
-      content: 'Code format verification was executed.'
+      content: |
+        Code format verification was executed.
+
+        Report artifact: **${{ parameters.artifactName }}** (published if publish report is enabled)
 
   - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/format-report.json'
     displayName: 'Publish format report'

@@ -19,6 +19,11 @@ parameters:
     type: boolean
     default: true
 
+  - name: warnIfTransitiveExcluded
+    displayName: 'Warn when transitive packages are excluded from the outdated check'
+    type: boolean
+    default: false
+
   - name: noRestore
     displayName: 'Do not restore packages before checking'
     type: boolean
@@ -66,12 +71,17 @@ steps:
   - pwsh: |
       $includePrerelease = [System.Convert]::ToBoolean($env:INCLUDE_PRERELEASE)
       $includeTransitive = [System.Convert]::ToBoolean($env:INCLUDE_TRANSITIVE)
+      $warnIfTransitiveExcluded = [System.Convert]::ToBoolean($env:WARN_IF_TRANSITIVE_EXCLUDED)
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $stepResult = $env:STEP_RESULT
       $transitiveStepResult = $env:TRANSITIVE_STEP_RESULT
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
       $artifactName = $env:ARTIFACT_NAME
       $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
+
+      if (-not $includeTransitive -and $warnIfTransitiveExcluded) {
+        Write-Host "##vso[task.logissue type=warning]Transitive packages are excluded from the outdated check."
+      }
 
       $command = 'dotnet list package --outdated --format json'
       if ($includePrerelease) { $command += ' --include-prerelease' }
@@ -141,13 +151,28 @@ steps:
 
       if ($appendSummary) {
         $summaryPath = "$(Agent.TempDirectory)/job-summary.md"
+
+        $infoLines = @()
+        if ($topLevelPackages.Count -eq 0 -and $transitivePackages.Count -eq 0) {
+          $infoLines += "✅ All NuGet packages are up to date."
+        } else {
+          $infoLines += "⚠️ Outdated NuGet packages found."
+        }
+        if (-not $includeTransitive -and $warnIfTransitiveExcluded) {
+          $infoLines += "⚠️ Transitive packages are excluded from the outdated check."
+        }
+        $infoLines += ""
+
         $summaryLines = @(
-          "## NuGet Outdated Packages",
+          "## NuGet Outdated Packages Check Results",
           "",
+          $infoLines,
           "| Type | Count |",
           "| --- | --- |",
           "| Top-level | $($topLevelPackages.Count) |",
-          "| Transitive | $($transitivePackages.Count) |",
+          "| Transitive | $(if ($includeTransitive) { $transitivePackages.Count } else { 'SKIPPED' }) |",
+          "",
+          "Report artifact: **$artifactName** (published if publish report is enabled)",
           ""
         )
         Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8
@@ -164,6 +189,7 @@ steps:
     env:
       INCLUDE_PRERELEASE: ${{ parameters.includePrerelease }}
       INCLUDE_TRANSITIVE: ${{ parameters.includeTransitive }}
+      WARN_IF_TRANSITIVE_EXCLUDED: ${{ parameters.warnIfTransitiveExcluded }}
       NO_RESTORE: ${{ parameters.noRestore }}
       STEP_RESULT: ${{ parameters.stepResult }}
       TRANSITIVE_STEP_RESULT: ${{ parameters.transitiveStepResult }}

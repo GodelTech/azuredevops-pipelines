@@ -104,6 +104,8 @@ steps:
         | Configuration | ${{ parameters.configuration }} |
         | Verbosity | ${{ parameters.verbosity }} |
 
+        Binary log artifact: **${{ parameters.artifactName }}** (published if publish binary log is enabled)
+
   - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/msbuild.binlog'
     displayName: 'Publish build binary log'
     condition: |
