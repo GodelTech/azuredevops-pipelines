@@ -143,8 +143,6 @@ steps:
       }
 
       if ($appendSummary) {
-        $summaryPath = "$(Agent.TempDirectory)/job-summary.md"
-
         $infoLines = @()
         if ($topLevelPackages.Count -eq 0 -and $transitivePackages.Count -eq 0) {
           $infoLines += "✅ No vulnerable NuGet packages found."
@@ -158,8 +156,10 @@ steps:
 
         $summaryLines = @(
           "## NuGet Vulnerable Packages Check Results",
-          "",
-          $infoLines,
+          ""
+        )
+        $summaryLines += $infoLines
+        $summaryLines += @(
           "| Type | Count |",
           "| --- | --- |",
           "| Top-level | $($topLevelPackages.Count) |",
@@ -168,6 +168,8 @@ steps:
           "Report artifact: **$artifactName** (published if publish report is enabled)",
           ""
         )
+
+        $summaryPath = "$(Agent.TempDirectory)/job-summary.md"
         Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8
       }
     displayName: 'Check NuGet vulnerable packages'
