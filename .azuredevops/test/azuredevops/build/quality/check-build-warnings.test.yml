@@ -77,8 +77,8 @@ jobs:
     steps:
       - checkout: none
 
-      - script: |
-          echo "##vso[task.logissue type=warning]Test warning message."
+      - pwsh: |
+          Write-Host '##vso[task.logissue type=warning]Test warning message.'
         displayName: 'Set build warning'
 
   - job: CheckBuildWarningsExist

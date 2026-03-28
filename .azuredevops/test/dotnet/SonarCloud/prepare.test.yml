@@ -102,7 +102,7 @@ jobs:
           coverageReportPath: ${{ parameters.coverageReportPath }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../../testHelpers/build-summary-validation.job.yml'
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}

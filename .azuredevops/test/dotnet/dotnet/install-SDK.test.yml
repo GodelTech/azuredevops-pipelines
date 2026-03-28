@@ -92,7 +92,7 @@ jobs:
             - '8.x'
             - '9.x'
 
-  - template: '../../../testHelpers/build-summary-validation.job.yml'
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}

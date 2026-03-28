@@ -42,7 +42,7 @@ schedules:
     always: true
 
 variables:
-  gitvVersionJobName: 'GitVersion'
+  gitVersionJobName: 'GitVersion'
   gitVersionStepName: 'git_version_step'
   gitVersionSemVer: '${{ variables.gitVersionStepName }}.semVer'
   gitVersionFullSemVer: '${{ variables.gitVersionStepName }}.fullSemVer'
@@ -51,7 +51,7 @@ jobs:
   - template: '../../../../git/version/get.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      jobName: ${{ variables.gitvVersionJobName }}
+      jobName: ${{ variables.gitVersionJobName }}
       vmImage: ${{ parameters.vmImage }}
       stepName: ${{ variables.gitVersionStepName }}
 
@@ -60,18 +60,18 @@ jobs:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - ${{ variables.gitvVersionJobName }}
+        - ${{ variables.gitVersionJobName }}
       variables:
-        gitvVersionSemVer: $[ dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionSemVer }}'] ]
-        gitvVersionFullSemVer: $[ dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionFullSemVer }}'] ]
+        gitVersionSemVer: $[ dependencies.${{ variables.gitVersionJobName }}.outputs['${{ variables.gitVersionSemVer }}'] ]
+        gitVersionFullSemVer: $[ dependencies.${{ variables.gitVersionJobName }}.outputs['${{ variables.gitVersionFullSemVer }}'] ]
       expectedBuildResult: 'Succeeded'
       outputVariables:
-        - displayName: "dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionSemVer }}']"
-          value: $(gitvVersionSemVer)
+        - displayName: "dependencies.${{ variables.gitVersionJobName }}.outputs['${{ variables.gitVersionSemVer }}']"
+          value: $(gitVersionSemVer)
           stepName: 'check_output_variable_step_SemVer'
           skipValidation: true
-        - displayName: "dependencies.${{ variables.gitvVersionJobName }}.outputs['${{ variables.gitVersionFullSemVer }}']"
-          value: $(gitvVersionFullSemVer)
+        - displayName: "dependencies.${{ variables.gitVersionJobName }}.outputs['${{ variables.gitVersionFullSemVer }}']"
+          value: $(gitVersionFullSemVer)
           stepName: 'check_output_variable_step_FullSemVer'
           skipValidation: true
       buildResultDescription: |

@@ -41,18 +41,21 @@ schedules:
         - main
     always: true
 
+variables:
+  ciJobName: 'GitVersion'
+
 jobs:
   - template: '../../../../dotnet/NuGet/CI.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
 
-  - template: '../../../testHelpers/build-summary-validation.job.yml'
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - GitVersion
+        - ${{ variables.ciJobName }}
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'GitVersion'** result must be: **Succeeded**
+        Job **'${{ variables.ciJobName }}'** result must be: **Succeeded**

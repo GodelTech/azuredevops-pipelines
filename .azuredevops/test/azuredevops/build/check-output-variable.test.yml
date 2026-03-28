@@ -49,13 +49,13 @@ jobs:
     steps:
       - checkout: none
 
-      - script: |
-          echo "##vso[task.setvariable variable=testOutput;isOutput=true]testValue"
+      - pwsh: |
+          Write-Host '##vso[task.setvariable variable=testOutput;isOutput=true]testValue'
         displayName: 'Set output variable "testOutput"'
         name: set_output_variable_step
 
-      - script: |
-          echo "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
+      - pwsh: |
+          Write-Host "Output variable 'testOutput': $(set_output_variable_step.testOutput)"
         displayName: 'Show output variable "testOutput"'
 
       - template: '../../../../azuredevops/build/check-output-variable.yml'

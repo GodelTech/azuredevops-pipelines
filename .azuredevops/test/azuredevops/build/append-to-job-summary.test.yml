@@ -97,7 +97,7 @@ jobs:
         env:
           AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
 
-  - template: '../../../testHelpers/build-summary-validation.job.yml'
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
