@@ -95,6 +95,19 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
+  - pwsh: |
+      $dotnetBuildResult = $env:DOTNET_BUILD_RESULT
+      Write-Host "##vso[task.setvariable variable=dotnetBuildResult]$dotnetBuildResult"
+    displayName: 'Capture dotnet build result'
+    condition: |
+      and
+      (
+        succeededOrFailed(),
+        eq(${{ parameters.appendSummary }}, true)
+      )
+    env:
+      DOTNET_BUILD_RESULT: $[ steps.dotnet_build_step.result ]
+
   - template: '../../azuredevops/build/append-to-job-summary.yml'
     parameters:
       stepDisplayName: 'Append .NET build section to job summary'
@@ -106,7 +119,7 @@ steps:
         )
       title: '.NET Build'
       content: |
-        Build result: **$[ steps.dotnet_build_step.result ]**
+        Build result: **$(dotnetBuildResult)**
 
         | Property | Value |
         | --- | --- |
