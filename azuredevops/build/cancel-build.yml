@@ -21,7 +21,7 @@ steps:
         Authorization  = "Bearer $accessToken"
         "Content-Type" = "application/json"
       }
-      $url = "$collectionUri$teamProject/_apis/build/builds/$buildId?api-version=7.1"
+      $url = "$collectionUri$teamProject/_apis/build/builds/${buildId}?api-version=7.1"
       $body = @{ status = "cancelling" } | ConvertTo-Json
 
       if ($enableBuildDebug) {
