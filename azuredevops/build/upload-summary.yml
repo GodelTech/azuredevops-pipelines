@@ -61,17 +61,24 @@ steps:
       $includeJobSummary = [System.Convert]::ToBoolean($env:SUMMARY_INCLUDE_JOB_SUMMARY)
       $showSystemInfo = [System.Convert]::ToBoolean($env:SUMMARY_SHOW_SYSTEM_INFO)
       $fileName = $env:SUMMARY_FILENAME
+      $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
+      $buildId = $env:BUILD_BUILDID
+      $buildNumber = $env:BUILD_BUILDNUMBER
+      $sourceBranchName = $env:BUILD_SOURCEBRANCHNAME
+      $sourceVersion = $env:BUILD_SOURCEVERSION
+      $queuedBy = $env:BUILD_QUEUEDBY
+      $agentMachineName = $env:AGENT_MACHINENAME
 
-      $filePath = "$(Agent.TempDirectory)/$fileName"
+      $filePath = "$agentTempDirectory/$fileName"
 
       $lines = @()
 
-      if ($null -ne $title) {
-         $lines += "# $title"
-         $lines += ""
+      if (-not [string]::IsNullOrEmpty($title)) {
+        $lines += "# $title"
+        $lines += ""
       }
 
-      if ($null -ne $content) {
+      if (-not [string]::IsNullOrEmpty($content)) {
         $lines += $content
         $lines += ""
       }
@@ -87,7 +94,7 @@ steps:
       }
 
       if ($includeJobSummary) {
-        $jobSummaryPath = "$(Agent.TempDirectory)/job-summary.md"
+        $jobSummaryPath = "$agentTempDirectory/job-summary.md"
         if (Test-Path $jobSummaryPath) {
           if ($lines.Count -gt 0 -and $lines[-1] -ne '') {
             $lines += ""
@@ -97,20 +104,20 @@ steps:
       }
 
       if ($showSystemInfo) {
-         if ($lines.Count -gt 0 -and $lines[-1] -ne '') {
-           $lines += ""
-         }
+        if ($lines.Count -gt 0 -and $lines[-1] -ne '') {
+          $lines += ""
+        }
 
-         $lines += "## System Information"
-         $lines += ""
-         $lines += "| Property | Value |"
-         $lines += "| --- | --- |"
-         $lines += "| Build ID | $(Build.BuildId) |"
-         $lines += "| Build Number | $(Build.BuildNumber) |"
-         $lines += "| Branch | $(Build.SourceBranchName) |"
-         $lines += "| Commit | $(Build.SourceVersion) |"
-         $lines += "| Queued by | $(Build.QueuedBy) |"
-         $lines += "| Agent | $(Agent.MachineName) |"
+        $lines += "## System Information"
+        $lines += ""
+        $lines += "| Property | Value |"
+        $lines += "| --- | --- |"
+        $lines += "| Build ID | $buildId |"
+        $lines += "| Build Number | $buildNumber |"
+        $lines += "| Branch | $sourceBranchName |"
+        $lines += "| Commit | $sourceVersion |"
+        $lines += "| Queued by | $queuedBy |"
+        $lines += "| Agent | $agentMachineName |"
       }
 
       $lines | Set-Content -Path $filePath -Encoding UTF8
@@ -127,3 +134,10 @@ steps:
       SUMMARY_INCLUDE_JOB_SUMMARY: ${{ parameters.includeJobSummary }}
       SUMMARY_SHOW_SYSTEM_INFO: ${{ parameters.showSystemInfo }}
       SUMMARY_FILENAME: ${{ parameters.fileName }}
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
+      BUILD_BUILDID: $(Build.BuildId)
+      BUILD_BUILDNUMBER: $(Build.BuildNumber)
+      BUILD_SOURCEBRANCHNAME: $(Build.SourceBranchName)
+      BUILD_SOURCEVERSION: $(Build.SourceVersion)
+      BUILD_QUEUEDBY: $(Build.QueuedBy)
+      AGENT_MACHINENAME: $(Agent.MachineName)

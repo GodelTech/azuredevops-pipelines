@@ -60,13 +60,16 @@ steps:
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $selfContained = [System.Convert]::ToBoolean($env:SELF_CONTAINED)
       $publishBinlog = [System.Convert]::ToBoolean($env:PUBLISH_BINLOG)
+      $configuration = $env:CONFIGURATION
+      $verbosity = $env:VERBOSITY
+      $artifactStagingDirectory = $env:BUILD_ARTIFACTSTAGINGDIRECTORY
 
-      $buildArgs = "--configuration ${{ parameters.configuration }}"
-      $buildArgs += " --verbosity ${{ parameters.verbosity }}"
+      $buildArgs = "--configuration $configuration"
+      $buildArgs += " --verbosity $verbosity"
       if ($noRestore) { $buildArgs += " --no-restore" }
       if ($selfContained) { $buildArgs += " --self-contained" }
       if ($publishBinlog) {
-        $binlogDir = "$(Build.ArtifactStagingDirectory)/dotnet-reports"
+        $binlogDir = "$artifactStagingDirectory/dotnet-reports"
         New-Item -ItemType Directory -Force -Path $binlogDir | Out-Null
         $buildArgs += " -bl:`"$binlogDir/msbuild.binlog`""
       }
@@ -77,6 +80,9 @@ steps:
       NO_RESTORE: ${{ parameters.noRestore }}
       SELF_CONTAINED: ${{ parameters.selfContained }}
       PUBLISH_BINLOG: ${{ parameters.publishBinlog }}
+      CONFIGURATION: ${{ parameters.configuration }}
+      VERBOSITY: ${{ parameters.verbosity }}
+      BUILD_ARTIFACTSTAGINGDIRECTORY: $(Build.ArtifactStagingDirectory)
 
   - task: DotNetCoreCLI@2
     name: dotnet_build_step

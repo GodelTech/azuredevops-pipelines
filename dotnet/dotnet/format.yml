@@ -38,11 +38,12 @@ steps:
   - pwsh: |
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
+      $artifactStagingDirectory = $env:BUILD_ARTIFACTSTAGINGDIRECTORY
 
       $formatArgs = '--verify-no-changes'
       if ($noRestore) { $formatArgs += ' --no-restore' }
       if ($publishReport) {
-        $reportDir = "$(Build.ArtifactStagingDirectory)/dotnet-reports"
+        $reportDir = "$artifactStagingDirectory/dotnet-reports"
         New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
         $formatArgs += " --report `"$reportDir/format-report.json`""
       }
@@ -58,6 +59,7 @@ steps:
     env:
       NO_RESTORE: ${{ parameters.noRestore }}
       PUBLISH_REPORT: ${{ parameters.publishReport }}
+      BUILD_ARTIFACTSTAGINGDIRECTORY: $(Build.ArtifactStagingDirectory)
 
   - task: DotNetCoreCLI@2
     name: dotnet_format_step

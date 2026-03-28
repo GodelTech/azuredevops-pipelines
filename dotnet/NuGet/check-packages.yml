@@ -12,6 +12,7 @@ parameters:
       enable: true,
       includePrerelease: false,
       includeTransitive: true,
+      warnIfTransitiveExcluded: false,
       artifactName: 'nuget-outdated-report',
       stepResult: 'SucceededWithIssues',
       transitiveStepResult: 'Succeeded'
@@ -24,6 +25,7 @@ parameters:
     default: {
       enable: true,
       includeTransitive: true,
+      warnIfTransitiveExcluded: true,
       artifactName: 'nuget-deprecated-report',
       stepResult: 'Failed',
       transitiveStepResult: 'SucceededWithIssues'
@@ -36,6 +38,7 @@ parameters:
     default: {
       enable: true,
       includeTransitive: true,
+      warnIfTransitiveExcluded: true,
       artifactName: 'nuget-vulnerable-report',
       stepResult: 'Failed',
       transitiveStepResult: 'Failed'
@@ -71,6 +74,8 @@ steps:
         includePrerelease: ${{ parameters.outdatedPackages.includePrerelease }}
       ${{ if ne(parameters.outdatedPackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.outdatedPackages.includeTransitive }}
+      ${{ if ne(parameters.outdatedPackages.warnIfTransitiveExcluded, '') }}:
+        warnIfTransitiveExcluded: ${{ parameters.outdatedPackages.warnIfTransitiveExcluded }}
       noRestore: ${{ parameters.noRestore }}
       ${{ if ne(parameters.outdatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.outdatedPackages.stepResult }}
@@ -90,6 +95,8 @@ steps:
         enable: ${{ parameters.deprecatedPackages.enable }}
       ${{ if ne(parameters.deprecatedPackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.deprecatedPackages.includeTransitive }}
+      ${{ if ne(parameters.deprecatedPackages.warnIfTransitiveExcluded, '') }}:
+        warnIfTransitiveExcluded: ${{ parameters.deprecatedPackages.warnIfTransitiveExcluded }}
       noRestore: ${{ parameters.noRestore }}
       ${{ if ne(parameters.deprecatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.deprecatedPackages.stepResult }}
@@ -109,6 +116,8 @@ steps:
         enable: ${{ parameters.vulnerablePackages.enable }}
       ${{ if ne(parameters.vulnerablePackages.includeTransitive, '') }}:
         includeTransitive: ${{ parameters.vulnerablePackages.includeTransitive }}
+      ${{ if ne(parameters.vulnerablePackages.warnIfTransitiveExcluded, '') }}:
+        warnIfTransitiveExcluded: ${{ parameters.vulnerablePackages.warnIfTransitiveExcluded }}
       noRestore: ${{ parameters.noRestore }}
       ${{ if ne(parameters.vulnerablePackages.stepResult, '') }}:
         stepResult: ${{ parameters.vulnerablePackages.stepResult }}

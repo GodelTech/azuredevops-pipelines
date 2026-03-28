@@ -11,13 +11,28 @@ parameters:
 
 steps:
   - pwsh: |
+      $accessToken = $env:SYSTEM_ACCESSTOKEN
+      $collectionUri = $env:SYSTEM_COLLECTIONURI
+      $teamProject = $env:SYSTEM_TEAMPROJECT
+      $buildId = $env:BUILD_BUILDID
+
       $headers = @{
-        Authorization  = "Bearer $(System.AccessToken)"
+        Authorization  = "Bearer $accessToken"
         "Content-Type" = "application/json"
       }
-      $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)?api-version=7.1"
+      $url = "$collectionUri$teamProject/_apis/build/builds/$buildId?api-version=7.1"
       $body = @{ status = "cancelling" } | ConvertTo-Json
-      Invoke-RestMethod -Uri $url -Method Patch -Headers $headers -Body $body
+      try {
+        Invoke-RestMethod -Uri $url -Method Patch -Headers $headers -Body $body -ErrorAction Stop
+      } catch {
+        Write-Host "##vso[task.logissue type=error]Failed to cancel build: $_"
+        exit 1
+      }
     displayName: 'Cancel build'
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      SYSTEM_COLLECTIONURI: $(System.CollectionUri)
+      SYSTEM_TEAMPROJECT: $(System.TeamProject)
+      BUILD_BUILDID: $(Build.BuildId)

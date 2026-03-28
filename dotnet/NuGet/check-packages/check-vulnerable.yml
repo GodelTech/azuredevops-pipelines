@@ -72,22 +72,27 @@ steps:
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
       $artifactName = $env:ARTIFACT_NAME
       $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
+      $artifactStagingDirectory = $env:BUILD_ARTIFACTSTAGINGDIRECTORY
+      $collectionUri = $env:SYSTEM_COLLECTIONURI
+      $teamProject = $env:SYSTEM_TEAMPROJECT
+      $buildId = $env:BUILD_BUILDID
+      $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
       if (-not $includeTransitive -and $warnIfTransitiveExcluded) {
         Write-Host "##vso[task.logissue type=warning]Transitive packages are excluded from the vulnerable check."
       }
 
-      $command = 'dotnet list package --vulnerable --format json'
-      if ($includeTransitive) { $command += ' --include-transitive' }
-      if ($noRestore) { $command += ' --no-restore' }
+      $dotnetArgs = @('list', 'package', '--vulnerable', '--format', 'json')
+      if ($includeTransitive) { $dotnetArgs += '--include-transitive' }
+      if ($noRestore) { $dotnetArgs += '--no-restore' }
 
-      $output = Invoke-Expression $command
+      $output = & dotnet @dotnetArgs
       $json = $output | ConvertFrom-Json
       $prettyOutput = $json | ConvertTo-Json -Depth 10
       Write-Host $prettyOutput
 
       if ($publishReport) {
-        $reportPath = "$(Build.ArtifactStagingDirectory)/nuget-reports/${artifactName}.json"
+        $reportPath = "$artifactStagingDirectory/nuget-reports/$artifactName.json"
         New-Item -ItemType Directory -Force -Path (Split-Path $reportPath) | Out-Null
         $output | Set-Content -Path $reportPath -Encoding UTF8
       }
@@ -156,7 +161,7 @@ steps:
 
         $reportLines = @()
         if ($publishReport) {
-          $artifactsUrl = "$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts"
+          $artifactsUrl = "$collectionUri$teamProject/_build/results?buildId=$buildId&view=artifacts"
           $reportLines += "Report artifact: [**$artifactName**]($artifactsUrl)"
         } else {
           $reportLines += "_Report artifact publishing is disabled._"
@@ -177,7 +182,7 @@ steps:
         )
         $summaryLines += $reportLines
 
-        $summaryPath = "$(Agent.TempDirectory)/job-summary.md"
+        $summaryPath = "$agentTempDirectory/job-summary.md"
         Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8
       }
     displayName: 'Check NuGet vulnerable packages'
@@ -198,6 +203,11 @@ steps:
       PUBLISH_REPORT: ${{ parameters.publishReport }}
       ARTIFACT_NAME: ${{ parameters.artifactName }}
       APPEND_SUMMARY: ${{ parameters.appendSummary }}
+      BUILD_ARTIFACTSTAGINGDIRECTORY: $(Build.ArtifactStagingDirectory)
+      SYSTEM_COLLECTIONURI: $(System.CollectionUri)
+      SYSTEM_TEAMPROJECT: $(System.TeamProject)
+      BUILD_BUILDID: $(Build.BuildId)
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
 
   - publish: '$(Build.ArtifactStagingDirectory)/nuget-reports/${{ parameters.artifactName }}.json'
     displayName: 'Publish NuGet vulnerable packages report'

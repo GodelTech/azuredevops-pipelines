@@ -43,8 +43,9 @@ steps:
       $title = $env:SUMMARY_TITLE
       $content = $env:SUMMARY_CONTENT
       $contentBlocks = $env:SUMMARY_CONTENT_BLOCKS | ConvertFrom-Json
+      $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
-      $filePath = "$(Agent.TempDirectory)/job-summary.md"
+      $filePath = "$agentTempDirectory/job-summary.md"
 
       $lines = @()
 
@@ -80,3 +81,4 @@ steps:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
       SUMMARY_CONTENT_BLOCKS: ${{ convertToJson(parameters.contentBlocks) }}
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)

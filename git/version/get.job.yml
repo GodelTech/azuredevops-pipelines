@@ -53,10 +53,10 @@ jobs:
             update-build-number=false
 
       - ${{ if eq(parameters.enableBuildDebug, true) }}:
-          - script: |
-              echo "SemVer '${{ parameters.stepName }}.semVer': $(${{ parameters.stepName }}.semVer)"
+          - pwsh: |
+              Write-Host "SemVer '${{ parameters.stepName }}.semVer': $(${{ parameters.stepName }}.semVer)"
             displayName: 'Display GitVersion SemVer output'
 
-          - script: |
-              echo "FullSemVer '${{ parameters.stepName }}.fullSemVer': $(${{ parameters.stepName }}.fullSemVer)"
+          - pwsh: |
+              Write-Host "FullSemVer '${{ parameters.stepName }}.fullSemVer': $(${{ parameters.stepName }}.fullSemVer)"
             displayName: 'Display GitVersion FullSemVer output'
