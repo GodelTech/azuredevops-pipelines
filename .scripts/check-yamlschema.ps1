@@ -47,16 +47,27 @@ if ($RemoteUrl -eq '') {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-function ConvertTo-CanonicalJson([string]$json) {
+function ConvertTo-CanonicalJson {
     <#
-    Parse the JSON into a live object then re-serialise with sorted keys and
-    consistent indentation so that two semantically identical documents compare
-    equal regardless of original whitespace or key ordering.
-    Returns a hashtable with:
-      Compressed - single-line JSON for equality comparison
-      Pretty     - indented JSON (one value per line) for human-readable diff
+    .SYNOPSIS
+        Normalises a JSON string for deterministic equality comparison.
+    .DESCRIPTION
+        Parses the JSON into a live object then re-serialises with consistent
+        indentation so that two semantically identical documents compare equal
+        regardless of original whitespace or key ordering.
+    .PARAMETER Json
+        Raw JSON string to normalise.
+    .OUTPUTS
+        [hashtable] With keys:
+          Compressed - single-line JSON for equality comparison.
+          Pretty     - indented JSON for human-readable diff output.
     #>
-    $obj        = $json | ConvertFrom-Json
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Json
+    )
+    $obj        = $Json | ConvertFrom-Json
     $compressed = $obj | ConvertTo-Json -Depth 100 -Compress
     $pretty     = $obj | ConvertTo-Json -Depth 100
     return @{ Compressed = $compressed; Pretty = $pretty }

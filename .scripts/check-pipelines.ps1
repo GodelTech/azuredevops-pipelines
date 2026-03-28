@@ -89,19 +89,33 @@ if ($AccessToken -ne '') {
 
 # ── Helper ────────────────────────────────────────────────────────────────────────────────────
 function Invoke-AzureDevOpsApi {
-    param([string]$Url)
+    <#
+    .SYNOPSIS
+        Sends a GET request to the Azure DevOps REST API.
+    .DESCRIPTION
+        Wraps Invoke-WebRequest with the pre-built authorization headers. Exits with
+        code 2 on HTTP 401/403 (authentication errors) or any other request failure,
+        printing an actionable error message before exiting.
+    .PARAMETER Url
+        Full URL of the Azure DevOps REST API endpoint to call.
+    .OUTPUTS
+        [Microsoft.PowerShell.Commands.BasicHtmlWebResponseObject] The raw response object.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Url
+    )
     try {
         return Invoke-WebRequest -Uri $Url -Headers $headers -UseBasicParsing -ErrorAction Stop
-    }
-    catch {
+    } catch {
         $statusCode = $_.Exception.Response.StatusCode.value__
         if ($statusCode -in @(401, 403)) {
             Write-Host ''
             Write-Host "ERROR: Access denied (HTTP $statusCode)." -ForegroundColor Red
             Write-Host "Provide a Personal Access Token with 'Read' scope via -AccessToken." -ForegroundColor Yellow
             Write-Host 'In Azure DevOps pipelines pass: -AccessToken $env:SYSTEM_ACCESSTOKEN' -ForegroundColor Yellow
-        }
-        else {
+        } else {
             Write-Host "ERROR: API request failed. $_" -ForegroundColor Red
         }
         exit 2

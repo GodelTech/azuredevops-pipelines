@@ -52,18 +52,30 @@ $templates = Get-ChildItem -Path $TemplatesPath -Recurse -Filter '*.yml' |
 # ── Helper: resolve template references from a test file ──────────────────────────────────────
 function Get-TemplateReferences {
     <#
-    Parses all 'template:' lines from a YAML file and returns the resolved absolute paths.
-    Paths are resolved relative to the directory containing the test file.
+    .SYNOPSIS
+        Parses all 'template:' lines from a YAML file and returns the resolved absolute paths.
+    .DESCRIPTION
+        Paths are resolved relative to the directory containing the test file.
+    .PARAMETER FilePath
+        Absolute path to the YAML test file, used to resolve relative template references.
+    .PARAMETER Content
+        Raw text content of the YAML test file.
+    .OUTPUTS
+        [string[]] Absolute paths of every referenced template.
     #>
+    [CmdletBinding()]
     param(
-        [string]$filePath,
-        [string]$content
+        [Parameter(Mandatory)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory)]
+        [string]$Content
     )
 
-    $dir  = [System.IO.Path]::GetDirectoryName($filePath)
+    $dir  = [System.IO.Path]::GetDirectoryName($FilePath)
     $refs = @()
 
-    foreach ($match in [regex]::Matches($content, "template:\s*['\`"]?([^'`"#\r\n]+)['\`"]?")) {
+    foreach ($match in [regex]::Matches($Content, "template:\s*['\`"]?([^'`"#\r\n]+)['\`"]?")) {
         $ref = $match.Groups[1].Value.Trim()
         if ($ref -ne '') {
             $resolved = [System.IO.Path]::GetFullPath((Join-Path $dir $ref))
@@ -94,7 +106,7 @@ foreach ($template in $templates) {
 
     # Check B: test file must reference the template
     $testContent = Get-Content -Path $expectedTestFile -Raw
-    $refs        = Get-TemplateReferences -filePath $expectedTestFile -content $testContent
+    $refs        = Get-TemplateReferences -FilePath $expectedTestFile -Content $testContent
     $templateAbs = [System.IO.Path]::GetFullPath($template.FullName)
 
     $found = $refs | Where-Object { $_ -eq $templateAbs }

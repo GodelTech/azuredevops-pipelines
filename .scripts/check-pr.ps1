@@ -43,14 +43,23 @@ $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
 
 function Get-PrBranchesInclude {
     <#
-    Parses the pr.branches.include list from a YAML pipeline file.
-    Uses a simple line-by-line state machine rather than a full YAML parser to
-    avoid external module dependencies.
-    Returns an array of branch strings (may be empty).
+    .SYNOPSIS
+        Parses the pr.branches.include list from a YAML pipeline file.
+    .DESCRIPTION
+        Uses a simple line-by-line state machine rather than a full YAML parser to
+        avoid external module dependencies.
+    .PARAMETER Content
+        Raw text content of the YAML pipeline file.
+    .OUTPUTS
+        [string[]] Array of branch strings; may be empty.
     #>
-    param([string]$content)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content
+    )
 
-    $lines = ($content -replace "`r`n", "`n") -split "`n"
+    $lines = ($Content -replace "`r`n", "`n") -split "`n"
     $inPr = $false
     $inBranches = $false
     $inInclude = $false
@@ -88,14 +97,23 @@ function Get-PrBranchesInclude {
 
 function Get-PrIncludePaths {
     <#
-    Parses the pr.paths.include list from a YAML pipeline file.
-    Uses a simple line-by-line state machine rather than a full YAML parser to
-    avoid external module dependencies.
-    Returns an array of path strings (may be empty).
+    .SYNOPSIS
+        Parses the pr.paths.include list from a YAML pipeline file.
+    .DESCRIPTION
+        Uses a simple line-by-line state machine rather than a full YAML parser to
+        avoid external module dependencies.
+    .PARAMETER Content
+        Raw text content of the YAML pipeline file.
+    .OUTPUTS
+        [string[]] Array of include path strings; may be empty.
     #>
-    param([string]$content)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content
+    )
 
-    $lines = ($content -replace "`r`n", "`n") -split "`n"
+    $lines = ($Content -replace "`r`n", "`n") -split "`n"
     $inPr = $false
     $inPaths = $false
     $inInclude = $false
@@ -134,16 +152,36 @@ function Get-PrIncludePaths {
 
 function Get-RepoRelativeTemplatePaths {
     <#
-    Extracts all 'template:' references from a YAML pipeline file and returns
-    them as paths relative to the repository root (forward-slash separated).
-    Handles single-quoted, double-quoted, and unquoted template values.
+    .SYNOPSIS
+        Extracts all 'template:' references from a YAML pipeline file.
+    .DESCRIPTION
+        Returns all template paths as paths relative to the repository root (forward-slash
+        separated). Handles single-quoted, double-quoted, and unquoted template values.
+    .PARAMETER Content
+        Raw text content of the YAML pipeline file.
+    .PARAMETER FilePath
+        Absolute path to the YAML pipeline file, used to resolve relative template references.
+    .PARAMETER RepoRoot
+        Absolute path to the repository root, used to compute repo-relative output paths.
+    .OUTPUTS
+        [string[]] Unique repo-relative forward-slash paths for every referenced template.
     #>
-    param([string]$content, [string]$filePath, [string]$repoRoot)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content,
 
-    $fileDir = [System.IO.Path]::GetDirectoryName($filePath)
+        [Parameter(Mandatory)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory)]
+        [string]$RepoRoot
+    )
+
+    $fileDir = [System.IO.Path]::GetDirectoryName($FilePath)
     $templatePaths = @()
 
-    $templateMatches = [regex]::Matches($content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
+    $templateMatches = [regex]::Matches($Content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
     foreach ($m in $templateMatches) {
         # Pick whichever capture group matched (single-quoted, double-quoted, or bare)
         $ref = if ($m.Groups[1].Success) { $m.Groups[1].Value }
@@ -152,7 +190,7 @@ function Get-RepoRelativeTemplatePaths {
 
         # Resolve to an absolute path then make it repo-relative with forward slashes
         $absolute = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($fileDir, $ref))
-        $relative = $absolute.Substring($repoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
+        $relative = $absolute.Substring($RepoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
         $templatePaths += $relative
     }
 
@@ -175,14 +213,14 @@ foreach ($file in $files) {
     } elseif ($content -notmatch '(?m)^pr:\s*$') {
         $fileIssues += "pr block is missing"
     } else {
-        $prBranches = @(Get-PrBranchesInclude -content $content)
+        $prBranches = @(Get-PrBranchesInclude -Content $content)
         if ($prBranches -notcontains '*') {
             $fileIssues += "pr.branches.include must contain '*'"
         }
 
         # CI.yml is exempt from paths checks as it intentionally uses a branch-only pr trigger
         if ($file.Name -ne 'CI.yml') {
-            $prPaths = @(Get-PrIncludePaths -content $content)
+            $prPaths = @(Get-PrIncludePaths -Content $content)
 
             if ($prPaths.Count -eq 0) {
                 $fileIssues += "pr.paths.include is missing or empty"
@@ -193,7 +231,7 @@ foreach ($file in $files) {
                 }
 
                 # The pipeline must also re-trigger when any referenced template changes
-                $templatePaths = @(Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot)
+                $templatePaths = @(Get-RepoRelativeTemplatePaths -Content $content -FilePath $file.FullName -RepoRoot $repoRoot)
                 foreach ($templatePath in $templatePaths) {
                     $templateFullPath = Join-Path $repoRoot $templatePath
                     if (-not (Test-Path -Path $templateFullPath)) {

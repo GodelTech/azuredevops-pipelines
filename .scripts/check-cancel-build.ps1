@@ -47,23 +47,43 @@ $cancelBuildTemplatePath = 'azuredevops/build/cancel-build.yml'
 
 function Get-RepoRelativeTemplatePaths {
     <#
-    Extracts all 'template:' references from a YAML pipeline file and returns
-    them as paths relative to the repository root (forward-slash separated).
-    Handles single-quoted, double-quoted, and unquoted template values.
+    .SYNOPSIS
+        Extracts all 'template:' references from a YAML pipeline file.
+    .DESCRIPTION
+        Returns all template paths as paths relative to the repository root (forward-slash
+        separated). Handles single-quoted, double-quoted, and unquoted template values.
+    .PARAMETER Content
+        Raw text content of the YAML pipeline file.
+    .PARAMETER FilePath
+        Absolute path to the YAML pipeline file, used to resolve relative template references.
+    .PARAMETER RepoRoot
+        Absolute path to the repository root, used to compute repo-relative output paths.
+    .OUTPUTS
+        [string[]] Unique repo-relative forward-slash paths for every referenced template.
     #>
-    param([string]$content, [string]$filePath, [string]$repoRoot)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content,
 
-    $fileDir = [System.IO.Path]::GetDirectoryName($filePath)
+        [Parameter(Mandatory)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory)]
+        [string]$RepoRoot
+    )
+
+    $fileDir = [System.IO.Path]::GetDirectoryName($FilePath)
     $templatePaths = @()
 
-    $templateMatches = [regex]::Matches($content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
+    $templateMatches = [regex]::Matches($Content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
     foreach ($m in $templateMatches) {
         $ref = if ($m.Groups[1].Success) { $m.Groups[1].Value }
                elseif ($m.Groups[2].Success) { $m.Groups[2].Value }
                else { $m.Groups[3].Value }
 
         $absolute = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($fileDir, $ref))
-        $relative = $absolute.Substring($repoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
+        $relative = $absolute.Substring($RepoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
         $templatePaths += $relative
     }
 
@@ -82,7 +102,7 @@ foreach ($file in $files) {
     if ($repoRelative -in $ExcludeFiles) { continue }
 
     $content = Get-Content -Path $file.FullName -Raw
-    $templatePaths = Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot
+    $templatePaths = Get-RepoRelativeTemplatePaths -Content $content -FilePath $file.FullName -RepoRoot $repoRoot
 
     if ($cancelBuildTemplatePath -in $templatePaths) {
         $found += $file.FullName

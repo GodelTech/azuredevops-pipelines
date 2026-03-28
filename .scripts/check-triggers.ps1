@@ -43,14 +43,23 @@ $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
 
 function Get-TriggerIncludePaths {
     <#
-    Parses the trigger.paths.include list from a YAML pipeline file.
-    Uses a simple line-by-line state machine rather than a full YAML parser to
-    avoid external module dependencies.
-    Returns an array of path strings (may be empty).
+    .SYNOPSIS
+        Parses the trigger.paths.include list from a YAML pipeline file.
+    .DESCRIPTION
+        Uses a simple line-by-line state machine rather than a full YAML parser to
+        avoid external module dependencies.
+    .PARAMETER Content
+        Raw text content of the YAML pipeline file.
+    .OUTPUTS
+        [string[]] Array of include path strings; may be empty.
     #>
-    param([string]$content)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content
+    )
 
-    $lines = ($content -replace "`r`n", "`n") -split "`n"
+    $lines = ($Content -replace "`r`n", "`n") -split "`n"
     $inTrigger = $false
     $inPaths = $false
     $inInclude = $false
@@ -89,16 +98,36 @@ function Get-TriggerIncludePaths {
 
 function Get-RepoRelativeTemplatePaths {
     <#
-    Extracts all 'template:' references from a YAML pipeline file and returns
-    them as paths relative to the repository root (forward-slash separated).
-    Handles single-quoted, double-quoted, and unquoted template values.
+    .SYNOPSIS
+        Extracts all 'template:' references from a YAML pipeline file.
+    .DESCRIPTION
+        Returns all template paths as paths relative to the repository root (forward-slash
+        separated). Handles single-quoted, double-quoted, and unquoted template values.
+    .PARAMETER Content
+        Raw text content of the YAML pipeline file.
+    .PARAMETER FilePath
+        Absolute path to the YAML pipeline file, used to resolve relative template references.
+    .PARAMETER RepoRoot
+        Absolute path to the repository root, used to compute repo-relative output paths.
+    .OUTPUTS
+        [string[]] Unique repo-relative forward-slash paths for every referenced template.
     #>
-    param([string]$content, [string]$filePath, [string]$repoRoot)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content,
 
-    $fileDir = [System.IO.Path]::GetDirectoryName($filePath)
+        [Parameter(Mandatory)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory)]
+        [string]$RepoRoot
+    )
+
+    $fileDir = [System.IO.Path]::GetDirectoryName($FilePath)
     $templatePaths = @()
 
-    $templateMatches = [regex]::Matches($content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
+    $templateMatches = [regex]::Matches($Content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
     foreach ($m in $templateMatches) {
         # Pick whichever capture group matched (single-quoted, double-quoted, or bare)
         $ref = if ($m.Groups[1].Success) { $m.Groups[1].Value }
@@ -107,7 +136,7 @@ function Get-RepoRelativeTemplatePaths {
 
         # Resolve to an absolute path then make it repo-relative with forward slashes
         $absolute = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($fileDir, $ref))
-        $relative = $absolute.Substring($repoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
+        $relative = $absolute.Substring($RepoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
         $templatePaths += $relative
     }
 
@@ -132,7 +161,7 @@ foreach ($file in $files) {
             $fileIssues += "trigger is missing 'batch: true'"
         }
 
-        $triggerPaths = @(Get-TriggerIncludePaths -content $content)
+        $triggerPaths = @(Get-TriggerIncludePaths -Content $content)
 
         if ($triggerPaths.Count -eq 0) {
             $fileIssues += "trigger.paths.include is missing or empty"
@@ -143,7 +172,7 @@ foreach ($file in $files) {
             }
 
             # The pipeline must also re-trigger when any referenced template changes
-            $templatePaths = @(Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot)
+            $templatePaths = @(Get-RepoRelativeTemplatePaths -Content $content -FilePath $file.FullName -RepoRoot $repoRoot)
             foreach ($templatePath in $templatePaths) {
                 $templateFullPath = Join-Path $repoRoot $templatePath
                 if (-not (Test-Path -Path $templateFullPath)) {

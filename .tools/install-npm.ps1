@@ -42,9 +42,29 @@ if (-not (Get-Variable -Name 'IsWindows' -ErrorAction SilentlyContinue)) {
 
 # ── Helper: compare semantic versions ────────────────────────────────────────────────────────
 function Compare-Version {
-    param([string]$actual, [string]$required)
-    $a = [Version]($actual  -replace '^v', '')
-    $r = [Version]($required -replace '^v', '')
+    <#
+    .SYNOPSIS
+        Compares two semantic version strings.
+    .DESCRIPTION
+        Returns $true when the actual version is greater than or equal to the required version.
+        Leading 'v' prefixes are stripped before comparison.
+    .PARAMETER Actual
+        The version string currently installed (e.g. '10.2.3' or 'v10.2.3').
+    .PARAMETER Required
+        The minimum acceptable version string (e.g. '10.0.0').
+    .OUTPUTS
+        [bool] $true when Actual >= Required, otherwise $false.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Actual,
+
+        [Parameter(Mandatory)]
+        [string]$Required
+    )
+    $a = [Version]($Actual  -replace '^v', '')
+    $r = [Version]($Required -replace '^v', '')
     return $a -ge $r
 }
 

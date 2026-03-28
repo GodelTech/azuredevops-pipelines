@@ -45,16 +45,36 @@ $validBuildSummaryValidationTemplatePaths = @(
 
 function Get-LastRepoRelativeTemplatePath {
     <#
-    Finds the last 'template:' reference in a YAML pipeline file and returns
-    its path relative to the repository root (forward-slash separated).
-    Returns $null if no template references are found.
-    Handles single-quoted, double-quoted, and unquoted template values.
+    .SYNOPSIS
+        Finds the last 'template:' reference in a YAML pipeline file.
+    .DESCRIPTION
+        Returns the path of the last template reference relative to the repository root
+        (forward-slash separated). Returns $null if no template references are found.
+        Handles single-quoted, double-quoted, and unquoted template values.
+    .PARAMETER Content
+        Raw text content of the YAML pipeline file.
+    .PARAMETER FilePath
+        Absolute path to the YAML pipeline file, used to resolve relative template references.
+    .PARAMETER RepoRoot
+        Absolute path to the repository root, used to compute the repo-relative output path.
+    .OUTPUTS
+        [string] Repo-relative forward-slash path of the last template reference, or $null.
     #>
-    param([string]$content, [string]$filePath, [string]$repoRoot)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content,
 
-    $fileDir = [System.IO.Path]::GetDirectoryName($filePath)
+        [Parameter(Mandatory)]
+        [string]$FilePath,
 
-    $templateMatches = [regex]::Matches($content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
+        [Parameter(Mandatory)]
+        [string]$RepoRoot
+    )
+
+    $fileDir = [System.IO.Path]::GetDirectoryName($FilePath)
+
+    $templateMatches = [regex]::Matches($Content, "template:\s+'([^']+)'|template:\s+`"([^`"]+)`"|template:\s+(\S+)")
     if ($templateMatches.Count -eq 0) { return $null }
 
     $lastMatch = $templateMatches[$templateMatches.Count - 1]
@@ -63,7 +83,7 @@ function Get-LastRepoRelativeTemplatePath {
            else { $lastMatch.Groups[3].Value }
 
     $absolute = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($fileDir, $ref))
-    return $absolute.Substring($repoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
+    return $absolute.Substring($RepoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
 }
 
 # ── Scan pipeline files ───────────────────────────────────────────────────────────────────────────
@@ -78,7 +98,7 @@ $issues = @()
 
 foreach ($file in $files) {
     $content = Get-Content -Path $file.FullName -Raw
-    $lastTemplate = Get-LastRepoRelativeTemplatePath -content $content -filePath $file.FullName -repoRoot $repoRoot
+    $lastTemplate = Get-LastRepoRelativeTemplatePath -Content $content -FilePath $file.FullName -RepoRoot $repoRoot
 
     if ($lastTemplate -notin $validBuildSummaryValidationTemplatePaths) {
         $actual = if ($lastTemplate) { "'$lastTemplate'" } else { 'no template reference found' }
