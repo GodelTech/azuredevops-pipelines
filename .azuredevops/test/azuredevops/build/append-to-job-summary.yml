@@ -53,14 +53,46 @@ jobs:
         displayName: 'Upload job summary'
         condition: succeededOrFailed()
 
+  - job: AppendToJobSummaryWithContentBlocks
+    displayName: 'Append to job summary with content blocks'
+    dependsOn: AppendToJobSummary
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - template: '../../../../azuredevops/build/append-to-job-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Append to job summary with content blocks'
+          condition: succeededOrFailed()
+          contentBlocks:
+            - title: 'Test Results'
+              content: |
+                | Suite | Passed | Failed |
+                | --- | --- | --- |
+                | Unit | 42 | 0 |
+            - title: 'Coverage'
+              content: '**Line coverage:** 95%'
+
+      - pwsh: |
+          $filePath = "$(Agent.TempDirectory)/job-summary.md"
+          Write-Host "##vso[task.uploadsummary]$filePath"
+        displayName: 'Upload job summary'
+        condition: succeededOrFailed()
+
   - template: '../../../testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - AppendToJobSummary
+        - AppendToJobSummaryWithContentBlocks
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
         Job **'Append to job summary'**
         Step **'Append to job summary'** result must be: **Succeeded**
+        Step **'Upload job summary'** result must be: **Succeeded**
+
+        Job **'Append to job summary with content blocks'**
+        Step **'Append to job summary with content blocks'** result must be: **Succeeded**
         Step **'Upload job summary'** result must be: **Succeeded**

@@ -143,18 +143,25 @@ steps:
       }
 
       if ($appendSummary) {
-        $artifactsUrl = "$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts"
-
         $infoLines = @()
         if ($topLevelPackages.Count -eq 0 -and $transitivePackages.Count -eq 0) {
           $infoLines += "**✅ No vulnerable NuGet packages found.**"
         } else {
-          $infoLines += "**⚠️ Vulnerable NuGet packages found.**"
+          $infoLines += "**❌ Vulnerable NuGet packages found.**"
         }
         if (-not $includeTransitive -and $warnIfTransitiveExcluded) {
           $infoLines += "**⚠️ Transitive packages are excluded from the vulnerable check.**"
         }
         $infoLines += ""
+
+        $reportLines = @()
+        if ($publishReport) {
+          $artifactsUrl = "$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts"
+          $reportLines += "Report artifact: [**$artifactName**]($artifactsUrl)"
+        } else {
+          $reportLines += "_Report artifact publishing is disabled._"
+        }
+        $reportLines += ""
 
         $summaryLines = @(
           "## NuGet Vulnerable Packages Check Results",
@@ -166,10 +173,9 @@ steps:
           "| --- | --- |",
           "| Top-level | $($topLevelPackages.Count) |",
           "| Transitive | $(if ($includeTransitive) { $transitivePackages.Count } else { 'SKIPPED' }) |",
-          "",
-          "Report artifact: [**$artifactName**]($artifactsUrl) (published if publish report is enabled)",
           ""
         )
+        $summaryLines += $reportLines
 
         $summaryPath = "$(Agent.TempDirectory)/job-summary.md"
         Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8

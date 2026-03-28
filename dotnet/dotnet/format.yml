@@ -60,6 +60,7 @@ steps:
       PUBLISH_REPORT: ${{ parameters.publishReport }}
 
   - task: DotNetCoreCLI@2
+    name: dotnet_format_step
     displayName: 'dotnet format'
     condition: |
       and
@@ -84,12 +85,14 @@ steps:
           eq(${{ parameters.appendSummary }}, true)
         )
       title: 'Code Format'
-      # yamllint disable rule:line-length
-      content: |
-        Code format verification was executed.
-
-        Report artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts) (published if publish report is enabled)
-      # yamllint enable rule:line-length
+      content: 'Code format result: **$[ steps.dotnet_format_step.result ]**'
+      contentBlocks:
+        - ${{ if parameters.publishReport }}:
+            # yamllint disable rule:line-length
+            content: 'Report artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'
+            # yamllint enable rule:line-length
+          ${{ else }}:
+            content: '_Report artifact publishing is disabled._'
 
   - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/format-report.json'
     displayName: 'Publish format report'

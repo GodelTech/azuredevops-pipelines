@@ -24,10 +24,25 @@
     type: string
     default: ''
 
+  - name: contentBlocks
+    displayName: 'Content blocks to include in the summary'
+    type: object
+    default: []
+    # Example:
+    # contentBlocks:
+    #   - title: 'Test Results'
+    #     content: |
+    #       | Suite | Passed | Failed |
+    #       | --- | --- | --- |
+    #       | Unit | 42 | 0 |
+    #   - title: 'Coverage'
+    #     content: '**Line coverage:** 95%'
+
 steps:
   - pwsh: |
       $title = $env:SUMMARY_TITLE
       $content = $env:SUMMARY_CONTENT
+      $contentBlocks = $env:SUMMARY_CONTENT_BLOCKS | ConvertFrom-Json
 
       $filePath = "$(Agent.TempDirectory)/job-summary.md"
 
@@ -43,6 +58,17 @@ steps:
         $lines += ""
       }
 
+      foreach ($block in $contentBlocks) {
+        if ($null -ne $block.title) {
+          $lines += "## $($block.title)"
+          $lines += ""
+        }
+        if ($null -ne $block.content) {
+          $lines += $block.content.TrimEnd()
+          $lines += ""
+        }
+      }
+
       Add-Content -Path $filePath -Value ($lines -join "`n") -Encoding UTF8
 
       Write-Host "Appended to job summary:"
@@ -53,3 +79,4 @@ steps:
     env:
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
+      SUMMARY_CONTENT_BLOCKS: ${{ convertToJson(parameters.contentBlocks) }}

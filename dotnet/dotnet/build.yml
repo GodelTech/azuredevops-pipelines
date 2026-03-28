@@ -79,6 +79,7 @@ steps:
       PUBLISH_BINLOG: ${{ parameters.publishBinlog }}
 
   - task: DotNetCoreCLI@2
+    name: dotnet_build_step
     displayName: 'dotnet build'
     inputs:
       command: 'build'
@@ -98,15 +99,20 @@ steps:
           eq(${{ parameters.appendSummary }}, true)
         )
       title: '.NET Build'
-      # yamllint disable rule:line-length
       content: |
+        Build result: **$[ steps.dotnet_build_step.result ]**
+
         | Property | Value |
         | --- | --- |
         | Configuration | ${{ parameters.configuration }} |
         | Verbosity | ${{ parameters.verbosity }} |
-
-        Binary log artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts) (published if publish binary log is enabled)
-      # yamllint enable rule:line-length
+      contentBlocks:
+        - ${{ if parameters.publishBinlog }}:
+            # yamllint disable rule:line-length
+            content: 'Binary log artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'
+            # yamllint enable rule:line-length
+          ${{ else }}:
+            content: '_Binary log artifact publishing is disabled._'
 
   - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/msbuild.binlog'
     displayName: 'Publish build binary log'
