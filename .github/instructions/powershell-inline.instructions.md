@@ -83,6 +83,22 @@ standalone `.ps1` files. Apply these guidelines when writing or reviewing inline
     API_URL: $(System.CollectionUri)
 ```
 
+## String Interpolation in URLs
+
+When embedding a variable directly before `?` in a URL string, PowerShell's interpolation
+parser treats `$var?rest` as one variable name (`${var?rest}`), which evaluates to empty.
+Always use `${varName}` to explicitly close the variable reference when it is immediately
+followed by `?`, `[`, or any non-alphanumeric/non-underscore character inside a
+double-quoted string.
+
+```yaml
+# WRONG — $buildId?api is parsed as one variable name → buildId is empty in the URL
+$url = "$collectionUri$teamProject/_apis/build/builds/$buildId?api-version=7.1"
+
+# CORRECT — ${buildId} explicitly closes the variable reference
+$url = "$collectionUri$teamProject/_apis/build/builds/${buildId}?api-version=7.1"
+```
+
 ## Style Rules (inline-specific)
 
 - Use `camelCase` for local variables (not PascalCase — reduces noise vs pipeline variable names)
