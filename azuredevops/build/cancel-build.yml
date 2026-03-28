@@ -11,6 +11,7 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $accessToken = $env:SYSTEM_ACCESSTOKEN
       $collectionUri = $env:SYSTEM_COLLECTIONURI
       $teamProject = $env:SYSTEM_TEAMPROJECT
@@ -22,6 +23,11 @@ steps:
       }
       $url = "$collectionUri$teamProject/_apis/build/builds/$buildId?api-version=7.1"
       $body = @{ status = "cancelling" } | ConvertTo-Json
+
+      if ($enableBuildDebug) {
+        Write-Host "Cancel build URL: $url"
+      }
+
       try {
         Invoke-RestMethod -Uri $url -Method Patch -Headers $headers -Body $body -ErrorAction Stop
       } catch {
@@ -32,6 +38,7 @@ steps:
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       SYSTEM_COLLECTIONURI: $(System.CollectionUri)
       SYSTEM_TEAMPROJECT: $(System.TeamProject)
