@@ -100,11 +100,25 @@ jobs:
       - script: npx prettier . --check
         displayName: 'Run prettier'
 
+  - job: CheckTemplateReferences
+    displayName: 'Check template references'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckPrettier
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-template-references'
+        inputs:
+          filePath: '.scripts/check-template-references.ps1'
+          pwsh: true
+
   - job: CheckTriggers
     displayName: 'Check triggers'
     pool:
       vmImage: ${{ parameters.vmImage }}
-    dependsOn: CheckPrettier
+    dependsOn: CheckTemplateReferences
     steps:
       - checkout: self
 
