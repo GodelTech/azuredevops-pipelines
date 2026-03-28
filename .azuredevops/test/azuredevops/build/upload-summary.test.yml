@@ -24,6 +24,17 @@ trigger:
       - azuredevops/build/append-to-job-summary.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/upload-summary.test.yml
+      - azuredevops/build/upload-summary.yml
+      - azuredevops/build/append-to-job-summary.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
 schedules:
   - cron: '0 0 1 * *'
     displayName: 'Monthly check'

@@ -1,2 +1,5 @@
 # Igrnore dummy project files
 .azuredevops/dummy-projects/
+
+# Ignore AI instruction files - formatting adds no value and may corrupt prose/examples
+.github/instructions/

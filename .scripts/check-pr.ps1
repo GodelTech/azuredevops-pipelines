@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    Validates trigger blocks in all Azure DevOps pipeline YAML files.
+    Validates pr blocks in all Azure DevOps pipeline YAML files.
 
 .DESCRIPTION
     Walks all *.yml files under the .azuredevops folder (excluding testHelpers) and checks
-    that each pipeline has a path-based CI trigger that includes:
+    that each pipeline has a path-based PR trigger that includes:
       • the pipeline file itself, and
       • every template it references.
-    It also checks that 'batch: true' is set in the trigger block.
-    Pipelines with 'trigger: none' are also flagged.
+    It also checks that 'pr.branches.include' contains '*'.
+    Pipelines with 'pr: none' are also flagged.
     Exits with code 1 when any issues are found so the build fails.
 
 .PARAMETER AzureDevOpsPath
@@ -17,10 +17,10 @@
 
 .EXAMPLE
     # Run from the repository root
-    .\.scripts\check-triggers.ps1
+    .\.scripts\check-pr.ps1
 
     # Run against a custom folder
-    .\.scripts\check-triggers.ps1 -AzureDevOpsPath 'C:\repo\.azuredevops'
+    .\.scripts\check-pr.ps1 -AzureDevOpsPath 'C:\repo\.azuredevops'
 #>
 param(
     [string]$AzureDevOpsPath = ''
@@ -41,9 +41,54 @@ $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
 
 # ── Helper functions ──────────────────────────────────────────────────────────────────────────────
 
-function Get-TriggerIncludePaths {
+function Get-PrBranchesInclude {
     <#
-    Parses the trigger.paths.include list from a YAML pipeline file.
+    Parses the pr.branches.include list from a YAML pipeline file.
+    Uses a simple line-by-line state machine rather than a full YAML parser to
+    avoid external module dependencies.
+    Returns an array of branch strings (may be empty).
+    #>
+    param([string]$content)
+
+    $lines = ($content -replace "`r`n", "`n") -split "`n"
+    $inPr = $false
+    $inBranches = $false
+    $inInclude = $false
+    $branches = @()
+
+    foreach ($line in $lines) {
+        # Detect the start of the top-level pr block
+        if ($line -match '^pr:\s*$') {
+            $inPr = $true
+            continue
+        }
+        # Any top-level key ends the pr block
+        if ($inPr -and $line -match '^[a-zA-Z]') {
+            break
+        }
+        if ($inPr -and $line -match '^\s{2}branches:\s*$') {
+            $inBranches = $true
+            continue
+        }
+        if ($inBranches -and $line -match '^\s{4}include:\s*$') {
+            $inInclude = $true
+            continue
+        }
+        if ($inInclude) {
+            if ($line -match '^\s{6}-\s+(.+)$') {
+                $branches += $Matches[1].Trim().Trim("'").Trim('"')
+            } elseif ($line -notmatch '^\s{6}' -and $line -notmatch '^\s*$') {
+                $inInclude = $false
+            }
+        }
+    }
+
+    return $branches
+}
+
+function Get-PrIncludePaths {
+    <#
+    Parses the pr.paths.include list from a YAML pipeline file.
     Uses a simple line-by-line state machine rather than a full YAML parser to
     avoid external module dependencies.
     Returns an array of path strings (may be empty).
@@ -51,22 +96,22 @@ function Get-TriggerIncludePaths {
     param([string]$content)
 
     $lines = ($content -replace "`r`n", "`n") -split "`n"
-    $inTrigger = $false
+    $inPr = $false
     $inPaths = $false
     $inInclude = $false
     $paths = @()
 
     foreach ($line in $lines) {
-        # Detect the start of the top-level trigger block
-        if ($line -match '^trigger:\s*$') {
-            $inTrigger = $true
+        # Detect the start of the top-level pr block
+        if ($line -match '^pr:\s*$') {
+            $inPr = $true
             continue
         }
-        # Any top-level key ends the trigger block
-        if ($inTrigger -and $line -match '^[a-zA-Z]') {
+        # Any top-level key ends the pr block
+        if ($inPr -and $line -match '^[a-zA-Z]') {
             break
         }
-        if ($inTrigger -and $line -match '^\s{2}paths:\s*$') {
+        if ($inPr -and $line -match '^\s{2}paths:\s*$') {
             $inPaths = $true
             continue
         }
@@ -122,47 +167,50 @@ foreach ($file in $files) {
     $content = Get-Content -Path $file.FullName -Raw
     $fileIssues = @()
 
-    # Normalise to a repo-relative forward-slash path for comparison with trigger entries
+    # Normalise to a repo-relative forward-slash path for comparison with pr entries
     $selfPath = $file.FullName.Substring($repoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
 
-    if ($content -match '(?m)^trigger:\s*none\s*$') {
-        $fileIssues += "trigger is 'none' - a paths-based trigger is required"
+    if ($content -match '(?m)^pr:\s*none\s*$') {
+        $fileIssues += "pr is 'none' - a paths-based pr trigger is required"
+    } elseif ($content -notmatch '(?m)^pr:\s*$') {
+        $fileIssues += "pr block is missing"
     } else {
-        if ($content -notmatch '(?m)^\s{2}batch:\s*true\s*$') {
-            $fileIssues += "trigger is missing 'batch: true'"
+        $prBranches = @(Get-PrBranchesInclude -content $content)
+        if ($prBranches -notcontains '*') {
+            $fileIssues += "pr.branches.include must contain '*'"
         }
 
-        $triggerPaths = @(Get-TriggerIncludePaths -content $content)
+        # CI.yml is exempt from paths checks as it intentionally uses a branch-only pr trigger
+        if ($file.Name -ne 'CI.yml') {
+            $prPaths = @(Get-PrIncludePaths -content $content)
 
-        if ($triggerPaths.Count -eq 0) {
-            $fileIssues += "trigger.paths.include is missing or empty"
-        } else {
-            # The pipeline must re-trigger itself when its own file changes
-            if ($selfPath -notin $triggerPaths) {
-                $fileIssues += "trigger.paths.include missing self: '$selfPath'"
-            }
-
-            # The pipeline must also re-trigger when any referenced template changes
-            $templatePaths = @(Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot)
-            foreach ($templatePath in $templatePaths) {
-                $templateFullPath = Join-Path $repoRoot $templatePath
-                if (-not (Test-Path -Path $templateFullPath)) {
-                    $fileIssues += "template file does not exist: '$templatePath'"
-                    continue
+            if ($prPaths.Count -eq 0) {
+                $fileIssues += "pr.paths.include is missing or empty"
+            } else {
+                # The pipeline must re-trigger itself when its own file changes
+                if ($selfPath -notin $prPaths) {
+                    $fileIssues += "pr.paths.include missing self: '$selfPath'"
                 }
-                if ($templatePath -notin $triggerPaths) {
-                    $fileIssues += "trigger.paths.include missing template: '$templatePath'"
-                }
-            }
 
-            # The trigger must not include paths that are not the pipeline itself or a referenced template
-            # (glob patterns containing '*' are intentional wildcards and are exempt from this check)
-            # CI.yml is also exempt as it legitimately watches non-template config files
-            $allowedPaths = @($selfPath) + $templatePaths
-            if ($file.Name -ne 'CI.yml') {
-                foreach ($triggerPath in $triggerPaths) {
-                    if ($triggerPath -notlike '*`**' -and $triggerPath -notin $allowedPaths) {
-                        $fileIssues += "trigger.paths.include has unreferenced path: '$triggerPath'"
+                # The pipeline must also re-trigger when any referenced template changes
+                $templatePaths = @(Get-RepoRelativeTemplatePaths -content $content -filePath $file.FullName -repoRoot $repoRoot)
+                foreach ($templatePath in $templatePaths) {
+                    $templateFullPath = Join-Path $repoRoot $templatePath
+                    if (-not (Test-Path -Path $templateFullPath)) {
+                        $fileIssues += "template file does not exist: '$templatePath'"
+                        continue
+                    }
+                    if ($templatePath -notin $prPaths) {
+                        $fileIssues += "pr.paths.include missing template: '$templatePath'"
+                    }
+                }
+
+                # The pr trigger must not include paths that are not the pipeline itself or a referenced template
+                # (glob patterns containing '*' are intentional wildcards and are exempt from this check)
+                $allowedPaths = @($selfPath) + $templatePaths
+                foreach ($prPath in $prPaths) {
+                    if ($prPath -notlike '*`**' -and $prPath -notin $allowedPaths) {
+                        $fileIssues += "pr.paths.include has unreferenced path: '$prPath'"
                     }
                 }
             }
@@ -179,9 +227,9 @@ foreach ($file in $files) {
 $totalIssues = 0
 
 if ($issues.Count -eq 0) {
-    Write-Host "All files have valid trigger blocks." -ForegroundColor Green
+    Write-Host "All files have valid pr blocks." -ForegroundColor Green
 } else {
-    Write-Host "The following files have trigger issues:" -ForegroundColor Red
+    Write-Host "The following files have pr issues:" -ForegroundColor Red
     foreach ($filePath in $issues.Keys) {
         Write-Host "  $filePath" -ForegroundColor Yellow
         foreach ($issue in $issues[$filePath]) {
@@ -192,6 +240,6 @@ if ($issues.Count -eq 0) {
 }
 
 $color = if ($totalIssues -eq 0) { 'Green' } else { 'Red' }
-Write-Host "Check Triggers: $totalIssues error(s)" -ForegroundColor $color
+Write-Host "Check PR: $totalIssues error(s)" -ForegroundColor $color
 
 if ($totalIssues -gt 0) { exit 1 }

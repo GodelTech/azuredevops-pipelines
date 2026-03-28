@@ -8,6 +8,7 @@
         "Check YAML Lint",
         "Check Prettier",
         "Check Triggers",
+        "Check PR",
         "Check Schedules",
         "Check Cancel Build",
         "Check Build Summary Validation",
@@ -90,6 +91,26 @@
         "Bypass",
         "-File",
         "${workspaceFolder}\\.scripts\\check-triggers.ps1"
+      ],
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check PR",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.scripts\\check-pr.ps1"
       ],
       "presentation": {
         "echo": false,

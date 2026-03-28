@@ -30,6 +30,18 @@ trigger:
       - dotnet/dotnet/format.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/dotnet/format.test.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/format.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
 schedules:
   - cron: '0 0 1 * *'
     displayName: 'Monthly check'

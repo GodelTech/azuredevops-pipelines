@@ -53,6 +53,16 @@ trigger:
       - dotnet/SonarCloud/prepare.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/SonarCloud/prepare.test.yml
+      - dotnet/SonarCloud/prepare.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
 schedules:
   - cron: '0 0 1 * *'
     displayName: 'Monthly check'

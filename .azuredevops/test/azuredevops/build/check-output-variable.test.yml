@@ -23,6 +23,16 @@ trigger:
       - azuredevops/build/check-output-variable.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/azuredevops/build/check-output-variable.test.yml
+      - azuredevops/build/check-output-variable.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
 schedules:
   - cron: '0 0 1 * *'
     displayName: 'Monthly check'

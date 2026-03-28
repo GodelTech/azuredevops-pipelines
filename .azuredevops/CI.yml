@@ -85,6 +85,15 @@ jobs:
         inputs:
           versionSpec: '22.x'
 
+      - task: Cache@2
+        displayName: 'Cache npm packages'
+        inputs:
+          key: 'npm | "$(Agent.OS)" | package-lock.json'
+          restoreKeys: |
+            npm | "$(Agent.OS)"
+            npm
+          path: $(npm_config_cache)
+
       - script: npm install
         displayName: 'npm install'
 
@@ -105,11 +114,25 @@ jobs:
           filePath: '.scripts/check-triggers.ps1'
           pwsh: true
 
+  - job: CheckPR
+    displayName: 'Check PR'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckTriggers
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-pr'
+        inputs:
+          filePath: '.scripts/check-pr.ps1'
+          pwsh: true
+
   - job: CheckSchedules
     displayName: 'Check schedules'
     pool:
       vmImage: ${{ parameters.vmImage }}
-    dependsOn: CheckTriggers
+    dependsOn: CheckPR
     steps:
       - checkout: self
 
