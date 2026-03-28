@@ -58,10 +58,13 @@ jobs:
           content: 'Test content line.'
 
       - pwsh: |
-          $filePath = "$(Agent.TempDirectory)/job-summary.md"
+          $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
+          $filePath = "$agentTempDirectory/job-summary.md"
           Write-Host "##vso[task.uploadsummary]$filePath"
         displayName: 'Upload job summary'
         condition: succeededOrFailed()
+        env:
+          AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
 
   - job: AppendToJobSummaryWithContentBlocks
     displayName: 'Append to job summary with content blocks'
@@ -86,10 +89,13 @@ jobs:
               content: '**Line coverage:** 95%'
 
       - pwsh: |
-          $filePath = "$(Agent.TempDirectory)/job-summary.md"
+          $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
+          $filePath = "$agentTempDirectory/job-summary.md"
           Write-Host "##vso[task.uploadsummary]$filePath"
         displayName: 'Upload job summary'
         condition: succeededOrFailed()
+        env:
+          AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
 
   - template: '../../../testHelpers/build-summary-validation.job.yml'
     parameters:

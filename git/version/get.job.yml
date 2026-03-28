@@ -54,9 +54,15 @@ jobs:
 
       - ${{ if eq(parameters.enableBuildDebug, true) }}:
           - pwsh: |
-              Write-Host "SemVer '${{ parameters.stepName }}.semVer': $(${{ parameters.stepName }}.semVer)"
+              $semVer = $env:GIT_VERSION_SEMVER
+              Write-Host "SemVer '${{ parameters.stepName }}.semVer': $semVer"
             displayName: 'Display GitVersion SemVer output'
+            env:
+              GIT_VERSION_SEMVER: $(${{ parameters.stepName }}.semVer)
 
           - pwsh: |
-              Write-Host "FullSemVer '${{ parameters.stepName }}.fullSemVer': $(${{ parameters.stepName }}.fullSemVer)"
+              $fullSemVer = $env:GIT_VERSION_FULLSEMVER
+              Write-Host "FullSemVer '${{ parameters.stepName }}.fullSemVer': $fullSemVer"
             displayName: 'Display GitVersion FullSemVer output'
+            env:
+              GIT_VERSION_FULLSEMVER: $(${{ parameters.stepName }}.fullSemVer)

@@ -79,7 +79,7 @@ steps:
       }
 
       if (-not [string]::IsNullOrEmpty($content)) {
-        $lines += $content
+        $lines += $content.TrimEnd()
         $lines += ""
       }
 

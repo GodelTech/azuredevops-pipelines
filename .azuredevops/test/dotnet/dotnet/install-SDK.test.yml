@@ -54,13 +54,15 @@ jobs:
     steps:
       - pwsh: |
           $workingDirectory = $env:WORKING_DIRECTORY
+          $buildSourcesDirectory = $env:BUILD_SOURCESDIRECTORY
 
           Copy-Item "$workingDirectory/global.json" `
-            -Destination '$(Build.SourcesDirectory)/global.json' `
+            -Destination "$buildSourcesDirectory/global.json" `
             -Force
         displayName: 'Copy global.json to $(Build.SourcesDirectory)'
         env:
           WORKING_DIRECTORY: ${{ parameters.workingDirectory }}
+          BUILD_SOURCESDIRECTORY: $(Build.SourcesDirectory)
 
       - template: '../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
