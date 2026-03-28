@@ -1,4 +1,4 @@
-# test-git-version-get.job.yml
+# test-git-version-get.job.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -19,7 +19,7 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/git/version/get.job.yml
+      - .azuredevops/test/git/version/get.job.test.yml
       - git/version/get.job.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 

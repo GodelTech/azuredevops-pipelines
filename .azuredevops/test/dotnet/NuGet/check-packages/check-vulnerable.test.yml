@@ -1,4 +1,4 @@
-﻿# test-dotnet-NuGet-check-packages.yml
+# test-dotnet-NuGet-check-packages-check-vulnerable.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -24,10 +24,10 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/NuGet/check-packages.yml
+      - .azuredevops/test/dotnet/NuGet/check-packages/check-vulnerable.test.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
-      - dotnet/NuGet/check-packages.yml
+      - dotnet/NuGet/check-packages/check-vulnerable.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -39,32 +39,32 @@ schedules:
     always: true
 
 jobs:
-  - job: CheckPackages
-    displayName: 'Check NuGet packages'
+  - job: CheckVulnerablePackages
+    displayName: 'Check NuGet vulnerable packages'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - template: '../../../../dotnet/dotnet/install-SDK.yml'
+      - template: '../../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../dotnet/dotnet/restore.yml'
+      - template: '../../../../../dotnet/dotnet/restore.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../dotnet/NuGet/check-packages.yml'
+      - template: '../../../../../dotnet/NuGet/check-packages/check-vulnerable.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../../testHelpers/build-summary-validation.job.yml'
+  - template: '../../../../testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - CheckPackages
+        - CheckVulnerablePackages
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'Check NuGet packages'** result must be: **Succeeded**
+        Job **'Check NuGet vulnerable packages'** result must be: **Succeeded**

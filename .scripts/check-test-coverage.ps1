@@ -79,7 +79,8 @@ $issues = @()
 
 foreach ($template in $templates) {
     $relativePath = $template.FullName.Substring($TemplatesPath.Length).TrimStart('\', '/')
-    $expectedTestFile = Join-Path $TestPath $relativePath
+    $testFileRelative = $relativePath -replace '\.yml$', '.test.yml'
+    $expectedTestFile = Join-Path $TestPath $testFileRelative
 
     # Check A: mirrored test file must exist
     if (-not (Test-Path $expectedTestFile)) {

@@ -1,4 +1,4 @@
-# test-dotnet-dotnet-restore.yml
+# test-dotnet-dotnet-build.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -24,9 +24,10 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/dotnet/restore.yml
+      - .azuredevops/test/dotnet/dotnet/build.test.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -38,8 +39,8 @@ schedules:
     always: true
 
 jobs:
-  - job: DotnetRestore
-    displayName: 'dotnet restore'
+  - job: DotnetBuild
+    displayName: 'dotnet build'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
@@ -53,12 +54,17 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
+      - template: '../../../../dotnet/dotnet/build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
   - template: '../../../testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - DotnetRestore
+        - DotnetBuild
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'dotnet restore'** result must be: **Succeeded**
+        Job **'dotnet build'** result must be: **Succeeded**

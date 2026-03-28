@@ -1,4 +1,4 @@
-# test-azuredevops-build-quality-check-build-warnings.yml
+# test-azuredevops-build-quality-check-build-warnings.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -19,7 +19,7 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/azuredevops/build/quality/check-build-warnings.yml
+      - .azuredevops/test/azuredevops/build/quality/check-build-warnings.test.yml
       - azuredevops/build/quality/check-build-warnings.yml
       - azuredevops/build/check-output-variable.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml

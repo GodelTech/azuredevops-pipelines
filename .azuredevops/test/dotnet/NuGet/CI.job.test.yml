@@ -1,4 +1,4 @@
-﻿# test-dotnet-NuGet-authenticate.yml
+# test-dotnet-NuGet-CI.job.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -19,8 +19,8 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/NuGet/authenticate.yml
-      - dotnet/NuGet/authenticate.yml
+      - .azuredevops/test/dotnet/NuGet/CI.job.test.yml
+      - dotnet/NuGet/CI.job.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -32,23 +32,17 @@ schedules:
     always: true
 
 jobs:
-  - job: NuGetAuthenticate
-    displayName: 'NuGet authenticate (no service connections)'
-    pool:
+  - template: '../../../../dotnet/NuGet/CI.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
-    steps:
-      - checkout: none
-
-      - template: '../../../../dotnet/NuGet/authenticate.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
 
   - template: '../../../testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - NuGetAuthenticate
+        - GitVersion
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'NuGet authenticate (no service connections)'** result must be: **Succeeded**
+        Job **'GitVersion'** result must be: **Succeeded**

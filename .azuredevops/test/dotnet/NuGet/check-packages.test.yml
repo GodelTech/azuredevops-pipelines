@@ -1,4 +1,4 @@
-﻿# test-dotnet-dotnet-format.yml
+# test-dotnet-NuGet-check-packages.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -24,10 +24,10 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/dotnet/format.yml
+      - .azuredevops/test/dotnet/NuGet/check-packages.test.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/format.yml
+      - dotnet/NuGet/check-packages.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -39,8 +39,8 @@ schedules:
     always: true
 
 jobs:
-  - job: DotnetFormat
-    displayName: 'dotnet format'
+  - job: CheckPackages
+    displayName: 'Check NuGet packages'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
@@ -54,7 +54,7 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../dotnet/dotnet/format.yml'
+      - template: '../../../../dotnet/NuGet/check-packages.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
@@ -64,7 +64,7 @@ jobs:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - DotnetFormat
+        - CheckPackages
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'dotnet format'** result must be: **Succeeded**
+        Job **'Check NuGet packages'** result must be: **Succeeded**

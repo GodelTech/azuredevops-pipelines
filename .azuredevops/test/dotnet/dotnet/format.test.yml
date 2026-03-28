@@ -1,4 +1,4 @@
-﻿# test-dotnet-NuGet-check-packages-check-vulnerable.yml
+# test-dotnet-dotnet-format.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -24,10 +24,10 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/NuGet/check-packages/check-vulnerable.yml
+      - .azuredevops/test/dotnet/dotnet/format.test.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
-      - dotnet/NuGet/check-packages/check-vulnerable.yml
+      - dotnet/dotnet/format.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -39,32 +39,32 @@ schedules:
     always: true
 
 jobs:
-  - job: CheckVulnerablePackages
-    displayName: 'Check NuGet vulnerable packages'
+  - job: DotnetFormat
+    displayName: 'dotnet format'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - template: '../../../../../dotnet/dotnet/install-SDK.yml'
+      - template: '../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../../dotnet/dotnet/restore.yml'
+      - template: '../../../../dotnet/dotnet/restore.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../../dotnet/NuGet/check-packages/check-vulnerable.yml'
+      - template: '../../../../dotnet/dotnet/format.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../../../testHelpers/build-summary-validation.job.yml'
+  - template: '../../../testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - CheckVulnerablePackages
+        - DotnetFormat
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'Check NuGet vulnerable packages'** result must be: **Succeeded**
+        Job **'dotnet format'** result must be: **Succeeded**

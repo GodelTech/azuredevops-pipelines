@@ -1,4 +1,4 @@
-# test-dotnet-SonarCloud-prepare.yml
+# test-dotnet-SonarCloud-prepare.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -49,7 +49,7 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/SonarCloud/prepare.yml
+      - .azuredevops/test/dotnet/SonarCloud/prepare.test.yml
       - dotnet/SonarCloud/prepare.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 

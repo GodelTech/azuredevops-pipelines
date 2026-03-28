@@ -1,4 +1,4 @@
-# test-azuredevops-build-check-output-variable.yml
+# test-azuredevops-build-check-output-variable.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -19,7 +19,7 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/azuredevops/build/check-output-variable.yml
+      - .azuredevops/test/azuredevops/build/check-output-variable.test.yml
       - azuredevops/build/check-output-variable.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 

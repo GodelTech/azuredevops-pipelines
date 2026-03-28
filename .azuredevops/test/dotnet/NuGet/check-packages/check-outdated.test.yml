@@ -1,4 +1,4 @@
-﻿# test-dotnet-dotnet-build.yml
+# test-dotnet-NuGet-check-packages-check-outdated.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -24,10 +24,10 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/dotnet/build.yml
+      - .azuredevops/test/dotnet/NuGet/check-packages/check-outdated.test.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
+      - dotnet/NuGet/check-packages/check-outdated.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -39,32 +39,32 @@ schedules:
     always: true
 
 jobs:
-  - job: DotnetBuild
-    displayName: 'dotnet build'
+  - job: CheckOutdatedPackages
+    displayName: 'Check NuGet outdated packages'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - template: '../../../../dotnet/dotnet/install-SDK.yml'
+      - template: '../../../../../dotnet/dotnet/install-SDK.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../dotnet/dotnet/restore.yml'
+      - template: '../../../../../dotnet/dotnet/restore.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../dotnet/dotnet/build.yml'
+      - template: '../../../../../dotnet/NuGet/check-packages/check-outdated.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../../testHelpers/build-summary-validation.job.yml'
+  - template: '../../../../testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - DotnetBuild
+        - CheckOutdatedPackages
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'dotnet build'** result must be: **Succeeded**
+        Job **'Check NuGet outdated packages'** result must be: **Succeeded**

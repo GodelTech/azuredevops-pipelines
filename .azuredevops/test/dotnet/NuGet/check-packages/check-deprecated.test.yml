@@ -1,4 +1,4 @@
-﻿# test-dotnet-NuGet-check-packages-check-deprecated.yml
+# test-dotnet-NuGet-check-packages-check-deprecated.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -24,7 +24,7 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/NuGet/check-packages/check-deprecated.yml
+      - .azuredevops/test/dotnet/NuGet/check-packages/check-deprecated.test.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
       - dotnet/NuGet/check-packages/check-deprecated.yml

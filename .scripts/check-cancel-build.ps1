@@ -26,7 +26,7 @@
 param(
     [string]$AzureDevOpsPath = '',
     [string[]]$ExcludeFiles   = @(
-        '.azuredevops/test/azuredevops/build/cancel-build.yml'
+        '.azuredevops/test/azuredevops/build/cancel-build.test.yml'
     )
 )
 
