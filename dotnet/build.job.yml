@@ -28,11 +28,55 @@ parameters:
     displayName: 'SonarCloud parameters'
     type: object
     default: {}
+    # Example:
+    # sonarCloud:
+    #   enable: true
+    #   serviceConnection: 'SonarCloud'
+    #   organization: 'my-org'
+    #   projectKey: 'my-project-key'
+    #   projectName: 'My Project'
+    #   coverageReportPath: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
 
   - name: dotnet
     displayName: '.NET parameters'
     type: object
     default: {}
+    # Example:
+    # dotnet:
+    #   nuGetServiceConnections:
+    #     - 'my-nuget-feed'
+    #   projects: '**/*.csproj'
+    #   configuration: 'Release'
+    #   verbosity: 'minimal'
+    #   noRestore: true
+    #   selfContained: false
+    #   publishBinlog: true
+    #   restore:
+    #     enable: true
+    #     useCache: true
+    #   checks:
+    #     publishReport: true
+    #     codeFormatting:
+    #       enable: true
+    #     outdatedPackages:
+    #       enable: true
+    #       includePrerelease: false
+    #       includeTransitive: true
+    #       artifactName: 'nuget-outdated-report'
+    #       stepResult: 'SucceededWithIssues'
+    #       transitiveStepResult: 'Succeeded'
+    #     deprecatedPackages:
+    #       enable: true
+    #       includeTransitive: true
+    #       artifactName: 'nuget-deprecated-report'
+    #       stepResult: 'Failed'
+    #       transitiveStepResult: 'SucceededWithIssues'
+    #     vulnerablePackages:
+    #       enable: true
+    #       includeTransitive: true
+    #       artifactName: 'nuget-vulnerable-report'
+    #       stepResult: 'Failed'
+    #       transitiveStepResult: 'Failed'
 
   - name: buildSummary
     displayName: 'Build summary parameters'
@@ -91,6 +135,8 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if ne(parameters.dotnet.restore.enable, '') }}:
             enable: ${{ parameters.dotnet.restore.enable }}
+          ${{ if ne(parameters.dotnet.restore.useCache, '') }}:
+            useCache: ${{ parameters.dotnet.restore.useCache }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
