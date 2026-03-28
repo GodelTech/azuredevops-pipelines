@@ -20,8 +20,23 @@ parameters:
     default: ''
 
 steps:
-  - task: Cache@2
-    displayName: 'Cache NuGet packages'
+  - pwsh: |
+      $workingDirectory = $env:WORKING_DIRECTORY
+
+      $searchPath = if ($workingDirectory) { $workingDirectory } else { '.' }
+
+      $files = Get-ChildItem -Path $searchPath -Recurse -Filter 'packages.lock.json' |
+        Where-Object { $_.FullName -notmatch '[/\\](bin|obj)[/\\]' }
+
+      if ($files.Count -gt 0) {
+        Write-Host "Found $($files.Count) packages.lock.json file(s)"
+        Write-Host '##vso[task.setvariable variable=lockFilesFound;isOutput=true]true'
+      } else {
+        Write-Host 'No packages.lock.json files found'
+        Write-Host '##vso[task.setvariable variable=lockFilesFound;isOutput=true]false'
+      }
+    displayName: 'Check NuGet lock files'
+    name: check_lock_files
     condition: |
       and
       (
@@ -29,10 +44,33 @@ steps:
         eq(${{ parameters.enable }}, true),
         eq(${{ parameters.useCache }}, true)
       )
+    env:
+      WORKING_DIRECTORY: ${{ parameters.workingDirectory }}
+
+  - task: Cache@2
+    displayName: 'Cache NuGet packages'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.useCache }}, true),
+        eq(variables['check_lock_files.lockFilesFound'], 'true')
+      )
     inputs:
-      key: 'nuget | "$(Agent.OS)" | **/packages.lock.json,!**/bin/**,!**/obj/**'
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        key: |
+          nuget
+          "$(Agent.OS)"
+          ${{ parameters.workingDirectory }}/**/packages.lock.json,!**/bin/**,!**/obj/**
+      ${{ else }}:
+        key: |
+          nuget
+          "$(Agent.OS)"
+          **/packages.lock.json,!**/bin/**,!**/obj/**
       restoreKeys: |
-        nuget | "$(Agent.OS)"
+        nuget
+        "$(Agent.OS)"
         nuget
       path: $(NUGET_PACKAGES)
 
