@@ -62,7 +62,6 @@ steps:
       BUILD_ARTIFACTSTAGINGDIRECTORY: $(Build.ArtifactStagingDirectory)
 
   - task: DotNetCoreCLI@2
-    name: dotnet_format_step
     displayName: 'dotnet format'
     condition: |
       and
@@ -77,19 +76,6 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
-  - pwsh: |
-      $dotnetFormatResult = $env:DOTNET_FORMAT_RESULT
-      Write-Host "##vso[task.setvariable variable=dotnetFormatResult]$dotnetFormatResult"
-    displayName: 'Capture dotnet format result'
-    condition: |
-      and
-      (
-        succeededOrFailed(),
-        eq(${{ parameters.appendSummary }}, true)
-      )
-    env:
-      DOTNET_FORMAT_RESULT: $[ steps.dotnet_format_step.result ]
-
   - template: '../../azuredevops/build/append-to-job-summary.yml'
     parameters:
       stepDisplayName: 'Append code format section to job summary'
@@ -100,7 +86,6 @@ steps:
           eq(${{ parameters.appendSummary }}, true)
         )
       title: 'Code Format'
-      content: 'Code format result: **$(dotnetFormatResult)**'
       contentBlocks:
         - ${{ if parameters.publishReport }}:
             # yamllint disable rule:line-length
