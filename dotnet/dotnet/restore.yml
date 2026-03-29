@@ -74,7 +74,7 @@ steps:
         nuget
       path: $(NUGET_PACKAGES)
 
-  - script: dotnet restore
+  - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'
     condition: |
       and
@@ -82,5 +82,7 @@ steps:
         succeeded(),
         eq(${{ parameters.enable }}, true)
       )
-    ${{ if ne(parameters.workingDirectory, '') }}:
-      workingDirectory: ${{ parameters.workingDirectory }}
+    inputs:
+      command: 'restore'
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
