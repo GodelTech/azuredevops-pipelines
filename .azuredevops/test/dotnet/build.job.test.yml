@@ -25,7 +25,7 @@ parameters:
       organization: 'godeltech',
       projectKey: 'GodelTech_azuredevops-pipelines_test_dotnet_build_job',
       projectName: 'azuredevops-pipelines test dotnet build.job',
-      coverageReportPath: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core/TestResults/Coverage/SonarQube.xml'
+      coverageReportPath: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
     }
 
   - name: dotnet

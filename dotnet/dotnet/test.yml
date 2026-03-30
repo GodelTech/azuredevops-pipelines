@@ -50,6 +50,11 @@
     type: string
     default: ''
 
+  - name: runSettingsFile
+    displayName: 'Path to the .runsettings file'
+    type: string
+    default: ''
+
   - name: collectCoverage
     displayName: 'Collect code coverage (requires coverlet.collector in test projects)'
     type: boolean
@@ -76,12 +81,14 @@ steps:
       $verbosity = $env:VERBOSITY
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
+      $runSettingsFile = $env:RUN_SETTINGS_FILE
       $collectCoverage = [System.Convert]::ToBoolean($env:COLLECT_COVERAGE)
 
       $testArgs = "--configuration $configuration"
       $testArgs += " --verbosity $verbosity"
       if ($noRestore) { $testArgs += ' --no-restore' }
       if ($noBuild) { $testArgs += ' --no-build' }
+      if ($runSettingsFile) { $testArgs += " --settings $runSettingsFile" }
       if ($collectCoverage) { $testArgs += ' --collect:"XPlat Code Coverage"' }
 
       Write-Host "##vso[task.setvariable variable=dotnetTestArguments]$testArgs"
@@ -97,6 +104,7 @@ steps:
       VERBOSITY: ${{ parameters.verbosity }}
       NO_RESTORE: ${{ parameters.noRestore }}
       NO_BUILD: ${{ parameters.noBuild }}
+      RUN_SETTINGS_FILE: ${{ parameters.runSettingsFile }}
       COLLECT_COVERAGE: ${{ parameters.collectCoverage }}
 
   - task: DotNetCoreCLI@2

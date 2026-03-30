@@ -35,7 +35,7 @@ parameters:
     #   organization: 'my-org'
     #   projectKey: 'my-project-key'
     #   projectName: 'My Project'
-    #   coverageReportPath: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
+    #   coverageReportPath: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
 
   - name: dotnet
     displayName: '.NET parameters'
@@ -83,6 +83,7 @@ parameters:
     #     noBuild: true
     #     publishTestResults: true
     #     testRunTitle: 'Unit Tests'
+    #     runSettingsFile: '.runsettings'
     #     collectCoverage: false
     #     coverageReportPath: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
@@ -219,6 +220,8 @@ jobs:
             publishTestResults: ${{ parameters.dotnet.test.publishTestResults }}
           ${{ if ne(parameters.dotnet.test.testRunTitle, '') }}:
             testRunTitle: ${{ parameters.dotnet.test.testRunTitle }}
+          ${{ if ne(parameters.dotnet.test.runSettingsFile, '') }}:
+            runSettingsFile: ${{ parameters.dotnet.test.runSettingsFile }}
           ${{ if ne(parameters.dotnet.test.collectCoverage, '') }}:
             collectCoverage: ${{ parameters.dotnet.test.collectCoverage }}
           ${{ if ne(parameters.dotnet.test.coverageReportPath, '') }}:

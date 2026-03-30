@@ -34,7 +34,9 @@ parameters:
   - name: coverageReportPath
     displayName: 'Coverage report path'
     type: string
-    default: '$(Build.SourcesDirectory)/TestResults/Coverage/SonarQube.xml'
+    default: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
+    # Note: SonarCloud requires OpenCover format. Ensure your .runsettings file includes
+    # <Format>opencover</Format> (or cobertura,opencover) in the coverlet configuration.
 
   - name: workingDirectory
     displayName: 'Working directory'
@@ -57,11 +59,13 @@ steps:
       projectKey: ${{ parameters.projectKey }}
       projectName: ${{ parameters.projectName }}
       # https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/analysis-parameters/parameters-not-settable-in-ui
-      # https://docs.sonarsource.com/sonarqube-cloud/enriching/test-coverage/generic-test-data
+      # https://docs.sonarsource.com/sonarqube-cloud/enriching/test-coverage/dotnet-test-coverage
+      # Note: coverage.opencover.xml is only generated when runSettingsFile is passed to dotnet/test.yml
+      # with <Format>opencover</Format> (or cobertura,opencover) in the coverlet configuration.
       ${{ if eq(parameters.workingDirectory, '') }}:
         extraProperties: |
-          sonar.coverageReportPaths="${{ parameters.coverageReportPath }}"
+          sonar.cs.opencover.reportsPaths=${{ parameters.coverageReportPath }}
       ${{ else }}:
         extraProperties: |
-          sonar.coverageReportPaths="${{ parameters.coverageReportPath }}"
-          sonar.projectBaseDir="${{ parameters.workingDirectory }}"
+          sonar.cs.opencover.reportsPaths=${{ parameters.coverageReportPath }}
+          sonar.projectBaseDir=${{ parameters.workingDirectory }}

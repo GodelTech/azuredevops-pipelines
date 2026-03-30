@@ -38,7 +38,7 @@ parameters:
   - name: coverageReportPath
     displayName: 'Coverage report path'
     type: string
-    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core/TestResults/Coverage/SonarQube.xml'
+    default: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
 
   - name: workingDirectory
     displayName: 'Working directory'
