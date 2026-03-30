@@ -94,6 +94,16 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
+  - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/msbuild.binlog'
+    displayName: 'Publish build binary log'
+    condition: |
+      and
+      (
+        succeededOrFailed(),
+        eq(${{ parameters.publishBinlog }}, true)
+      )
+    artifact: ${{ parameters.artifactName }}
+
   - template: '../../azuredevops/build/append-to-job-summary.yml'
     parameters:
       stepDisplayName: 'Append .NET build section to job summary'
@@ -116,13 +126,3 @@ steps:
             # yamllint enable rule:line-length
           ${{ else }}:
             content: '_Binary log artifact publishing is disabled._'
-
-  - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/msbuild.binlog'
-    displayName: 'Publish build binary log'
-    condition: |
-      and
-      (
-        succeededOrFailed(),
-        eq(${{ parameters.publishBinlog }}, true)
-      )
-    artifact: ${{ parameters.artifactName }}

@@ -76,24 +76,6 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../azuredevops/build/append-to-job-summary.yml'
-    parameters:
-      stepDisplayName: 'Append code format section to job summary'
-      condition: |
-        and
-        (
-          succeededOrFailed(),
-          eq(${{ parameters.appendSummary }}, true)
-        )
-      title: 'Code Format'
-      contentBlocks:
-        - ${{ if parameters.publishReport }}:
-            # yamllint disable rule:line-length
-            content: 'Report artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'
-            # yamllint enable rule:line-length
-          ${{ else }}:
-            content: '_Report artifact publishing is disabled._'
-
   - publish: '$(Build.ArtifactStagingDirectory)/dotnet-reports/format-report.json'
     displayName: 'Publish format report'
     condition: |
@@ -104,3 +86,22 @@ steps:
         eq(${{ parameters.publishReport }}, true)
       )
     artifact: ${{ parameters.artifactName }}
+
+  - template: '../../azuredevops/build/append-to-job-summary.yml'
+    parameters:
+      stepDisplayName: 'Append code format section to job summary'
+      condition: |
+        and
+        (
+          succeededOrFailed(),
+          eq(${{ parameters.enable }}, true),
+          eq(${{ parameters.appendSummary }}, true)
+        )
+      title: 'Code Format'
+      contentBlocks:
+        - ${{ if parameters.publishReport }}:
+            # yamllint disable rule:line-length
+            content: 'Report artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'
+            # yamllint enable rule:line-length
+          ${{ else }}:
+            content: '_Report artifact publishing is disabled._'

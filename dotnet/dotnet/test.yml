@@ -148,6 +148,7 @@ steps:
         and
         (
           succeededOrFailed(),
+          eq(${{ parameters.enable }}, true),
           eq(${{ parameters.appendSummary }}, true)
         )
       title: '.NET Test'
