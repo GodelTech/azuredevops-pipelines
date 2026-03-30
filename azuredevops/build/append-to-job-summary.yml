@@ -37,6 +37,7 @@
     #       | Unit | 42 | 0 |
     #   - title: 'Coverage'
     #     content: '**Line coverage:** 95%'
+    #     noNewLine: true
 
 steps:
   - pwsh: |
@@ -66,7 +67,9 @@ steps:
         }
         if ($null -ne $block.content) {
           $lines += $block.content.TrimEnd()
-          $lines += ""
+          if (-not $block.noNewLine) {
+            $lines += ""
+          }
         }
       }
 

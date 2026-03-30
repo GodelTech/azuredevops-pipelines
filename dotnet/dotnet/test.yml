@@ -160,13 +160,15 @@ steps:
       contentBlocks:
         - ${{ if parameters.publishTestResults }}:
             # yamllint disable rule:line-length
-            content: 'Test results: [**View in Tests tab**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=ms.vss-test-web.build-test-results-tab)'
+            content: 'Test results: [**view**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=ms.vss-test-web.build-test-results-tab)'
             # yamllint enable rule:line-length
+            noNewLine: true
           ${{ else }}:
             content: '_Test results publishing is disabled._'
+            noNewLine: true
         - ${{ if parameters.collectCoverage }}:
             # yamllint disable rule:line-length
-            content: 'Code coverage: [**View in Code Coverage tab**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=codecoverage-tab)'
+            content: 'Code coverage: [**view**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=codecoverage-tab)'
             # yamllint enable rule:line-length
           ${{ else }}:
             content: '_Code coverage collection is disabled._'
