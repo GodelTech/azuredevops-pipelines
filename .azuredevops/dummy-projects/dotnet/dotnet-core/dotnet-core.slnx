@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/DummyProjectDotNetCore/DummyProjectDotNetCore.csproj" Id="f3aa7728-237e-483e-8c9f-4f60112be922" />
   </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/DummyProjectDotNetCore.Tests/DummyProjectDotNetCore.Tests.csproj" Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890" />
+  </Folder>
 </Solution>

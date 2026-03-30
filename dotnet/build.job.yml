@@ -77,6 +77,14 @@ parameters:
     #       artifactName: 'nuget-vulnerable-report'
     #       stepResult: 'Failed'
     #       transitiveStepResult: 'Failed'
+    #   test:
+    #     enable: true
+    #     projects: '**/*Tests.csproj'
+    #     noBuild: true
+    #     publishTestResults: true
+    #     testRunTitle: 'Unit Tests'
+    #     collectCoverage: false
+    #     coverageReportPath: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
   - name: buildSummary
     displayName: 'Build summary parameters'
@@ -187,6 +195,34 @@ jobs:
             noRestore: ${{ parameters.dotnet.noRestore }}
           ${{ if ne(parameters.dotnet.checks.publishReport, '') }}:
             publishReport: ${{ parameters.dotnet.checks.publishReport }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: 'dotnet/test.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.dotnet.test.enable, '') }}:
+            enable: ${{ parameters.dotnet.test.enable }}
+          ${{ if ne(parameters.dotnet.test.projects, '') }}:
+            projects: ${{ parameters.dotnet.test.projects }}
+          ${{ if ne(parameters.dotnet.configuration, '') }}:
+            configuration: ${{ parameters.dotnet.configuration }}
+          ${{ if ne(parameters.dotnet.verbosity, '') }}:
+            verbosity: ${{ parameters.dotnet.verbosity }}
+          ${{ if ne(parameters.dotnet.noRestore, '') }}:
+            noRestore: ${{ parameters.dotnet.noRestore }}
+          ${{ if ne(parameters.dotnet.test.noBuild, '') }}:
+            noBuild: ${{ parameters.dotnet.test.noBuild }}
+          ${{ if ne(parameters.dotnet.test.publishTestResults, '') }}:
+            publishTestResults: ${{ parameters.dotnet.test.publishTestResults }}
+          ${{ if ne(parameters.dotnet.test.testRunTitle, '') }}:
+            testRunTitle: ${{ parameters.dotnet.test.testRunTitle }}
+          ${{ if ne(parameters.dotnet.test.collectCoverage, '') }}:
+            collectCoverage: ${{ parameters.dotnet.test.collectCoverage }}
+          ${{ if ne(parameters.dotnet.test.coverageReportPath, '') }}:
+            coverageReportPath: ${{ parameters.dotnet.test.coverageReportPath }}
           ${{ if ne(parameters.buildSummary.enable, '') }}:
             appendSummary: ${{ parameters.buildSummary.enable }}
           ${{ if ne(parameters.workingDirectory, '') }}:

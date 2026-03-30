@@ -1,0 +1,147 @@
+﻿parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable dotnet test'
+    type: boolean
+    default: true
+
+  - name: projects
+    displayName: 'Projects to test'
+    type: string
+    default: ''
+
+  - name: configuration
+    displayName: 'Build configuration'
+    type: string
+    default: 'Release'
+
+  - name: verbosity
+    displayName: 'MSBuild verbosity level'
+    type: string
+    default: 'minimal'
+    values:
+      - quiet
+      - minimal
+      - normal
+      - detailed
+      - diagnostic
+
+  - name: noRestore
+    displayName: 'Do not restore packages before testing'
+    type: boolean
+    default: true
+
+  - name: noBuild
+    displayName: 'Do not build the project before testing'
+    type: boolean
+    default: true
+
+  - name: publishTestResults
+    displayName: 'Publish test results to the Tests tab'
+    type: boolean
+    default: true
+
+  - name: testRunTitle
+    displayName: 'Test run title'
+    type: string
+    default: ''
+
+  - name: collectCoverage
+    displayName: 'Collect code coverage (requires coverlet.collector in test projects)'
+    type: boolean
+    default: true
+
+  - name: coverageReportPath
+    displayName: 'Path to the coverage report file(s)'
+    type: string
+    default: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+
+  - name: appendSummary
+    displayName: 'Append section to job summary'
+    type: boolean
+    default: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - pwsh: |
+      $configuration = $env:CONFIGURATION
+      $verbosity = $env:VERBOSITY
+      $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
+      $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
+      $collectCoverage = [System.Convert]::ToBoolean($env:COLLECT_COVERAGE)
+
+      $testArgs = "--configuration $configuration"
+      $testArgs += " --verbosity $verbosity"
+      if ($noRestore) { $testArgs += ' --no-restore' }
+      if ($noBuild) { $testArgs += ' --no-build' }
+      if ($collectCoverage) { $testArgs += ' --collect:"XPlat Code Coverage"' }
+
+      Write-Host "##vso[task.setvariable variable=dotnetTestArguments]$testArgs"
+    displayName: 'Set dotnet test arguments'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    env:
+      CONFIGURATION: ${{ parameters.configuration }}
+      VERBOSITY: ${{ parameters.verbosity }}
+      NO_RESTORE: ${{ parameters.noRestore }}
+      NO_BUILD: ${{ parameters.noBuild }}
+      COLLECT_COVERAGE: ${{ parameters.collectCoverage }}
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet test'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    inputs:
+      command: 'test'
+      ${{ if ne(parameters.projects, '') }}:
+        projects: ${{ parameters.projects }}
+      arguments: $(dotnetTestArguments)
+      publishTestResults: ${{ parameters.publishTestResults }}
+      ${{ if ne(parameters.testRunTitle, '') }}:
+        testRunTitle: ${{ parameters.testRunTitle }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  - task: PublishCodeCoverageResults@2
+    displayName: 'Publish code coverage'
+    condition: |
+      and
+      (
+        succeededOrFailed(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.collectCoverage }}, true)
+      )
+    inputs:
+      summaryFileLocation: ${{ parameters.coverageReportPath }}
+
+  - template: '../../azuredevops/build/append-to-job-summary.yml'
+    parameters:
+      stepDisplayName: 'Append .NET test section to job summary'
+      condition: |
+        and
+        (
+          succeededOrFailed(),
+          eq(${{ parameters.appendSummary }}, true)
+        )
+      title: '.NET Test'
+      content: |
+        | Property | Value |
+        | --- | --- |
+        | Configuration | ${{ parameters.configuration }} |
+        | Verbosity | ${{ parameters.verbosity }} |
