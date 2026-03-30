@@ -2,4 +2,5 @@
 .azuredevops/dummy-projects/
 
 # Ignore AI instruction files - formatting adds no value and may corrupt prose/examples
+.github/copilot-instructions.md
 .github/instructions/
