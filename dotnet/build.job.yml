@@ -231,6 +231,18 @@ jobs:
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
+      - template: 'SonarCloud/analyze.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.sonarCloud.enable, '') }}:
+            enable: ${{ parameters.sonarCloud.enable }}
+          ${{ if ne(parameters.sonarCloud.organization, '') }}:
+            organization: ${{ parameters.sonarCloud.organization }}
+          ${{ if ne(parameters.sonarCloud.projectKey, '') }}:
+            projectKey: ${{ parameters.sonarCloud.projectKey }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
+
       - template: '../azuredevops/build/upload-summary.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
