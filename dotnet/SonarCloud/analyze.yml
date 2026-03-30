@@ -9,25 +9,10 @@ parameters:
     type: boolean
     default: true
 
-  - name: organization
-    displayName: 'SonarCloud organization'
-    type: string
-    default: ''
-
-  - name: projectKey
-    displayName: 'SonarCloud project key'
-    type: string
-    default: ''
-
   - name: pollingTimeoutSec
     displayName: 'Polling timeout in seconds'
     type: string
     default: '300'
-
-  - name: appendSummary
-    displayName: 'Append section to job summary'
-    type: boolean
-    default: true
 
 steps:
   - task: SonarCloudAnalyze@4
@@ -49,21 +34,3 @@ steps:
       )
     inputs:
       pollingTimeoutSec: ${{ parameters.pollingTimeoutSec }}
-
-  - template: '../../azuredevops/build/append-to-job-summary.yml'
-    parameters:
-      stepDisplayName: 'Append SonarCloud section to job summary'
-      condition: |
-        and
-        (
-          succeededOrFailed(),
-          eq(${{ parameters.enable }}, true),
-          eq(${{ parameters.appendSummary }}, true)
-        )
-      title: 'SonarCloud'
-      contentBlocks:
-        - ${{ if and(ne(parameters.organization, ''), ne(parameters.projectKey, '')) }}:
-            content: 'Quality gate: [**view**](https://sonarcloud.io/project/overview?id=${{ parameters.projectKey }})'
-          ${{ else }}:
-            content: '_SonarCloud quality gate link not available (organization or projectKey not configured)._'
-          noNewLine: true

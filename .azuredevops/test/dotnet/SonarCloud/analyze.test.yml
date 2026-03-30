@@ -1,4 +1,4 @@
-# test-dotnet-SonarCloud-prepare.test.yml
+# test-dotnet-SonarCloud-analyze.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -28,17 +28,12 @@ parameters:
   - name: projectKey
     displayName: 'SonarCloud project key'
     type: string
-    default: 'GodelTech_azuredevops-pipelines_test_dotnet_SonarCloud_prepare'
+    default: 'GodelTech_azuredevops-pipelines_test_dotnet_SonarCloud_analyze'
 
   - name: projectName
     displayName: 'SonarCloud project name'
     type: string
-    default: 'azuredevops-pipelines test dotnet SonarCloud prepare'
-
-  - name: coverageReportPath
-    displayName: 'Coverage report path'
-    type: string
-    default: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
+    default: 'azuredevops-pipelines test dotnet SonarCloud analyze'
 
   - name: workingDirectory
     displayName: 'Working directory'
@@ -49,8 +44,12 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/SonarCloud/prepare.test.yml
+      - .azuredevops/test/dotnet/SonarCloud/analyze.test.yml
+      - dotnet/SonarCloud/analyze.yml
       - dotnet/SonarCloud/prepare.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 pr:
@@ -59,8 +58,12 @@ pr:
       - '*'
   paths:
     include:
-      - .azuredevops/test/dotnet/SonarCloud/prepare.test.yml
+      - .azuredevops/test/dotnet/SonarCloud/analyze.test.yml
+      - dotnet/SonarCloud/analyze.yml
       - dotnet/SonarCloud/prepare.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -72,13 +75,11 @@ schedules:
     always: true
 
 jobs:
-  - job: PrepareSonarCloud
-    displayName: 'Prepare SonarCloud'
+  - job: AnalyzeSonarCloud
+    displayName: 'Analyze SonarCloud'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - checkout: none
-
       - template: '../../../../dotnet/SonarCloud/prepare.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
@@ -87,16 +88,36 @@ jobs:
           organization: ${{ parameters.organization }}
           projectKey: ${{ parameters.projectKey }}
           projectName: ${{ parameters.projectName }}
-          coverageReportPath: ${{ parameters.coverageReportPath }}
           workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/install-SDK.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/restore.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/SonarCloud/analyze.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          enable: true
 
   - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - PrepareSonarCloud
+        - AnalyzeSonarCloud
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'Prepare SonarCloud'**
-        Step **'Prepare SonarCloud analysis'** result must be: **Succeeded**
+        Job **'Analyze SonarCloud'**
+        Step **'Run SonarCloud analysis'** result must be: **Succeeded**
+        Step **'Publish SonarCloud quality gate result'** result must be: **Succeeded**
