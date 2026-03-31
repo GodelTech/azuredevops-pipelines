@@ -39,7 +39,6 @@ parameters:
     type: string
     default: 'Standard'
     values:
-      - ''
       - Basic
       - Standard
       - Advanced
