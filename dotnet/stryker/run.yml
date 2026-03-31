@@ -161,7 +161,9 @@ steps:
       contentBlocks:
         - ${{ if parameters.publishReport }}:
             # yamllint disable rule:line-length
-            content: 'Report artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'
+            content: |
+              Mutation report tab: [**view**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=stryker-mutator.mutation-report-publisher.mutation-report-tab)
+              Report artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)
             # yamllint enable rule:line-length
           ${{ else }}:
             content: '_Report artifact publishing is disabled._'
