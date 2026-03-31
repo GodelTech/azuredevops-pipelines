@@ -14,6 +14,11 @@ parameters:
     type: string
     default: ''
 
+  - name: configuration
+    displayName: 'Build configuration'
+    type: string
+    default: 'Release'
+
   - name: thresholdHigh
     displayName: 'Mutation score threshold (high)'
     type: string
@@ -30,9 +35,15 @@ parameters:
     default: ''
 
   - name: mutationLevel
-    displayName: 'Mutation level (Baseline, Basic, Standard, Advanced, Complete)'
+    displayName: 'Mutation level'
     type: string
-    default: ''
+    default: 'Standard'
+    values:
+      - ''
+      - Basic
+      - Standard
+      - Advanced
+      - Complete
 
   - name: publishReport
     displayName: 'Publish Stryker report as pipeline artifact'
@@ -67,6 +78,7 @@ steps:
 
   - pwsh: |
       $project = $env:PROJECT
+      $configuration = $env:CONFIGURATION
       $thresholdHigh = $env:THRESHOLD_HIGH
       $thresholdLow = $env:THRESHOLD_LOW
       $thresholdBreak = $env:THRESHOLD_BREAK
@@ -75,6 +87,7 @@ steps:
 
       $strykerArgs = "--output `"$agentTempDirectory/stryker-output`""
       if ($project) { $strykerArgs += " --project `"$project`"" }
+      if ($configuration) { $strykerArgs += " --configuration $configuration" }
       if ($thresholdHigh) { $strykerArgs += " --threshold-high $thresholdHigh" }
       if ($thresholdLow) { $strykerArgs += " --threshold-low $thresholdLow" }
       if ($thresholdBreak) { $strykerArgs += " --threshold-break $thresholdBreak" }
@@ -90,6 +103,7 @@ steps:
       )
     env:
       PROJECT: ${{ parameters.project }}
+      CONFIGURATION: ${{ parameters.configuration }}
       THRESHOLD_HIGH: ${{ parameters.thresholdHigh }}
       THRESHOLD_LOW: ${{ parameters.thresholdLow }}
       THRESHOLD_BREAK: ${{ parameters.thresholdBreak }}

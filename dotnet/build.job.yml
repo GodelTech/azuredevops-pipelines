@@ -259,6 +259,8 @@ jobs:
             enable: ${{ parameters.stryker.enable }}
           ${{ if ne(parameters.stryker.project, '') }}:
             project: ${{ parameters.stryker.project }}
+          ${{ if ne(parameters.dotnet.configuration, '') }}:
+            configuration: ${{ parameters.dotnet.configuration }}
           ${{ if ne(parameters.stryker.thresholdHigh, '') }}:
             thresholdHigh: ${{ parameters.stryker.thresholdHigh }}
           ${{ if ne(parameters.stryker.thresholdLow, '') }}:
