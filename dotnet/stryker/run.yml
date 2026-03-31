@@ -1,0 +1,141 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable Stryker mutation testing'
+    type: boolean
+    default: true
+
+  - name: project
+    displayName: 'Project under test (source project path)'
+    type: string
+    default: ''
+
+  - name: thresholdHigh
+    displayName: 'Mutation score threshold (high)'
+    type: string
+    default: ''
+
+  - name: thresholdLow
+    displayName: 'Mutation score threshold (low)'
+    type: string
+    default: ''
+
+  - name: thresholdBreak
+    displayName: 'Mutation score threshold (break)'
+    type: string
+    default: ''
+
+  - name: mutationLevel
+    displayName: 'Mutation level (Baseline, Basic, Standard, Advanced, Complete)'
+    type: string
+    default: ''
+
+  - name: publishReport
+    displayName: 'Publish Stryker report as pipeline artifact'
+    type: boolean
+    default: true
+
+  - name: artifactName
+    displayName: 'Artifact name for the report'
+    type: string
+    default: 'stryker-report'
+
+  - name: appendSummary
+    displayName: 'Append section to job summary'
+    type: boolean
+    default: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - pwsh: |
+      dotnet tool install dotnet-stryker --global
+    displayName: 'Install dotnet-stryker'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+
+  - pwsh: |
+      $project = $env:PROJECT
+      $thresholdHigh = $env:THRESHOLD_HIGH
+      $thresholdLow = $env:THRESHOLD_LOW
+      $thresholdBreak = $env:THRESHOLD_BREAK
+      $mutationLevel = $env:MUTATION_LEVEL
+      $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
+
+      $strykerArgs = "--output `"$agentTempDirectory/stryker-output`""
+      if ($project) { $strykerArgs += " --project `"$project`"" }
+      if ($thresholdHigh) { $strykerArgs += " --threshold-high $thresholdHigh" }
+      if ($thresholdLow) { $strykerArgs += " --threshold-low $thresholdLow" }
+      if ($thresholdBreak) { $strykerArgs += " --threshold-break $thresholdBreak" }
+      if ($mutationLevel) { $strykerArgs += " --mutation-level $mutationLevel" }
+
+      Write-Host "##vso[task.setvariable variable=strykerArguments]$strykerArgs"
+    displayName: 'Set dotnet-stryker arguments'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    env:
+      PROJECT: ${{ parameters.project }}
+      THRESHOLD_HIGH: ${{ parameters.thresholdHigh }}
+      THRESHOLD_LOW: ${{ parameters.thresholdLow }}
+      THRESHOLD_BREAK: ${{ parameters.thresholdBreak }}
+      MUTATION_LEVEL: ${{ parameters.mutationLevel }}
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
+
+  - pwsh: |
+      dotnet stryker $(strykerArguments)
+    displayName: 'dotnet stryker'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    ${{ if ne(parameters.workingDirectory, '') }}:
+      workingDirectory: ${{ parameters.workingDirectory }}
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Stryker report'
+    condition: |
+      and
+      (
+        succeededOrFailed(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.publishReport }}, true)
+      )
+    inputs:
+      PathtoPublish: '$(Agent.TempDirectory)/stryker-output'
+      ArtifactName: ${{ parameters.artifactName }}
+
+  - template: '../../azuredevops/build/append-to-job-summary.yml'
+    parameters:
+      stepDisplayName: 'Append Stryker section to job summary'
+      condition: |
+        and
+        (
+          succeededOrFailed(),
+          eq(${{ parameters.enable }}, true),
+          eq(${{ parameters.appendSummary }}, true)
+        )
+      title: 'Stryker Mutation Testing'
+      contentBlocks:
+        - ${{ if parameters.publishReport }}:
+            # yamllint disable rule:line-length
+            content: 'Report artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'
+            # yamllint enable rule:line-length
+          ${{ else }}:
+            content: '_Report artifact publishing is disabled._'

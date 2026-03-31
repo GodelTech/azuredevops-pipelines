@@ -87,6 +87,21 @@ parameters:
     #     collectCoverage: false
     #     coverageReportPath: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
 
+  - name: stryker
+    displayName: 'Stryker mutation testing parameters'
+    type: object
+    default: {}
+    # Example:
+    # stryker:
+    #   enable: true
+    #   project: 'src/MyProject/MyProject.csproj'
+    #   thresholdHigh: '80'
+    #   thresholdLow: '60'
+    #   thresholdBreak: '0'
+    #   mutationLevel: 'Standard'
+    #   publishReport: true
+    #   artifactName: 'stryker-report'
+
   - name: buildSummary
     displayName: 'Build summary parameters'
     type: object
@@ -236,6 +251,30 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if ne(parameters.sonarCloud.enable, '') }}:
             enable: ${{ parameters.sonarCloud.enable }}
+
+      - template: 'stryker/run.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.stryker.enable, '') }}:
+            enable: ${{ parameters.stryker.enable }}
+          ${{ if ne(parameters.stryker.project, '') }}:
+            project: ${{ parameters.stryker.project }}
+          ${{ if ne(parameters.stryker.thresholdHigh, '') }}:
+            thresholdHigh: ${{ parameters.stryker.thresholdHigh }}
+          ${{ if ne(parameters.stryker.thresholdLow, '') }}:
+            thresholdLow: ${{ parameters.stryker.thresholdLow }}
+          ${{ if ne(parameters.stryker.thresholdBreak, '') }}:
+            thresholdBreak: ${{ parameters.stryker.thresholdBreak }}
+          ${{ if ne(parameters.stryker.mutationLevel, '') }}:
+            mutationLevel: ${{ parameters.stryker.mutationLevel }}
+          ${{ if ne(parameters.stryker.publishReport, '') }}:
+            publishReport: ${{ parameters.stryker.publishReport }}
+          ${{ if ne(parameters.stryker.artifactName, '') }}:
+            artifactName: ${{ parameters.stryker.artifactName }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
 
       - template: '../azuredevops/build/upload-summary.yml'
         parameters:
