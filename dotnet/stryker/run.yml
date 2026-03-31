@@ -45,7 +45,7 @@ parameters:
       - Complete
 
   - name: publishReport
-    displayName: 'Publish Stryker report as pipeline artifact'
+    displayName: 'Publish Stryker report as pipeline artifact and build tab'
     type: boolean
     default: true
 
@@ -133,6 +133,19 @@ steps:
     inputs:
       PathtoPublish: '$(Agent.TempDirectory)/stryker-output'
       ArtifactName: ${{ parameters.artifactName }}
+
+  - task: PublishMutationReport@1
+    displayName: 'Publish Stryker mutation report tab'
+    condition: |
+      and
+      (
+        succeededOrFailed(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.publishReport }}, true)
+      )
+    inputs:
+      reportPattern: '$(Agent.TempDirectory)/stryker-output/reports/mutation-report.html'
+      reportDisplayName: ${{ parameters.artifactName }}
 
   - template: '../../azuredevops/build/append-to-job-summary.yml'
     parameters:
