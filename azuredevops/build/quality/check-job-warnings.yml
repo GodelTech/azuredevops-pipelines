@@ -11,8 +11,8 @@ parameters:
 
   - name: warningThreshold
     displayName: 'Maximum number of warnings allowed before failing'
-    type: string
-    default: '0'
+    type: number
+    default: 0
 
   - name: showStatistics
     displayName: 'Show per-task warning statistics in the log'

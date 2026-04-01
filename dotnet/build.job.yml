@@ -95,9 +95,9 @@ parameters:
     # stryker:
     #   enable: true
     #   project: 'src/MyProject/MyProject.csproj'
-    #   thresholdHigh: '80'
-    #   thresholdLow: '60'
-    #   thresholdBreak: '0'
+    #   thresholdHigh: 80
+    #   thresholdLow: 60
+    #   thresholdBreak: 0
     #   mutationLevel: 'Standard'
     #   publishReport: true
     #   artifactName: 'stryker-report'
@@ -108,11 +108,20 @@ parameters:
     default: {}
     # Example:
     # quality:
-    #   checks:
-    #     jobWarnings:
+    #   jobWarnings:
+    #     enable: true
+    #     warningThreshold: 0
+    #     showStatistics: true
+    #   coverageChecks:
+    #     lineCoverage:
     #       enable: true
-    #       warningThreshold: '0'
-    #       showStatistics: true
+    #       threshold: 80
+    #     branchCoverage:
+    #       enable: true
+    #       threshold: 80
+    #     methodCoverage:
+    #       enable: true
+    #       threshold: 80
 
   - name: buildSummary
     displayName: 'Build summary parameters'
@@ -293,8 +302,10 @@ jobs:
       - template: 'quality/checks.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.quality.checks.jobWarnings, '') }}:
-            jobWarnings: ${{ parameters.quality.checks.jobWarnings }}
+          ${{ if ne(parameters.quality.jobWarnings, '') }}:
+            jobWarnings: ${{ parameters.quality.jobWarnings }}
+          ${{ if ne(parameters.quality.coverageChecks, '') }}:
+            coverageChecks: ${{ parameters.quality.coverageChecks }}
 
       - template: '../azuredevops/build/upload-summary.yml'
         parameters:

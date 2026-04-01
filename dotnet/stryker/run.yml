@@ -21,18 +21,18 @@ parameters:
 
   - name: thresholdHigh
     displayName: 'Mutation score threshold (high)'
-    type: string
-    default: ''
+    type: number
+    default: 80
 
   - name: thresholdLow
     displayName: 'Mutation score threshold (low)'
-    type: string
-    default: ''
+    type: number
+    default: 60
 
   - name: thresholdBreak
     displayName: 'Mutation score threshold (break)'
-    type: string
-    default: ''
+    type: number
+    default: 0
 
   - name: mutationLevel
     displayName: 'Mutation level'
@@ -87,9 +87,9 @@ steps:
       $strykerArgs = "--output `"$agentTempDirectory/stryker-output`""
       if ($project) { $strykerArgs += " --project `"$project`"" }
       if ($configuration) { $strykerArgs += " --configuration $configuration" }
-      if ($thresholdHigh) { $strykerArgs += " --threshold-high $thresholdHigh" }
-      if ($thresholdLow) { $strykerArgs += " --threshold-low $thresholdLow" }
-      if ($thresholdBreak) { $strykerArgs += " --threshold-break $thresholdBreak" }
+      $strykerArgs += " --threshold-high $thresholdHigh"
+      $strykerArgs += " --threshold-low $thresholdLow"
+      $strykerArgs += " --threshold-break $thresholdBreak"
       if ($mutationLevel) { $strykerArgs += " --mutation-level $mutationLevel" }
 
       Write-Host "##vso[task.setvariable variable=strykerArguments]$strykerArgs"

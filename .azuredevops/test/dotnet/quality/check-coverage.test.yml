@@ -1,0 +1,143 @@
+# test-dotnet-quality-check-coverage.test.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/quality/check-coverage.test.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/test.yml
+      - dotnet/quality/check-coverage.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/quality/check-coverage.test.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/test.yml
+      - dotnet/quality/check-coverage.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: CheckCoveragePass
+    displayName: 'Coverage threshold check — pass (threshold: 0%)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - template: '../../../../dotnet/dotnet/install-SDK.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/restore.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/test.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/quality/check-coverage.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          lineCoverage:
+            threshold: '0'
+          branchCoverage:
+            threshold: '0'
+          methodCoverage:
+            threshold: '0'
+
+  - job: CheckCoverageBelowThreshold
+    displayName: 'Coverage threshold check — fail (line threshold: 101%)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - template: '../../../../dotnet/dotnet/install-SDK.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/restore.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/test.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/quality/check-coverage.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          lineCoverage:
+            threshold: '101'
+
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - CheckCoveragePass
+        - CheckCoverageBelowThreshold
+      variables:
+        checkCoveragePassResult: $[ dependencies.CheckCoveragePass.result ]
+        checkCoverageBelowThresholdResult: $[ dependencies.CheckCoverageBelowThreshold.result ]
+      expectedBuildResult: 'Canceled'
+      buildResultDescription: |
+        Job **'Coverage threshold check — pass'** result must be: **Succeeded**
+        Job **'Coverage threshold check — fail'** result must be: **Failed**
+      cancelBuildCondition: |
+        and
+        (
+          eq(variables['checkCoveragePassResult'], 'Succeeded'),
+          eq(variables['checkCoverageBelowThresholdResult'], 'Failed')
+        )

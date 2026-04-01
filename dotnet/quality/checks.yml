@@ -10,9 +10,14 @@ parameters:
     # prettier-ignore
     default: {
       enable: false,
-      warningThreshold: '0',
+      warningThreshold: 0,
       showStatistics: true
     }
+
+  - name: coverageChecks
+    displayName: 'Parameters for coverage threshold check'
+    type: object
+    default: {}
 
 steps:
   - template: '../../azuredevops/build/quality/check-job-warnings.yml'
@@ -28,3 +33,13 @@ steps:
         warningThreshold: ${{ parameters.jobWarnings.warningThreshold }}
       ${{ if ne(parameters.jobWarnings.showStatistics, '') }}:
         showStatistics: ${{ parameters.jobWarnings.showStatistics }}
+
+  - template: 'check-coverage.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.coverageChecks.lineCoverage, '') }}:
+        lineCoverage: ${{ parameters.coverageChecks.lineCoverage }}
+      ${{ if ne(parameters.coverageChecks.branchCoverage, '') }}:
+        branchCoverage: ${{ parameters.coverageChecks.branchCoverage }}
+      ${{ if ne(parameters.coverageChecks.methodCoverage, '') }}:
+        methodCoverage: ${{ parameters.coverageChecks.methodCoverage }}

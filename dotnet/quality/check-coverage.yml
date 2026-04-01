@@ -1,0 +1,82 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: lineCoverage
+    displayName: 'Parameters for line coverage check'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      threshold: 80
+    }
+
+  - name: branchCoverage
+    displayName: 'Parameters for branch coverage check'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      threshold: 80
+    }
+
+  - name: methodCoverage
+    displayName: 'Parameters for method coverage check'
+    type: object
+    # Uses coverageType: custom with customCoverageType: 'Methods', which maps to the Methods
+    # metric Azure DevOps parses from Cobertura via PublishCodeCoverageResults@2.
+    # Requires that dotnet/test.yml runs before this template with collectCoverage: true.
+    # prettier-ignore
+    default: {
+      enable: true,
+      threshold: 80
+    }
+
+steps:
+  - task: BuildQualityChecks@10
+    displayName: 'Line coverage threshold check'
+    condition: |
+      and
+      (
+        succeeded(),
+        ne(${{ parameters.lineCoverage.enable }}, false)
+      )
+    inputs:
+      checkCoverage: true
+      coverageFailOption: 'fixed'
+      coverageType: 'lines'
+      coverageThreshold: ${{ parameters.lineCoverage.threshold }}
+      treat0of0as100: true
+
+  - task: BuildQualityChecks@10
+    displayName: 'Branch coverage threshold check'
+    condition: |
+      and
+      (
+        succeeded(),
+        ne(${{ parameters.branchCoverage.enable }}, false)
+      )
+    inputs:
+      checkCoverage: true
+      coverageFailOption: 'fixed'
+      coverageType: 'branches'
+      coverageThreshold: ${{ parameters.branchCoverage.threshold }}
+      treat0of0as100: true
+
+  - task: BuildQualityChecks@10
+    displayName: 'Method coverage threshold check'
+    condition: |
+      and
+      (
+        succeeded(),
+        ne(${{ parameters.methodCoverage.enable }}, false)
+      )
+    inputs:
+      checkCoverage: true
+      coverageFailOption: 'fixed'
+      coverageType: 'custom'
+      customCoverageType: 'Methods'
+      coverageThreshold: ${{ parameters.methodCoverage.threshold }}
+      treat0of0as100: true

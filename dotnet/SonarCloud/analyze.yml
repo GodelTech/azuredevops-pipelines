@@ -11,8 +11,8 @@ parameters:
 
   - name: pollingTimeoutSec
     displayName: 'Polling timeout in seconds'
-    type: string
-    default: '300'
+    type: number
+    default: 300
 
 steps:
   - task: SonarCloudAnalyze@4
