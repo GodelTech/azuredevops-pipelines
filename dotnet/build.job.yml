@@ -108,10 +108,6 @@ parameters:
     default: {}
     # Example:
     # quality:
-    #   jobWarnings:
-    #     enable: true
-    #     warningThreshold: 0
-    #     showStatistics: true
     #   coverageChecks:
     #     lineCoverage:
     #       enable: true
@@ -122,6 +118,10 @@ parameters:
     #     methodCoverage:
     #       enable: true
     #       threshold: 80
+    #   jobWarnings:
+    #     enable: true
+    #     warningThreshold: 0
+    #     showStatistics: true
 
   - name: buildSummary
     displayName: 'Build summary parameters'
@@ -302,10 +302,10 @@ jobs:
       - template: 'quality/checks.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.quality.jobWarnings, '') }}:
-            jobWarnings: ${{ parameters.quality.jobWarnings }}
           ${{ if ne(parameters.quality.coverageChecks, '') }}:
             coverageChecks: ${{ parameters.quality.coverageChecks }}
+          ${{ if ne(parameters.quality.jobWarnings, '') }}:
+            jobWarnings: ${{ parameters.quality.jobWarnings }}
 
       - template: '../azuredevops/build/upload-summary.yml'
         parameters:

@@ -4,36 +4,22 @@ parameters:
     type: boolean
     default: false
 
-  - name: jobWarnings
-    displayName: 'Parameters for job warnings check'
-    type: object
-    # prettier-ignore
-    default: {
-      enable: false,
-      warningThreshold: 0,
-      showStatistics: true
-    }
-
   - name: coverageChecks
     displayName: 'Parameters for coverage threshold check'
     type: object
     default: {}
 
-steps:
-  - template: '../../azuredevops/build/quality/check-job-warnings.yml'
-    parameters:
-      enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      condition: |
-        and
-        (
-          always(),
-          eq(${{ parameters.jobWarnings.enable }}, true)
-        )
-      ${{ if ne(parameters.jobWarnings.warningThreshold, '') }}:
-        warningThreshold: ${{ parameters.jobWarnings.warningThreshold }}
-      ${{ if ne(parameters.jobWarnings.showStatistics, '') }}:
-        showStatistics: ${{ parameters.jobWarnings.showStatistics }}
+  - name: jobWarnings
+    displayName: 'Parameters for job warnings check'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      warningThreshold: 0,
+      showStatistics: true
+    }
 
+steps:
   - template: 'check-coverage.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
@@ -43,3 +29,17 @@ steps:
         branchCoverage: ${{ parameters.coverageChecks.branchCoverage }}
       ${{ if ne(parameters.coverageChecks.methodCoverage, '') }}:
         methodCoverage: ${{ parameters.coverageChecks.methodCoverage }}
+
+  - template: '../../azuredevops/build/quality/check-job-warnings.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      condition: |
+        and
+        (
+          always(),
+          ne(${{ parameters.jobWarnings.enable }}, false)
+        )
+      ${{ if ne(parameters.jobWarnings.warningThreshold, '') }}:
+        warningThreshold: ${{ parameters.jobWarnings.warningThreshold }}
+      ${{ if ne(parameters.jobWarnings.showStatistics, '') }}:
+        showStatistics: ${{ parameters.jobWarnings.showStatistics }}
