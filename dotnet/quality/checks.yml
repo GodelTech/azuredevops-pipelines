@@ -9,6 +9,11 @@ parameters:
     type: object
     default: {}
 
+  - name: sonarCloud
+    displayName: 'Parameters for SonarCloud quality gate check'
+    type: object
+    default: {}
+
   - name: jobWarnings
     displayName: 'Parameters for job warnings check'
     type: object
@@ -29,6 +34,16 @@ steps:
         branchCoverage: ${{ parameters.coverageChecks.branchCoverage }}
       ${{ if ne(parameters.coverageChecks.methodCoverage, '') }}:
         methodCoverage: ${{ parameters.coverageChecks.methodCoverage }}
+
+  - template: '../SonarCloud/check-quality-gate.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.sonarCloud.enable, '') }}:
+        enable: ${{ parameters.sonarCloud.enable }}
+      ${{ if ne(parameters.sonarCloud.serviceConnection, '') }}:
+        serviceConnection: ${{ parameters.sonarCloud.serviceConnection }}
+      ${{ if ne(parameters.sonarCloud.organization, '') }}:
+        organization: ${{ parameters.sonarCloud.organization }}
 
   - template: '../../azuredevops/build/quality/check-job-warnings.yml'
     parameters:

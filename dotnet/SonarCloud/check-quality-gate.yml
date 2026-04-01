@@ -1,0 +1,33 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable quality gate check'
+    type: boolean
+    default: true
+
+  - name: serviceConnection
+    displayName: 'SonarCloud service connection name'
+    type: string
+    default: 'SonarCloud'
+
+  - name: organization
+    displayName: 'SonarCloud organization'
+    type: string
+    default: ''
+
+steps:
+  - task: sonarcloud-buildbreaker@2
+    displayName: 'Break build on quality gate failure'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    inputs:
+      SonarCloud: ${{ parameters.serviceConnection }}
+      organization: ${{ parameters.organization }}

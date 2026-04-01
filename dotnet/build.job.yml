@@ -118,6 +118,8 @@ parameters:
     #     methodCoverage:
     #       enable: true
     #       threshold: 80
+    #   sonarCloud:
+    #     enable: true
     #   jobWarnings:
     #     enable: true
     #     warningThreshold: 0
@@ -304,6 +306,13 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if ne(parameters.quality.coverageChecks, '') }}:
             coverageChecks: ${{ parameters.quality.coverageChecks }}
+          sonarCloud:
+            ${{ if ne(parameters.quality.sonarCloud.enable, '') }}:
+              enable: ${{ parameters.quality.sonarCloud.enable }}
+            ${{ if ne(parameters.sonarCloud.serviceConnection, '') }}:
+              serviceConnection: ${{ parameters.sonarCloud.serviceConnection }}
+            ${{ if ne(parameters.sonarCloud.organization, '') }}:
+              organization: ${{ parameters.sonarCloud.organization }}
           ${{ if ne(parameters.quality.jobWarnings, '') }}:
             jobWarnings: ${{ parameters.quality.jobWarnings }}
 
