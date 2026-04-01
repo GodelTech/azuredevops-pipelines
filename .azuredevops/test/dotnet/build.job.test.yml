@@ -41,7 +41,12 @@ parameters:
   - name: quality
     displayName: 'Quality check parameters'
     type: object
-    default: {}
+    # prettier-ignore
+    default: {
+      jobWarnings: {
+        warningThreshold: 1
+      }
+    }
 
   - name: buildSummary
     displayName: 'Build summary parameters'
@@ -88,6 +93,9 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       sonarCloud: ${{ parameters.sonarCloud }}
       dotnet: ${{ parameters.dotnet }}
+      stryker: ${{ parameters.stryker }}
+      quality: ${{ parameters.quality }}
+      buildSummary: ${{ parameters.buildSummary }}
       workingDirectory: ${{ parameters.workingDirectory }}
 
   - template: '../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
