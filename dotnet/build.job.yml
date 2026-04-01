@@ -97,7 +97,7 @@ parameters:
     #   project: 'src/MyProject/MyProject.csproj'
     #   thresholdHigh: 80
     #   thresholdLow: 60
-    #   thresholdBreak: 0
+    #   breakAt: 0
     #   mutationLevel: 'Standard'
     #   publishReport: true
     #   artifactName: 'stryker-report'
@@ -288,8 +288,8 @@ jobs:
             thresholdHigh: ${{ parameters.stryker.thresholdHigh }}
           ${{ if ne(parameters.stryker.thresholdLow, '') }}:
             thresholdLow: ${{ parameters.stryker.thresholdLow }}
-          ${{ if ne(parameters.stryker.thresholdBreak, '') }}:
-            thresholdBreak: ${{ parameters.stryker.thresholdBreak }}
+          ${{ if ne(parameters.stryker.breakAt, '') }}:
+            breakAt: ${{ parameters.stryker.breakAt }}
           ${{ if ne(parameters.stryker.mutationLevel, '') }}:
             mutationLevel: ${{ parameters.stryker.mutationLevel }}
           ${{ if ne(parameters.stryker.publishReport, '') }}:

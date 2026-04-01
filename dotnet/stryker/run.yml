@@ -29,8 +29,8 @@ parameters:
     type: number
     default: 60
 
-  - name: thresholdBreak
-    displayName: 'Mutation score threshold (break)'
+  - name: breakAt
+    displayName: 'Break at mutation score'
     type: number
     default: 0
 
@@ -80,7 +80,7 @@ steps:
       $configuration = $env:CONFIGURATION
       $thresholdHigh = $env:THRESHOLD_HIGH
       $thresholdLow = $env:THRESHOLD_LOW
-      $thresholdBreak = $env:THRESHOLD_BREAK
+      $breakAt = $env:BREAK_AT
       $mutationLevel = $env:MUTATION_LEVEL
       $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
@@ -89,7 +89,7 @@ steps:
       if ($configuration) { $strykerArgs += " --configuration $configuration" }
       $strykerArgs += " --threshold-high $thresholdHigh"
       $strykerArgs += " --threshold-low $thresholdLow"
-      $strykerArgs += " --threshold-break $thresholdBreak"
+      $strykerArgs += " --break-at $breakAt"
       if ($mutationLevel) { $strykerArgs += " --mutation-level $mutationLevel" }
 
       Write-Host "##vso[task.setvariable variable=strykerArguments]$strykerArgs"
@@ -105,7 +105,7 @@ steps:
       CONFIGURATION: ${{ parameters.configuration }}
       THRESHOLD_HIGH: ${{ parameters.thresholdHigh }}
       THRESHOLD_LOW: ${{ parameters.thresholdLow }}
-      THRESHOLD_BREAK: ${{ parameters.thresholdBreak }}
+      BREAK_AT: ${{ parameters.breakAt }}
       MUTATION_LEVEL: ${{ parameters.mutationLevel }}
       AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
 
