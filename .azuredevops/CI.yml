@@ -77,6 +77,8 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn: Lint
+    variables:
+      npm_config_cache: $(Pipeline.Workspace)/.npm
     steps:
       - checkout: self
 
