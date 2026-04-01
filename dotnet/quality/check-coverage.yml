@@ -41,7 +41,7 @@ steps:
       and
       (
         succeeded(),
-        ne(${{ parameters.lineCoverage.enable }}, false)
+        ne(${{ coalesce(parameters.lineCoverage.enable, true) }}, false)
       )
     inputs:
       checkCoverage: true
@@ -56,7 +56,7 @@ steps:
       and
       (
         succeeded(),
-        ne(${{ parameters.branchCoverage.enable }}, false)
+        ne(${{ coalesce(parameters.branchCoverage.enable, true) }}, false)
       )
     inputs:
       checkCoverage: true
@@ -71,7 +71,7 @@ steps:
       and
       (
         succeeded(),
-        ne(${{ parameters.methodCoverage.enable }}, false)
+        ne(${{ coalesce(parameters.methodCoverage.enable, true) }}, false)
       )
     inputs:
       checkCoverage: true

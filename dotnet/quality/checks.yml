@@ -52,7 +52,7 @@ steps:
         and
         (
           always(),
-          ne(${{ parameters.jobWarnings.enable }}, false)
+          ne(${{ coalesce(parameters.jobWarnings.enable, true) }}, false)
         )
       ${{ if ne(parameters.jobWarnings.warningThreshold, '') }}:
         warningThreshold: ${{ parameters.jobWarnings.warningThreshold }}

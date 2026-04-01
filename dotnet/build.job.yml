@@ -320,15 +320,12 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           stepDisplayName: 'Upload .NET build summary'
-          ${{ if ne(parameters.buildSummary.enable, '') }}:
-            condition: |
-              and
-              (
-                always(),
-                eq(${{ parameters.buildSummary.enable }}, true)
-              )
-          ${{ else }}:
-            condition: always()
+          condition: |
+            and
+            (
+              always(),
+              eq(${{ coalesce(parameters.buildSummary.enable, true) }}, true)
+            )
           title: ${{ coalesce(parameters.buildSummary.title, '.NET Build Summary') }}
           includeJobSummary: true
           ${{ if ne(parameters.buildSummary.showSystemInfo, '') }}:
