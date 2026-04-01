@@ -1,0 +1,30 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: jobWarnings
+    displayName: 'Parameters for job warnings check'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: false,
+      warningThreshold: '0',
+      showStatistics: true
+    }
+
+steps:
+  - template: '../../azuredevops/build/quality/check-job-warnings.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      condition: |
+        and
+        (
+          always(),
+          eq(${{ parameters.jobWarnings.enable }}, true)
+        )
+      ${{ if ne(parameters.jobWarnings.warningThreshold, '') }}:
+        warningThreshold: ${{ parameters.jobWarnings.warningThreshold }}
+      ${{ if ne(parameters.jobWarnings.showStatistics, '') }}:
+        showStatistics: ${{ parameters.jobWarnings.showStatistics }}

@@ -33,6 +33,21 @@ parameters:
     type: object
     default: {}
 
+  - name: stryker
+    displayName: 'Stryker mutation testing parameters'
+    type: object
+    default: {}
+
+  - name: quality
+    displayName: 'Quality check parameters'
+    type: object
+    default: {}
+
+  - name: buildSummary
+    displayName: 'Build summary parameters'
+    type: object
+    default: {}
+
   - name: workingDirectory
     displayName: 'Working directory'
     type: string

@@ -9,6 +9,16 @@ parameters:
     type: string
     default: ''
 
+  - name: warningThreshold
+    displayName: 'Maximum number of warnings allowed before failing'
+    type: string
+    default: '0'
+
+  - name: showStatistics
+    displayName: 'Show per-task warning statistics in the log'
+    type: boolean
+    default: true
+
 steps:
   - task: BuildQualityChecks@10
     displayName: 'Warnings quality check'
@@ -18,5 +28,5 @@ steps:
       checkWarnings: true
       warningTaskFilters: '/.*/'
       warningFailOption: 'fixed'
-      warningThreshold: '0'
-      showStatistics: true
+      warningThreshold: ${{ parameters.warningThreshold }}
+      showStatistics: ${{ parameters.showStatistics }}

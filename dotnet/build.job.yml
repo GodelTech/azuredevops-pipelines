@@ -102,6 +102,18 @@ parameters:
     #   publishReport: true
     #   artifactName: 'stryker-report'
 
+  - name: quality
+    displayName: 'Quality check parameters'
+    type: object
+    default: {}
+    # Example:
+    # quality:
+    #   checks:
+    #     jobWarnings:
+    #       enable: true
+    #       warningThreshold: '0'
+    #       showStatistics: true
+
   - name: buildSummary
     displayName: 'Build summary parameters'
     type: object
@@ -277,6 +289,12 @@ jobs:
             appendSummary: ${{ parameters.buildSummary.enable }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: 'quality/checks.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.quality.checks.jobWarnings, '') }}:
+            jobWarnings: ${{ parameters.quality.checks.jobWarnings }}
 
       - template: '../azuredevops/build/upload-summary.yml'
         parameters:

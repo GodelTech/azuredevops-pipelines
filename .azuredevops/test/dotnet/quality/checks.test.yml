@@ -1,0 +1,76 @@
+# test-dotnet-quality-checks.test.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/quality/checks.test.yml
+      - dotnet/quality/checks.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/quality/checks.test.yml
+      - dotnet/quality/checks.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: CheckQuality
+    displayName: 'Check quality'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - pwsh: |
+          Write-Host '##vso[task.logissue type=warning]Test warning message (CheckQuality).'
+        displayName: 'Set build warning'
+
+      - template: '../../../../dotnet/quality/checks.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          jobWarnings:
+            enable: true
+
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - CheckQuality
+      variables:
+        checkQualityResult: $[ dependencies.CheckQuality.result ]
+      expectedBuildResult: 'Canceled'
+      buildResultDescription: |
+        Job **'Check quality'**
+        Step **'Warnings quality check'** result must be: **Failed**
+      warningThreshold: 1
+      cancelBuildCondition: |
+        eq(variables['checkQualityResult'], 'Failed')
