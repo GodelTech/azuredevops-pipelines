@@ -134,7 +134,7 @@ steps:
       PathtoPublish: '$(Agent.TempDirectory)/stryker-output'
       ArtifactName: ${{ parameters.artifactName }}
 
-  - task: PublishMutationReport@1
+  - task: PublishMutationReport@2
     displayName: 'Publish Stryker mutation report tab'
     condition: |
       and
