@@ -1,5 +1,6 @@
 using DummyProjectDotNetCore.Controllers;
 using DummyProjectDotNetCore.Models;
+using DummyProjectDotNetCore.Tests.Fakes;
 
 using Xunit;
 
@@ -8,43 +9,17 @@ namespace DummyProjectDotNetCore.Tests.Controllers;
 public class WeatherForecastControllerTests
 {
     [Fact]
-    public void Get_ReturnsTemperatureC_EqualTo12()
+    public void Get_ReturnsExpectedWeatherForecast()
     {
         // Arrange
-        var controller = new WeatherForecastController();
+        var utcNow = new DateTime(2026, 4, 3, 0, 0, 0, DateTimeKind.Utc);
+        var controller = new WeatherForecastController(new FakeDateTimeProvider(utcNow));
+        var expected = new WeatherForecastModel(DateOnly.FromDateTime(utcNow), 12, "Mild");
 
         // Act
         var result = controller.Get();
 
         // Assert
-        Assert.Equal(12, Assert.IsType<WeatherForecastModel>(result.Value).TemperatureC);
-    }
-
-    [Fact]
-    public void Get_ReturnsSummary_EqualToMild()
-    {
-        // Arrange
-        var controller = new WeatherForecastController();
-
-        // Act
-        var result = controller.Get();
-
-        // Assert
-        Assert.Equal("Mild", Assert.IsType<WeatherForecastModel>(result.Value).Summary);
-    }
-
-    [Fact]
-    public void Get_ReturnsDate_EqualToToday()
-    {
-        // Arrange
-        var controller = new WeatherForecastController();
-        var before = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        // Act
-        var result = controller.Get();
-
-        // Assert
-        var after = DateOnly.FromDateTime(DateTime.UtcNow);
-        Assert.InRange(Assert.IsType<WeatherForecastModel>(result.Value).Date, before, after);
+        Assert.Equal(expected, Assert.IsType<WeatherForecastModel>(result.Value));
     }
 }

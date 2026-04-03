@@ -1,5 +1,8 @@
+using DummyProjectDotNetCore.Providers;
+
 var builder = WebApplication.CreateBuilder(args);
 
+_ = builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 _ = builder.Services.AddControllers();
 _ = builder.Services.AddOpenApi();
 
