@@ -24,6 +24,11 @@ parameters:
     type: boolean
     default: false
 
+  - name: warnIfTransitiveFound
+    displayName: 'Warn when outdated transitive packages are found'
+    type: boolean
+    default: false
+
   - name: noRestore
     displayName: 'Do not restore packages before checking'
     type: boolean
@@ -72,6 +77,7 @@ steps:
       $includePrerelease = [System.Convert]::ToBoolean($env:INCLUDE_PRERELEASE)
       $includeTransitive = [System.Convert]::ToBoolean($env:INCLUDE_TRANSITIVE)
       $warnIfTransitiveExcluded = [System.Convert]::ToBoolean($env:WARN_IF_TRANSITIVE_EXCLUDED)
+      $warnIfTransitiveFound = [System.Convert]::ToBoolean($env:WARN_IF_TRANSITIVE_FOUND)
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $stepResult = $env:STEP_RESULT
       $transitiveStepResult = $env:TRANSITIVE_STEP_RESULT
@@ -129,29 +135,31 @@ steps:
       }
 
       if ($topLevelPackages.Count -gt 0 -or $transitivePackages.Count -gt 0) {
-        $packageKind = if ($topLevelPackages.Count -gt 0 -and $transitivePackages.Count -gt 0) {
-          "'top-level' and 'transitive'"
-        } elseif ($topLevelPackages.Count -gt 0) {
-          "'top-level'"
-        } else {
-          "'transitive'"
-        }
-        $message = "Outdated NuGet $packageKind packages found."
+        $message = 'Outdated NuGet packages found.'
         switch ($finalResult) {
-          'SucceededWithIssues' {
-            Write-Host "##vso[task.logissue type=warning]$message"
-            Write-Host "##vso[task.complete result=SucceededWithIssues;]$message"
+          'SucceededWithIssues' { Write-Host "##vso[task.complete result=SucceededWithIssues;]$message" }
+          'Failed' { Write-Host "##vso[task.complete result=Failed;]$message" }
+        }
+
+        if ($topLevelPackages.Count -gt 0) {
+          $topMessage = 'Outdated top-level NuGet packages found.'
+          if ($stepResult -eq 'Failed') {
+            Write-Host "##vso[task.logissue type=error]$topMessage"
+          } else {
+            Write-Host "##vso[task.logissue type=warning]$topMessage"
           }
-          'Failed' {
-            Write-Host "##vso[task.logissue type=error]$message"
-            Write-Host "##vso[task.complete result=Failed;]$message"
-          }
-          default {
-            Write-Host "##vso[task.logissue type=warning]$message"
+        }
+
+        if ($transitivePackages.Count -gt 0) {
+          $transitiveMessage = 'Outdated transitive NuGet packages found.'
+          if ($transitiveStepResult -eq 'Failed') {
+            Write-Host "##vso[task.logissue type=error]$transitiveMessage"
+          } elseif ($transitiveStepResult -eq 'SucceededWithIssues' -or $warnIfTransitiveFound) {
+            Write-Host "##vso[task.logissue type=warning]$transitiveMessage"
           }
         }
       } else {
-        Write-Host "All NuGet packages are up to date."
+        Write-Host 'All NuGet packages are up to date.'
       }
 
       if ($appendSummary) {
@@ -205,6 +213,7 @@ steps:
       INCLUDE_PRERELEASE: ${{ parameters.includePrerelease }}
       INCLUDE_TRANSITIVE: ${{ parameters.includeTransitive }}
       WARN_IF_TRANSITIVE_EXCLUDED: ${{ parameters.warnIfTransitiveExcluded }}
+      WARN_IF_TRANSITIVE_FOUND: ${{ parameters.warnIfTransitiveFound }}
       NO_RESTORE: ${{ parameters.noRestore }}
       STEP_RESULT: ${{ parameters.stepResult }}
       TRANSITIVE_STEP_RESULT: ${{ parameters.transitiveStepResult }}

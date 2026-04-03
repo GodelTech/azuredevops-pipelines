@@ -13,6 +13,7 @@ parameters:
       includePrerelease: false,
       includeTransitive: true,
       warnIfTransitiveExcluded: false,
+      warnIfTransitiveFound: false,
       artifactName: 'nuget-outdated-report',
       stepResult: 'SucceededWithIssues',
       transitiveStepResult: 'Succeeded'
@@ -76,6 +77,8 @@ steps:
         includeTransitive: ${{ parameters.outdatedPackages.includeTransitive }}
       ${{ if ne(parameters.outdatedPackages.warnIfTransitiveExcluded, '') }}:
         warnIfTransitiveExcluded: ${{ parameters.outdatedPackages.warnIfTransitiveExcluded }}
+      ${{ if ne(parameters.outdatedPackages.warnIfTransitiveFound, '') }}:
+        warnIfTransitiveFound: ${{ parameters.outdatedPackages.warnIfTransitiveFound }}
       noRestore: ${{ parameters.noRestore }}
       ${{ if ne(parameters.outdatedPackages.stepResult, '') }}:
         stepResult: ${{ parameters.outdatedPackages.stepResult }}
