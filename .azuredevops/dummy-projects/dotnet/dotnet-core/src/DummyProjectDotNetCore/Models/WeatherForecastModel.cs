@@ -8,4 +8,16 @@ public record WeatherForecastModel(DateOnly Date, int TemperatureC, string? Summ
 {
     /// <summary>Gets the temperature in degrees Fahrenheit, converted from <see cref="TemperatureC"/>.</summary>
     public int TemperatureF => TemperatureC * 9 / 5 + 32;
+
+    /// <summary>Gets a human-readable description based on temperature.</summary>
+    public string GetDescription()
+    {
+        return TemperatureC switch
+        {
+            < 0 => "Freezing",
+            < 10 => "Cold",
+            < 20 => "Mild",
+            _ => "Hot"
+        };
+    }
 }

@@ -21,4 +21,21 @@ public class WeatherForecastModelTests
         // Assert
         Assert.Equal(expectedFahrenheit, result);
     }
+
+    [Theory]
+    [InlineData(-10, "Freezing")]
+    [InlineData(5, "Cold")]
+    [InlineData(15, "Mild")]
+    [InlineData(25, "Hot")]
+    public void GetDescription_ReturnsCorrectDescription(int celsius, string expected)
+    {
+        // Arrange
+        var model = new WeatherForecastModel(DateOnly.MinValue, celsius, null);
+
+        // Act
+        var result = model.GetDescription();
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
 }
