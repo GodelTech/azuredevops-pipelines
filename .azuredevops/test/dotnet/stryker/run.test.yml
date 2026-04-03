@@ -77,7 +77,6 @@ jobs:
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           project: 'src/DummyProjectDotNetCore/DummyProjectDotNetCore.csproj'
-          breakAt: 0
           workingDirectory: ${{ parameters.workingDirectory }}
 
   - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'

@@ -97,11 +97,10 @@ parameters:
     #   project: 'src/MyProject/MyProject.csproj'
     #   thresholdHigh: 80
     #   thresholdLow: 60
-    #   breakAt: 80
+    #   breakAt: 0
     #   mutationLevel: 'Standard'
     #   publishReport: true
     #   artifactName: 'stryker-report'
-    #   continueOnError: true
 
   - name: quality
     displayName: 'Quality check parameters'
@@ -302,8 +301,6 @@ jobs:
             artifactName: ${{ parameters.stryker.artifactName }}
           ${{ if ne(parameters.buildSummary.enable, '') }}:
             appendSummary: ${{ parameters.buildSummary.enable }}
-          ${{ if ne(parameters.stryker.continueOnError, '') }}:
-            continueOnError: ${{ parameters.stryker.continueOnError }}
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 

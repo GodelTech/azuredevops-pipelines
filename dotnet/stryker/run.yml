@@ -35,7 +35,7 @@ parameters:
   - name: breakAt
     displayName: 'Break at mutation score'
     type: number
-    default: 80
+    default: 0
 
   - name: mutationLevel
     displayName: 'Mutation level'
@@ -59,11 +59,6 @@ parameters:
 
   - name: appendSummary
     displayName: 'Append section to job summary'
-    type: boolean
-    default: true
-
-  - name: continueOnError
-    displayName: 'Continue pipeline on Stryker failure'
     type: boolean
     default: true
 
@@ -121,7 +116,6 @@ steps:
   - pwsh: |
       dotnet stryker $(strykerArguments)
     displayName: 'dotnet stryker'
-    continueOnError: ${{ parameters.continueOnError }}
     condition: |
       and
       (
