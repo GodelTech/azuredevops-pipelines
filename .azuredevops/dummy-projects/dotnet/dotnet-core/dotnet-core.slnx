@@ -4,5 +4,6 @@
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/DummyProjectDotNetCore.Tests/DummyProjectDotNetCore.Tests.csproj" Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890" />
+    <Project Path="test/DummyProjectDotNetCore.IntegrationTests/DummyProjectDotNetCore.IntegrationTests.csproj" Id="b2c3d4e5-f6a7-8901-bcde-f12345678901" />
   </Folder>
 </Solution>

@@ -1,0 +1,15 @@
+<Project>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591: Missing XML doc comment -->
+    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <!-- Test projects don't need XML doc warnings -->
+  <PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('\test\')) Or $(MSBuildProjectDirectory.EndsWith('\test'))">
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>

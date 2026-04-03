@@ -1,27 +1,21 @@
-using DummyProjectDotNetCore.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DummyProjectDotNetCore.Controllers
-{
-    [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
-    {
-        private static readonly string[] Summaries =
-        [
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        ];
+using DummyProjectDotNetCore.Models;
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecastModel> Get()
-        {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecastModel
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-        }
+namespace DummyProjectDotNetCore.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class WeatherForecastController : ControllerBase
+{
+    [HttpGet(Name = "Current")]
+    [ProducesResponseType<WeatherForecastModel>(StatusCodes.Status200OK)]
+    public ActionResult<WeatherForecastModel> Get()
+    {
+        return new WeatherForecastModel(
+            Date: DateOnly.FromDateTime(DateTime.UtcNow),
+            TemperatureC: 12,
+            Summary: "Mild"
+        );
     }
 }

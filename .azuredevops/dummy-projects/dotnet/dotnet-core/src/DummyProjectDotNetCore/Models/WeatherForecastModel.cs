@@ -1,13 +1,6 @@
-namespace DummyProjectDotNetCore.Models
+namespace DummyProjectDotNetCore.Models;
+
+public record WeatherForecastModel(DateOnly Date, int TemperatureC, string? Summary)
 {
-    public class WeatherForecastModel
-    {
-        public DateOnly Date { get; set; }
-
-        public int TemperatureC { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-
-        public string? Summary { get; set; }
-    }
+    public int TemperatureF => TemperatureC * 9 / 5 + 32;
 }
