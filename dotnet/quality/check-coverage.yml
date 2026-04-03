@@ -16,6 +16,9 @@ parameters:
   - name: branchCoverage
     displayName: 'Parameters for branch coverage check'
     type: object
+    # Known issue: PublishCodeCoverageResults@2 does not expose branch coverage data to BuildQualityChecks,
+    # so this check will report 0% branches even when coverage exists.
+    # Track progress at https://github.com/microsoft/azure-pipelines-tasks/issues/19669
     # prettier-ignore
     default: {
       enable: true,
@@ -28,6 +31,9 @@ parameters:
     # Uses coverageType: custom with customCoverageType: 'Methods', which maps to the Methods
     # metric Azure DevOps parses from Cobertura via PublishCodeCoverageResults@2.
     # Requires that dotnet/test.yml runs before this template with collectCoverage: true.
+    # Known issue: PublishCodeCoverageResults@2 does not expose method coverage data to BuildQualityChecks,
+    # so this check will report 0% methods even when coverage exists.
+    # Track progress at https://github.com/microsoft/azure-pipelines-tasks/issues/19669
     # prettier-ignore
     default: {
       enable: true,
