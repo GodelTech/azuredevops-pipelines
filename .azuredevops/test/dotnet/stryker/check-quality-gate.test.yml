@@ -1,0 +1,98 @@
+# test-dotnet-stryker-check-quality-gate.test.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/stryker/check-quality-gate.test.yml
+      - dotnet/stryker/check-quality-gate.yml
+      - dotnet/stryker/run.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/build.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/stryker/check-quality-gate.test.yml
+      - dotnet/stryker/check-quality-gate.yml
+      - dotnet/stryker/run.yml
+      - dotnet/dotnet/install-SDK.yml
+      - dotnet/dotnet/restore.yml
+      - dotnet/dotnet/build.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: StrykerQualityGate
+    displayName: 'Stryker quality gate'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - template: '../../../../dotnet/dotnet/install-SDK.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/restore.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/stryker/run.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          project: 'src/DummyProjectDotNetCore/DummyProjectDotNetCore.csproj'
+          breakAt: 80
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/stryker/check-quality-gate.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          breakAt: 80
+
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - StrykerQualityGate
+      expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Stryker quality gate'** result must be: **Succeeded**

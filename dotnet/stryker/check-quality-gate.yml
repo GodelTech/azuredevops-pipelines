@@ -1,0 +1,78 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable Stryker quality gate check'
+    type: boolean
+    default: true
+
+  - name: breakAt
+    displayName: 'Fail if mutation score falls below this threshold'
+    type: number
+    default: 80
+
+  - name: reportPath
+    displayName: 'Path to the Stryker mutation report JSON file'
+    type: string
+    default: '$(Agent.TempDirectory)/stryker-output/reports/mutation-report.json'
+
+steps:
+  - pwsh: |
+      $breakAt = [double]$env:BREAK_AT
+      $reportPath = $env:REPORT_PATH
+
+      if (-not (Test-Path $reportPath)) {
+        Write-Host "##vso[task.logissue type=error]Stryker mutation report not found at: $reportPath"
+        exit 1
+      }
+
+      $report = Get-Content $reportPath -Raw | ConvertFrom-Json
+
+      $killed = 0
+      $survived = 0
+      $timeout = 0
+      $noCoverage = 0
+
+      foreach ($file in $report.files.PSObject.Properties) {
+        foreach ($mutant in $file.Value.mutants) {
+          switch ($mutant.status) {
+            'Killed' { $killed++ }
+            'Survived' { $survived++ }
+            'Timeout' { $timeout++ }
+            'NoCoverage' { $noCoverage++ }
+          }
+        }
+      }
+
+      $totalDetected = $killed + $timeout
+      $totalMutants = $killed + $survived + $timeout + $noCoverage
+
+      if ($totalMutants -eq 0) {
+        Write-Host 'No mutants found. Quality gate check skipped.'
+        exit 0
+      }
+
+      $mutationScore = [Math]::Round(($totalDetected / $totalMutants) * 100, 2)
+
+      Write-Host "Mutation score: $mutationScore% (killed: $killed, timeout: $timeout, survived: $survived, noCoverage: $noCoverage)"
+      Write-Host "Break-at threshold: $breakAt%"
+
+      if ($mutationScore -lt $breakAt) {
+        Write-Host "##vso[task.logissue type=error]Mutation score $mutationScore% is below break-at threshold $breakAt%"
+        exit 1
+      }
+
+      Write-Host "Quality gate passed: $mutationScore% >= $breakAt%"
+    displayName: 'Check Stryker quality gate'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    env:
+      BREAK_AT: ${{ parameters.breakAt }}
+      REPORT_PATH: ${{ parameters.reportPath }}

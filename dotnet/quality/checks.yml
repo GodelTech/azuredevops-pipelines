@@ -14,6 +14,11 @@ parameters:
     type: object
     default: {}
 
+  - name: stryker
+    displayName: 'Parameters for Stryker quality gate check'
+    type: object
+    default: {}
+
   - name: jobWarnings
     displayName: 'Parameters for job warnings check'
     type: object
@@ -44,6 +49,16 @@ steps:
         serviceConnection: ${{ parameters.sonarCloud.serviceConnection }}
       ${{ if ne(parameters.sonarCloud.organization, '') }}:
         organization: ${{ parameters.sonarCloud.organization }}
+
+  - template: '../stryker/check-quality-gate.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.stryker.enable, '') }}:
+        enable: ${{ parameters.stryker.enable }}
+      ${{ if ne(parameters.stryker.breakAt, '') }}:
+        breakAt: ${{ parameters.stryker.breakAt }}
+      ${{ if ne(parameters.stryker.reportPath, '') }}:
+        reportPath: ${{ parameters.stryker.reportPath }}
 
   - template: '../../azuredevops/build/quality/check-job-warnings.yml'
     parameters:
