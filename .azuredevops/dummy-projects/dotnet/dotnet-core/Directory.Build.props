@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <!-- Test projects don't need XML doc warnings -->
-  <PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('\test\')) Or $(MSBuildProjectDirectory.EndsWith('\test'))">
+  <PropertyGroup Condition="$(MSBuildProjectDirectory.Replace('\', '/').Contains('/test/')) Or $(MSBuildProjectDirectory.Replace('\', '/').EndsWith('/test'))">
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
