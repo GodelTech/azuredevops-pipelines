@@ -102,36 +102,33 @@ steps:
       $mutationLevel = $env:MUTATION_LEVEL
       $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
-      $strykerArgs = "--output `"$agentTempDirectory/stryker-output`""
-      if ($project) { $strykerArgs += " --project `"$project`"" }
-      if ($configuration) { $strykerArgs += " --configuration $configuration" }
-      $strykerArgs += " --threshold-high $thresholdHigh"
-      $strykerArgs += " --threshold-low $thresholdLow"
-      $strykerArgs += " --break-at $breakAt"
-      if ($mutationLevel) { $strykerArgs += " --mutation-level $mutationLevel" }
-      $strykerArgs += " --reporter json --reporter html --reporter progress"
+      $strykerArgs = @('--output', "$agentTempDirectory/stryker-output")
+      if ($project) {
+        $strykerArgs += '--project'
+        $strykerArgs += $project
+      }
+      if ($configuration) {
+        $strykerArgs += '--configuration'
+        $strykerArgs += $configuration
+      }
+      $strykerArgs += '--threshold-high'
+      $strykerArgs += $thresholdHigh
+      $strykerArgs += '--threshold-low'
+      $strykerArgs += $thresholdLow
+      $strykerArgs += '--break-at'
+      $strykerArgs += $breakAt
+      if ($mutationLevel) {
+        $strykerArgs += '--mutation-level'
+        $strykerArgs += $mutationLevel
+      }
+      $strykerArgs += '--reporter'
+      $strykerArgs += 'json'
+      $strykerArgs += '--reporter'
+      $strykerArgs += 'html'
+      $strykerArgs += '--reporter'
+      $strykerArgs += 'progress'
 
-      Write-Host "##vso[task.setvariable variable=strykerArguments]$strykerArgs"
-    displayName: 'Set dotnet-stryker arguments'
-    condition: |
-      and
-      (
-        succeeded(),
-        eq(${{ parameters.enable }}, true)
-      )
-    env:
-      PROJECT: ${{ parameters.project }}
-      CONFIGURATION: ${{ parameters.configuration }}
-      THRESHOLD_HIGH: ${{ parameters.thresholdHigh }}
-      THRESHOLD_LOW: ${{ parameters.thresholdLow }}
-      BREAK_AT: ${{ parameters.breakAt }}
-      MUTATION_LEVEL: ${{ parameters.mutationLevel }}
-      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
-
-  - pwsh: |
-      $strykerArguments = $env:STRYKER_ARGUMENTS
-
-      dotnet stryker $strykerArguments
+      & dotnet stryker @strykerArgs
     displayName: 'dotnet stryker'
     condition: |
       and
@@ -142,7 +139,13 @@ steps:
     ${{ if ne(parameters.workingDirectory, '') }}:
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
-      STRYKER_ARGUMENTS: $(strykerArguments)
+      PROJECT: ${{ parameters.project }}
+      CONFIGURATION: ${{ parameters.configuration }}
+      THRESHOLD_HIGH: ${{ parameters.thresholdHigh }}
+      THRESHOLD_LOW: ${{ parameters.thresholdLow }}
+      BREAK_AT: ${{ parameters.breakAt }}
+      MUTATION_LEVEL: ${{ parameters.mutationLevel }}
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
 
   - publish: '$(Agent.TempDirectory)/stryker-output'
     displayName: 'Publish Stryker report'
