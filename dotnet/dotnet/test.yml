@@ -104,6 +104,7 @@ steps:
       if ($noBuild) { $testArgs += ' --no-build' }
       if ($runSettingsFile) { $testArgs += " --settings $runSettingsFile" }
       if ($collectCoverage) { $testArgs += ' --collect:"XPlat Code Coverage"' }
+      $testArgs += ' --logger trx'
       $testArgs += " --results-directory `"$resultsDirectory`""
 
       Write-Host "##vso[task.setvariable variable=dotnetTestArguments]$testArgs"
