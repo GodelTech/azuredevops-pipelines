@@ -83,6 +83,8 @@ parameters:
     #     noBuild: true
     #     publishTestResults: true
     #     testRunTitle: 'Unit Tests'
+    #     mergeTestResults: true
+    #     resultsDirectory: '$(Agent.TempDirectory)/dotnet-test-results'
     #     runSettingsFile: '.runsettings'
     #     collectCoverage: false
     #     coverageReportPath: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
@@ -94,6 +96,7 @@ parameters:
     # Example:
     # stryker:
     #   enable: true
+    #   version: '4.x.x'
     #   project: 'src/MyProject/MyProject.csproj'
     #   thresholdHigh: 80
     #   thresholdLow: 60
@@ -261,6 +264,10 @@ jobs:
             publishTestResults: ${{ parameters.dotnet.test.publishTestResults }}
           ${{ if ne(parameters.dotnet.test.testRunTitle, '') }}:
             testRunTitle: ${{ parameters.dotnet.test.testRunTitle }}
+          ${{ if ne(parameters.dotnet.test.mergeTestResults, '') }}:
+            mergeTestResults: ${{ parameters.dotnet.test.mergeTestResults }}
+          ${{ if ne(parameters.dotnet.test.resultsDirectory, '') }}:
+            resultsDirectory: ${{ parameters.dotnet.test.resultsDirectory }}
           ${{ if ne(parameters.dotnet.test.runSettingsFile, '') }}:
             runSettingsFile: ${{ parameters.dotnet.test.runSettingsFile }}
           ${{ if ne(parameters.dotnet.test.collectCoverage, '') }}:
@@ -283,6 +290,8 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if ne(parameters.stryker.enable, '') }}:
             enable: ${{ parameters.stryker.enable }}
+          ${{ if ne(parameters.stryker.version, '') }}:
+            version: ${{ parameters.stryker.version }}
           ${{ if ne(parameters.stryker.project, '') }}:
             project: ${{ parameters.stryker.project }}
           ${{ if ne(parameters.dotnet.configuration, '') }}:

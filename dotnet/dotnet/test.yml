@@ -50,6 +50,16 @@
     type: string
     default: ''
 
+  - name: mergeTestResults
+    displayName: 'Merge test results into a single test run'
+    type: boolean
+    default: true
+
+  - name: resultsDirectory
+    displayName: 'Directory to write test result (.trx) files'
+    type: string
+    default: '$(Agent.TempDirectory)/dotnet-test-results'
+
   - name: runSettingsFile
     displayName: 'Path to the .runsettings file'
     type: string
@@ -86,6 +96,7 @@ steps:
       $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
       $runSettingsFile = $env:RUN_SETTINGS_FILE
       $collectCoverage = [System.Convert]::ToBoolean($env:COLLECT_COVERAGE)
+      $resultsDirectory = $env:RESULTS_DIRECTORY
 
       $testArgs = "--configuration $configuration"
       $testArgs += " --verbosity $verbosity"
@@ -93,6 +104,7 @@ steps:
       if ($noBuild) { $testArgs += ' --no-build' }
       if ($runSettingsFile) { $testArgs += " --settings $runSettingsFile" }
       if ($collectCoverage) { $testArgs += ' --collect:"XPlat Code Coverage"' }
+      $testArgs += " --results-directory `"$resultsDirectory`""
 
       Write-Host "##vso[task.setvariable variable=dotnetTestArguments]$testArgs"
     displayName: 'Set dotnet test arguments'
@@ -109,6 +121,7 @@ steps:
       NO_BUILD: ${{ parameters.noBuild }}
       RUN_SETTINGS_FILE: ${{ parameters.runSettingsFile }}
       COLLECT_COVERAGE: ${{ parameters.collectCoverage }}
+      RESULTS_DIRECTORY: ${{ parameters.resultsDirectory }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet test'
@@ -123,11 +136,27 @@ steps:
       ${{ if ne(parameters.projects, '') }}:
         projects: ${{ parameters.projects }}
       arguments: $(dotnetTestArguments)
-      publishTestResults: ${{ parameters.publishTestResults }}
-      ${{ if ne(parameters.testRunTitle, '') }}:
-        testRunTitle: ${{ parameters.testRunTitle }}
+      publishTestResults: false
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
+
+  - task: PublishTestResults@2
+    displayName: 'Publish test results'
+    condition: |
+      and
+      (
+        succeededOrFailed(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.publishTestResults }}, true)
+      )
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '${{ parameters.resultsDirectory }}/**/*.trx'
+      mergeTestResults: ${{ parameters.mergeTestResults }}
+      failTaskOnMissingResultsFile: true
+      ${{ if ne(parameters.testRunTitle, '') }}:
+        testRunTitle: ${{ parameters.testRunTitle }}
+      buildConfiguration: ${{ parameters.configuration }}
 
   - task: PublishCodeCoverageResults@2
     displayName: 'Publish code coverage'

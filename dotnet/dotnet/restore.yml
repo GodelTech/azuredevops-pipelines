@@ -41,8 +41,7 @@ steps:
       and
       (
         succeeded(),
-        eq(${{ parameters.enable }}, true),
-        eq(${{ parameters.useCache }}, true)
+        eq(${{ parameters.enable }}, true)
       )
     env:
       WORKING_DIRECTORY: ${{ parameters.workingDirectory }}
@@ -69,13 +68,19 @@ steps:
           "$(Agent.OS)"
           **/packages.lock.json,!**/bin/**,!**/obj/**
       restoreKeys: |
-        nuget
-        "$(Agent.OS)"
+        nuget | "$(Agent.OS)"
         nuget
       path: $(NUGET_PACKAGES)
 
   - pwsh: |
-      dotnet restore
+      $lockFilesFound = $env:LOCK_FILES_FOUND -eq 'true'
+
+      $restoreArgs = @()
+      if ($lockFilesFound) {
+        $restoreArgs += '--locked-mode'
+      }
+
+      & dotnet restore @restoreArgs
     displayName: 'dotnet restore'
     condition: |
       and
@@ -85,3 +90,5 @@ steps:
       )
     ${{ if ne(parameters.workingDirectory, '') }}:
       workingDirectory: ${{ parameters.workingDirectory }}
+    env:
+      LOCK_FILES_FOUND: $(check_lock_files.lockFilesFound)

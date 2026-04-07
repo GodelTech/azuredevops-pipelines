@@ -12,6 +12,11 @@ parameters:
     type: boolean
     default: true
 
+  - name: version
+    displayName: 'dotnet-stryker version to install (empty = latest)'
+    type: string
+    default: ''
+
   - name: project
     displayName: 'Project under test (source project path)'
     type: string
@@ -69,7 +74,15 @@ parameters:
 
 steps:
   - pwsh: |
-      dotnet tool install dotnet-stryker --global
+      $version = $env:STRYKER_VERSION
+
+      $installArgs = @('tool', 'install', 'dotnet-stryker', '--global')
+      if ($version) {
+        $installArgs += '--version'
+        $installArgs += $version
+      }
+
+      & dotnet @installArgs
     displayName: 'Install dotnet-stryker'
     condition: |
       and
@@ -77,6 +90,8 @@ steps:
         succeeded(),
         eq(${{ parameters.enable }}, true)
       )
+    env:
+      STRYKER_VERSION: ${{ parameters.version }}
 
   - pwsh: |
       $project = $env:PROJECT
@@ -114,7 +129,9 @@ steps:
       AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
 
   - pwsh: |
-      dotnet stryker $(strykerArguments)
+      $strykerArguments = $env:STRYKER_ARGUMENTS
+
+      dotnet stryker $strykerArguments
     displayName: 'dotnet stryker'
     condition: |
       and
@@ -124,8 +141,10 @@ steps:
       )
     ${{ if ne(parameters.workingDirectory, '') }}:
       workingDirectory: ${{ parameters.workingDirectory }}
+    env:
+      STRYKER_ARGUMENTS: $(strykerArguments)
 
-  - task: PublishBuildArtifacts@1
+  - publish: '$(Agent.TempDirectory)/stryker-output'
     displayName: 'Publish Stryker report'
     condition: |
       and
@@ -134,9 +153,7 @@ steps:
         eq(${{ parameters.enable }}, true),
         eq(${{ parameters.publishReport }}, true)
       )
-    inputs:
-      PathtoPublish: '$(Agent.TempDirectory)/stryker-output'
-      ArtifactName: ${{ parameters.artifactName }}
+    artifact: ${{ parameters.artifactName }}
 
   - task: PublishMutationReport@2
     displayName: 'Publish Stryker mutation report tab'
