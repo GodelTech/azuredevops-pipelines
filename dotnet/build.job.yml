@@ -83,7 +83,7 @@ parameters:
     #     noBuild: true
     #     publishTestResults: true
     #     testRunTitle: 'Unit Tests'
-    #     mergeTestResults: true
+    #     mergeTestResults: false
     #     resultsDirectory: '$(Agent.TempDirectory)/dotnet-test-results'
     #     runSettingsFile: '.runsettings'
     #     collectCoverage: false
