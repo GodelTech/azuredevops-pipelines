@@ -21,6 +21,7 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $breakAt = [double]$env:BREAK_AT
       $reportPath = $env:REPORT_PATH
 
@@ -57,6 +58,11 @@ steps:
 
       $mutationScore = [Math]::Round(($totalDetected / $totalMutants) * 100, 2)
 
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]Report path: $reportPath"
+        Write-Host "##[debug]Total mutants: $totalMutants"
+      }
+
       Write-Host "Mutation score: $mutationScore% (killed: $killed, timeout: $timeout, survived: $survived, noCoverage: $noCoverage)"
       Write-Host "Break-at threshold: $breakAt%"
 
@@ -74,5 +80,6 @@ steps:
         eq(${{ parameters.enable }}, true)
       )
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       BREAK_AT: ${{ parameters.breakAt }}
       REPORT_PATH: ${{ parameters.reportPath }}

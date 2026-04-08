@@ -21,6 +21,7 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $workingDirectory = $env:WORKING_DIRECTORY
 
       $searchPath = if ($workingDirectory) { $workingDirectory } else { '.' }
@@ -31,6 +32,10 @@ steps:
       if ($files.Count -gt 0) {
         Write-Host "Found $($files.Count) packages.lock.json file(s)"
         Write-Host '##vso[task.setvariable variable=lockFilesFound;isOutput=true]true'
+
+        if ($enableBuildDebug) {
+          Write-Host "##[debug]Lock files: $($files.FullName -join ', ')"
+        }
       } else {
         Write-Host 'No packages.lock.json files found'
         Write-Host '##vso[task.setvariable variable=lockFilesFound;isOutput=true]false'
@@ -44,6 +49,7 @@ steps:
         eq(${{ parameters.enable }}, true)
       )
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       WORKING_DIRECTORY: ${{ parameters.workingDirectory }}
 
   - task: Cache@2
@@ -73,11 +79,17 @@ steps:
       path: $(NUGET_PACKAGES)
 
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $lockFilesFound = $env:LOCK_FILES_FOUND -eq 'true'
 
       $restoreArgs = @()
       if ($lockFilesFound) {
         $restoreArgs += '--locked-mode'
+      }
+
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]Lock files found: $lockFilesFound"
+        Write-Host "##[debug]dotnet restore arguments: $($restoreArgs -join ' ')"
       }
 
       & dotnet restore @restoreArgs
@@ -91,4 +103,5 @@ steps:
     ${{ if ne(parameters.workingDirectory, '') }}:
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       LOCK_FILES_FOUND: $(check_lock_files.lockFilesFound)

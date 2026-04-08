@@ -36,6 +36,7 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $publishReport = [System.Convert]::ToBoolean($env:PUBLISH_REPORT)
       $artifactStagingDirectory = $env:BUILD_ARTIFACTSTAGINGDIRECTORY
@@ -48,6 +49,10 @@ steps:
         $formatArgs += " --report `"$reportDir/format-report.json`""
       }
 
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]dotnet format arguments: $formatArgs"
+      }
+
       Write-Host "##vso[task.setvariable variable=dotnetFormatArguments]$formatArgs"
     displayName: 'Set dotnet format arguments'
     condition: |
@@ -57,6 +62,7 @@ steps:
         eq(${{ parameters.enable }}, true)
       )
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       NO_RESTORE: ${{ parameters.noRestore }}
       PUBLISH_REPORT: ${{ parameters.publishReport }}
       BUILD_ARTIFACTSTAGINGDIRECTORY: $(Build.ArtifactStagingDirectory)

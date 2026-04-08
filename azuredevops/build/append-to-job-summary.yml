@@ -41,6 +41,7 @@
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $title = $env:SUMMARY_TITLE
       $content = $env:SUMMARY_CONTENT
       $contentBlocks = $env:SUMMARY_CONTENT_BLOCKS | ConvertFrom-Json
@@ -75,12 +76,18 @@ steps:
 
       Add-Content -Path $filePath -Value ($lines -join "`n") -Encoding UTF8
 
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]Job summary file path: $filePath"
+        Write-Host "##[debug]Content block count: $($contentBlocks.Count)"
+      }
+
       Write-Host "Appended to job summary:"
       Write-Host ($lines -join "`n")
     displayName: ${{ parameters.stepDisplayName }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
       SUMMARY_CONTENT_BLOCKS: ${{ convertToJson(parameters.contentBlocks) }}

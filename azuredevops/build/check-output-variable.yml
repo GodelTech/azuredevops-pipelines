@@ -51,12 +51,17 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $variableDisplayName = $env:VARIABLE_DISPLAY_NAME
       $variableValue = $env:VARIABLE_VALUE
       $expectedValue = $env:EXPECTED_VALUE
       $stepResultOnMismatch = $env:STEP_RESULT_ON_MISMATCH
       $skipValidation = [System.Convert]::ToBoolean($env:SKIP_VALIDATION)
       $logIssueOnMismatch = [System.Convert]::ToBoolean($env:LOG_ISSUE_ON_MISMATCH)
+
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]skipValidation=$skipValidation, logIssueOnMismatch=$logIssueOnMismatch, stepResultOnMismatch=$stepResultOnMismatch"
+      }
 
       Write-Host "Variable : $variableDisplayName"
       Write-Host "Value    : $variableValue"
@@ -109,6 +114,7 @@ steps:
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       VARIABLE_DISPLAY_NAME: ${{ parameters.variableDisplayName }}
       VARIABLE_VALUE: ${{ parameters.variableValue }}
       EXPECTED_VALUE: ${{ parameters.expectedValue }}

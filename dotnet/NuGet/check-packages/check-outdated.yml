@@ -74,6 +74,7 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $includePrerelease = [System.Convert]::ToBoolean($env:INCLUDE_PRERELEASE)
       $includeTransitive = [System.Convert]::ToBoolean($env:INCLUDE_TRANSITIVE)
       $warnIfTransitiveExcluded = [System.Convert]::ToBoolean($env:WARN_IF_TRANSITIVE_EXCLUDED)
@@ -98,6 +99,10 @@ steps:
       if ($includePrerelease) { $dotnetArgs += '--include-prerelease' }
       if ($includeTransitive) { $dotnetArgs += '--include-transitive' }
       if ($noRestore) { $dotnetArgs += '--no-restore' }
+
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]dotnet list package arguments: $($dotnetArgs -join ' ')"
+      }
 
       $output = & dotnet @dotnetArgs
       $json = $output | ConvertFrom-Json
@@ -210,6 +215,7 @@ steps:
     ${{ if ne(parameters.workingDirectory, '') }}:
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       INCLUDE_PRERELEASE: ${{ parameters.includePrerelease }}
       INCLUDE_TRANSITIVE: ${{ parameters.includeTransitive }}
       WARN_IF_TRANSITIVE_EXCLUDED: ${{ parameters.warnIfTransitiveExcluded }}

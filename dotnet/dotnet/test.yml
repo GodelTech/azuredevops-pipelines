@@ -90,6 +90,7 @@
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $configuration = $env:CONFIGURATION
       $verbosity = $env:VERBOSITY
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
@@ -107,6 +108,10 @@ steps:
       $testArgs += ' --logger trx'
       $testArgs += " --results-directory `"$resultsDirectory`""
 
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]dotnet test arguments: $testArgs"
+      }
+
       Write-Host "##vso[task.setvariable variable=dotnetTestArguments]$testArgs"
     displayName: 'Set dotnet test arguments'
     condition: |
@@ -116,6 +121,7 @@ steps:
         eq(${{ parameters.enable }}, true)
       )
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       CONFIGURATION: ${{ parameters.configuration }}
       VERBOSITY: ${{ parameters.verbosity }}
       NO_RESTORE: ${{ parameters.noRestore }}

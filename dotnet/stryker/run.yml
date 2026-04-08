@@ -74,7 +74,13 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $version = $env:STRYKER_VERSION
+
+      if ($enableBuildDebug) {
+        $versionInfo = if ($version) { "version $version" } else { 'latest version' }
+        Write-Host "##[debug]Installing dotnet-stryker ($versionInfo)"
+      }
 
       $installArgs = @('tool', 'install', 'dotnet-stryker', '--global')
       if ($version) {
@@ -91,9 +97,11 @@ steps:
         eq(${{ parameters.enable }}, true)
       )
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       STRYKER_VERSION: ${{ parameters.version }}
 
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $project = $env:PROJECT
       $configuration = $env:CONFIGURATION
       $thresholdHigh = $env:THRESHOLD_HIGH
@@ -128,6 +136,10 @@ steps:
       $strykerArgs += '--reporter'
       $strykerArgs += 'progress'
 
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]dotnet stryker arguments: $($strykerArgs -join ' ')"
+      }
+
       & dotnet stryker @strykerArgs
     displayName: 'dotnet stryker'
     condition: |
@@ -139,6 +151,7 @@ steps:
     ${{ if ne(parameters.workingDirectory, '') }}:
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       PROJECT: ${{ parameters.project }}
       CONFIGURATION: ${{ parameters.configuration }}
       THRESHOLD_HIGH: ${{ parameters.thresholdHigh }}

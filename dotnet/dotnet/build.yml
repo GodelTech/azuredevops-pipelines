@@ -57,6 +57,7 @@ parameters:
 
 steps:
   - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $noRestore = [System.Convert]::ToBoolean($env:NO_RESTORE)
       $selfContained = [System.Convert]::ToBoolean($env:SELF_CONTAINED)
       $publishBinlog = [System.Convert]::ToBoolean($env:PUBLISH_BINLOG)
@@ -74,9 +75,14 @@ steps:
         $buildArgs += " -bl:`"$binlogDir/msbuild.binlog`""
       }
 
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]dotnet build arguments: $buildArgs"
+      }
+
       Write-Host "##vso[task.setvariable variable=dotnetBuildArguments]$buildArgs"
     displayName: 'Set dotnet build arguments'
     env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       NO_RESTORE: ${{ parameters.noRestore }}
       SELF_CONTAINED: ${{ parameters.selfContained }}
       PUBLISH_BINLOG: ${{ parameters.publishBinlog }}
