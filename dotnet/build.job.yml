@@ -171,31 +171,13 @@ jobs:
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: 'NuGet/authenticate.yml'
+      - template: 'restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if parameters.dotnet.nuGetServiceConnections }}:
-            serviceConnections: ${{ parameters.dotnet.nuGetServiceConnections }}
-
-      - template: 'dotnet/install-SDK.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.workingDirectory, '') }}:
-            workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: 'dotnet/restore.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.dotnet.restore.enable, '') }}:
-            enable: ${{ parameters.dotnet.restore.enable }}
-          ${{ if ne(parameters.dotnet.restore.useCache, '') }}:
-            useCache: ${{ parameters.dotnet.restore.useCache }}
-          ${{ if ne(parameters.workingDirectory, '') }}:
-            workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: 'dotnet/build.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+            nuGetServiceConnections: ${{ parameters.dotnet.nuGetServiceConnections }}
+          ${{ if ne(parameters.dotnet.restore, '') }}:
+            restore: ${{ parameters.dotnet.restore }}
           ${{ if ne(parameters.dotnet.projects, '') }}:
             projects: ${{ parameters.dotnet.projects }}
           ${{ if ne(parameters.dotnet.configuration, '') }}:

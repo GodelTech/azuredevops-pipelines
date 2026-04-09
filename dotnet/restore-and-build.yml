@@ -1,0 +1,98 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: nuGetServiceConnections
+    displayName: 'NuGet service connections'
+    type: object
+    default: []
+
+  - name: restore
+    displayName: 'Restore parameters'
+    type: object
+    default: {}
+    # Example:
+    # restore:
+    #   enable: true
+    #   useCache: true
+
+  - name: projects
+    displayName: 'Projects to build'
+    type: string
+    default: ''
+
+  - name: configuration
+    displayName: 'Build configuration'
+    type: string
+    default: ''
+
+  - name: verbosity
+    displayName: 'MSBuild verbosity level'
+    type: string
+    default: ''
+
+  - name: noRestore
+    displayName: 'Do not restore packages before building'
+    type: boolean
+    default: true
+
+  - name: selfContained
+    displayName: 'Publish the .NET runtime with the application'
+    type: boolean
+    default: false
+
+  - name: publishBinlog
+    displayName: 'Publish MSBuild binary log as pipeline artifact'
+    type: boolean
+    default: true
+
+  - name: appendSummary
+    displayName: 'Append section to job summary'
+    type: boolean
+    default: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - template: 'NuGet/authenticate.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if parameters.nuGetServiceConnections }}:
+        serviceConnections: ${{ parameters.nuGetServiceConnections }}
+
+  - template: 'dotnet/install-SDK.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  - template: 'dotnet/restore.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.restore.enable, '') }}:
+        enable: ${{ parameters.restore.enable }}
+      ${{ if ne(parameters.restore.useCache, '') }}:
+        useCache: ${{ parameters.restore.useCache }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  - template: 'dotnet/build.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.projects, '') }}:
+        projects: ${{ parameters.projects }}
+      ${{ if ne(parameters.configuration, '') }}:
+        configuration: ${{ parameters.configuration }}
+      ${{ if ne(parameters.verbosity, '') }}:
+        verbosity: ${{ parameters.verbosity }}
+      noRestore: ${{ parameters.noRestore }}
+      selfContained: ${{ parameters.selfContained }}
+      publishBinlog: ${{ parameters.publishBinlog }}
+      appendSummary: ${{ parameters.appendSummary }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
