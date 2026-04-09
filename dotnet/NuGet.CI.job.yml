@@ -10,7 +10,7 @@ parameters:
     default: 'ubuntu-latest'
 
 jobs:
-  - template: '../../git/version/get.job.yml'
+  - template: '../git/version/get.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       jobName: 'GitVersion'
