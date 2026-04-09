@@ -171,7 +171,7 @@ jobs:
           ${{ if ne(parameters.workingDirectory, '') }}:
             workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: 'restore-and-build.yml'
+      - template: 'dotnet/restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if parameters.dotnet.nuGetServiceConnections }}:

@@ -1,4 +1,4 @@
-# test-dotnet-restore-and-build.test.yml
+# test-dotnet-dotnet-restore-and-build.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -24,8 +24,8 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/restore-and-build.test.yml
-      - dotnet/restore-and-build.yml
+      - .azuredevops/test/dotnet/dotnet/restore-and-build.test.yml
+      - dotnet/dotnet/restore-and-build.yml
       - dotnet/NuGet/authenticate.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
@@ -38,8 +38,8 @@ pr:
       - '*'
   paths:
     include:
-      - .azuredevops/test/dotnet/restore-and-build.test.yml
-      - dotnet/restore-and-build.yml
+      - .azuredevops/test/dotnet/dotnet/restore-and-build.test.yml
+      - dotnet/dotnet/restore-and-build.yml
       - dotnet/NuGet/authenticate.yml
       - dotnet/dotnet/install-SDK.yml
       - dotnet/dotnet/restore.yml
@@ -60,12 +60,12 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - template: '../../../dotnet/restore-and-build.yml'
+      - template: '../../../../dotnet/dotnet/restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}

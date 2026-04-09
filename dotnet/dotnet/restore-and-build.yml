@@ -59,19 +59,19 @@ parameters:
     default: ''
 
 steps:
-  - template: 'NuGet/authenticate.yml'
+  - template: '../NuGet/authenticate.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       ${{ if parameters.nuGetServiceConnections }}:
         serviceConnections: ${{ parameters.nuGetServiceConnections }}
 
-  - template: 'dotnet/install-SDK.yml'
+  - template: 'install-SDK.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: 'dotnet/restore.yml'
+  - template: 'restore.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       ${{ if ne(parameters.restore.enable, '') }}:
@@ -81,7 +81,7 @@ steps:
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: 'dotnet/build.yml'
+  - template: 'build.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       ${{ if ne(parameters.projects, '') }}:
