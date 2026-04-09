@@ -179,6 +179,7 @@ steps:
 
   - template: '../../azuredevops/build/append-to-job-summary.yml'
     parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
       stepDisplayName: 'Append .NET test section to job summary'
       condition: |
         and
