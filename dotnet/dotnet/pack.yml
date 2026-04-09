@@ -1,0 +1,188 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable dotnet pack'
+    type: boolean
+    default: true
+
+  - name: projects
+    displayName: 'Projects to pack'
+    type: string
+    default: ''
+
+  - name: configuration
+    displayName: 'Build configuration'
+    type: string
+    default: 'Release'
+
+  - name: verbosity
+    displayName: 'MSBuild verbosity level'
+    type: string
+    default: 'minimal'
+    values:
+      - quiet
+      - minimal
+      - normal
+      - detailed
+      - diagnostic
+
+  - name: versioningScheme
+    displayName: 'Versioning scheme'
+    type: string
+    default: 'off'
+    values:
+      - 'off'
+      - byEnvVar
+      - byBuildNumber
+
+  - name: versionEnvVar
+    displayName: 'Pipeline variable name holding the version (used when versioningScheme is byEnvVar)'
+    type: string
+    default: ''
+
+  - name: noBuild
+    displayName: 'Do not build the project before packing'
+    type: boolean
+    default: true
+
+  - name: includesSymbols
+    displayName: 'Include symbol packages (.snupkg)'
+    type: boolean
+    default: false
+
+  - name: outputDir
+    displayName: 'Output directory for NuGet packages'
+    type: string
+    default: '$(Build.ArtifactStagingDirectory)/nuget'
+
+  - name: publishPackages
+    displayName: 'Publish NuGet packages as pipeline artifact'
+    type: boolean
+    default: true
+
+  - name: artifactName
+    displayName: 'Artifact name for the NuGet packages'
+    type: string
+    default: 'nuget-packages'
+
+  - name: appendSummary
+    displayName: 'Append section to job summary'
+    type: boolean
+    default: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
+steps:
+  - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
+      $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
+      $includesSymbols = [System.Convert]::ToBoolean($env:INCLUDES_SYMBOLS)
+      $configuration = $env:CONFIGURATION
+      $verbosity = $env:VERBOSITY
+      $outputDir = $env:OUTPUT_DIR
+      $versioningScheme = $env:VERSIONING_SCHEME
+      $versionEnvVar = $env:VERSION_ENV_VAR
+
+      $packArgs = "--configuration $configuration"
+      $packArgs += " --verbosity $verbosity"
+      $packArgs += ' --no-restore'
+      if ($noBuild) { $packArgs += ' --no-build' }
+      if ($includesSymbols) {
+        $packArgs += ' --include-symbols'
+        $packArgs += ' -p:SymbolPackageFormat=snupkg'
+      }
+      $packArgs += " --output `"$outputDir`""
+
+      if ($versioningScheme -eq 'byEnvVar' -and -not [string]::IsNullOrEmpty($versionEnvVar)) {
+        $version = [System.Environment]::GetEnvironmentVariable($versionEnvVar)
+        if (-not [string]::IsNullOrEmpty($version)) {
+          $packArgs += " /p:PackageVersion=$version"
+          $packArgs += " /p:Version=$version"
+        }
+      } elseif ($versioningScheme -eq 'byBuildNumber') {
+        $buildNumber = $env:BUILD_BUILDNUMBER
+        $packArgs += " /p:PackageVersion=$buildNumber"
+        $packArgs += " /p:Version=$buildNumber"
+      }
+
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]dotnet pack arguments: $packArgs"
+      }
+
+      Write-Host "##vso[task.setvariable variable=dotnetPackArguments]$packArgs"
+    displayName: 'Set dotnet pack arguments'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
+      NO_BUILD: ${{ parameters.noBuild }}
+      INCLUDES_SYMBOLS: ${{ parameters.includesSymbols }}
+      CONFIGURATION: ${{ parameters.configuration }}
+      VERBOSITY: ${{ parameters.verbosity }}
+      OUTPUT_DIR: ${{ parameters.outputDir }}
+      VERSIONING_SCHEME: ${{ parameters.versioningScheme }}
+      VERSION_ENV_VAR: ${{ parameters.versionEnvVar }}
+      BUILD_BUILDNUMBER: $(Build.BuildNumber)
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet pack'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
+    inputs:
+      command: 'pack'
+      ${{ if ne(parameters.projects, '') }}:
+        packagesToPack: ${{ parameters.projects }}
+      arguments: $(dotnetPackArguments)
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  - publish: '${{ parameters.outputDir }}'
+    displayName: 'Publish NuGet packages artifact'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true),
+        eq(${{ parameters.publishPackages }}, true)
+      )
+    artifact: ${{ parameters.artifactName }}
+
+  - template: '../../azuredevops/build/append-to-job-summary.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      stepDisplayName: 'Append .NET pack section to job summary'
+      condition: |
+        and
+        (
+          succeededOrFailed(),
+          eq(${{ parameters.enable }}, true),
+          eq(${{ parameters.appendSummary }}, true)
+        )
+      title: '.NET Pack'
+      content: |
+        | Property | Value |
+        | --- | --- |
+        | Configuration | ${{ parameters.configuration }} |
+        | Versioning Scheme | ${{ parameters.versioningScheme }} |
+      contentBlocks:
+        - ${{ if parameters.publishPackages }}:
+            # yamllint disable rule:line-length
+            content: 'NuGet packages artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'
+            # yamllint enable rule:line-length
+          ${{ else }}:
+            content: '_NuGet packages artifact publishing is disabled._'
