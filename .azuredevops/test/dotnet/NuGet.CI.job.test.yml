@@ -1,4 +1,4 @@
-# test-dotnet-NuGet-CI.job.test.yml
+# test-dotnet-NuGet.CI.job.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -19,8 +19,8 @@ trigger:
   batch: true
   paths:
     include:
-      - .azuredevops/test/dotnet/NuGet/CI.job.test.yml
-      - dotnet/NuGet/CI.job.yml
+      - .azuredevops/test/dotnet/NuGet.CI.job.test.yml
+      - dotnet/NuGet.CI.job.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 pr:
@@ -29,8 +29,8 @@ pr:
       - '*'
   paths:
     include:
-      - .azuredevops/test/dotnet/NuGet/CI.job.test.yml
-      - dotnet/NuGet/CI.job.yml
+      - .azuredevops/test/dotnet/NuGet.CI.job.test.yml
+      - dotnet/NuGet.CI.job.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -45,7 +45,7 @@ variables:
   ciJobName: 'GitVersion'
 
 jobs:
-  - template: '../../../../dotnet/NuGet/CI.job.yml'
+  - template: '../../../../dotnet/NuGet.CI.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
