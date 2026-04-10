@@ -15,11 +15,18 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+
 trigger:
   batch: true
   paths:
     include:
       - .azuredevops/test/dotnet/quality/checks.test.yml
+      - dotnet/dotnet/restore-and-build.yml
+      - dotnet/dotnet/test.yml
       - dotnet/quality/checks.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
@@ -30,6 +37,8 @@ pr:
   paths:
     include:
       - .azuredevops/test/dotnet/quality/checks.test.yml
+      - dotnet/dotnet/restore-and-build.yml
+      - dotnet/dotnet/test.yml
       - dotnet/quality/checks.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
@@ -42,35 +51,79 @@ schedules:
     always: true
 
 jobs:
-  - job: CheckQuality
-    displayName: 'Check quality'
+  - job: QualityChecksPass
+    displayName: 'Quality checks — pass (threshold: 0%, SonarCloud & Stryker disabled)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - checkout: none
+      - template: '../../../../dotnet/dotnet/restore-and-build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
 
-      - pwsh: |
-          Write-Host '##vso[task.logissue type=warning]Test warning message (CheckQuality).'
-        displayName: 'Set build warning'
+      - template: '../../../../dotnet/dotnet/test.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
 
       - template: '../../../../dotnet/quality/checks.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          jobWarnings:
-            enable: true
+          coverageChecks:
+            lineCoverage:
+              threshold: '0'
+            branchCoverage:
+              threshold: '0'
+            methodCoverage:
+              threshold: '0'
+          sonarCloud:
+            enable: false
+          stryker:
+            enable: false
+
+  - job: QualityChecksFail
+    displayName: 'Quality checks — fail (line threshold: 101%)'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - template: '../../../../dotnet/dotnet/restore-and-build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/dotnet/test.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../../../../dotnet/quality/checks.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          coverageChecks:
+            lineCoverage:
+              threshold: '101'
+          sonarCloud:
+            enable: false
+          stryker:
+            enable: false
 
   - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - CheckQuality
+        - QualityChecksPass
+        - QualityChecksFail
       variables:
-        checkQualityResult: $[ dependencies.CheckQuality.result ]
+        qualityChecksPassResult: $[ dependencies.QualityChecksPass.result ]
+        qualityChecksFailResult: $[ dependencies.QualityChecksFail.result ]
       expectedBuildResult: 'Canceled'
       buildResultDescription: |
-        Job **'Check quality'**
-        Step **'Warnings quality check'** result must be: **Failed**
-      warningThreshold: 1
+        Job **'Quality checks — pass'** result must be: **Succeeded**
+        Job **'Quality checks — fail'** result must be: **Failed**
       cancelBuildCondition: |
-        eq(variables['checkQualityResult'], 'Failed')
+        and
+        (
+          eq(variables['qualityChecksPassResult'], 'Succeeded'),
+          eq(variables['qualityChecksFailResult'], 'Failed')
+        )

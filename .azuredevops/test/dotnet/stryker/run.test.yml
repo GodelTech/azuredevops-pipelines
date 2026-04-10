@@ -26,9 +26,7 @@ trigger:
     include:
       - .azuredevops/test/dotnet/stryker/run.test.yml
       - dotnet/stryker/run.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/restore-and-build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 pr:
@@ -39,9 +37,7 @@ pr:
     include:
       - .azuredevops/test/dotnet/stryker/run.test.yml
       - dotnet/stryker/run.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/restore-and-build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -58,17 +54,7 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - template: '../../../../dotnet/dotnet/install-SDK.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: '../../../../dotnet/dotnet/restore.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: '../../../../dotnet/dotnet/build.yml'
+      - template: '../../../../dotnet/dotnet/restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}
@@ -76,7 +62,6 @@ jobs:
       - template: '../../../../dotnet/stryker/run.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          project: 'src/DummyProjectDotNetCore/DummyProjectDotNetCore.csproj'
           workingDirectory: ${{ parameters.workingDirectory }}
 
   - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'

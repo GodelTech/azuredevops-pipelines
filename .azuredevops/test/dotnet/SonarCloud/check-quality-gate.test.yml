@@ -48,9 +48,7 @@ trigger:
       - dotnet/SonarCloud/check-quality-gate.yml
       - dotnet/SonarCloud/prepare.yml
       - dotnet/SonarCloud/analyze.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/restore-and-build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 pr:
@@ -63,9 +61,7 @@ pr:
       - dotnet/SonarCloud/check-quality-gate.yml
       - dotnet/SonarCloud/prepare.yml
       - dotnet/SonarCloud/analyze.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/restore-and-build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -92,17 +88,7 @@ jobs:
           projectName: ${{ parameters.projectName }}
           workingDirectory: ${{ parameters.workingDirectory }}
 
-      - template: '../../../../dotnet/dotnet/install-SDK.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: '../../../../dotnet/dotnet/restore.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: '../../../../dotnet/dotnet/build.yml'
+      - template: '../../../../dotnet/dotnet/restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}

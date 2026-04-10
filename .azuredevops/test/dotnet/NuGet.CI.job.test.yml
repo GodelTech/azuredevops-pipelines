@@ -73,7 +73,7 @@ parameters:
   - name: workingDirectory
     displayName: 'Working directory'
     type: string
-    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-nuget'
 
 trigger:
   batch: true

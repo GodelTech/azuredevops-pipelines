@@ -26,10 +26,6 @@ trigger:
     include:
       - .azuredevops/test/dotnet/dotnet/restore-and-build.test.yml
       - dotnet/dotnet/restore-and-build.yml
-      - dotnet/NuGet/authenticate.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 pr:
@@ -40,10 +36,6 @@ pr:
     include:
       - .azuredevops/test/dotnet/dotnet/restore-and-build.test.yml
       - dotnet/dotnet/restore-and-build.yml
-      - dotnet/NuGet/authenticate.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:

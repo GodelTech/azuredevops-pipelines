@@ -25,9 +25,7 @@ trigger:
   paths:
     include:
       - .azuredevops/test/dotnet/dotnet/test.test.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/restore-and-build.yml
       - dotnet/dotnet/test.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
@@ -38,9 +36,7 @@ pr:
   paths:
     include:
       - .azuredevops/test/dotnet/dotnet/test.test.yml
-      - dotnet/dotnet/install-SDK.yml
-      - dotnet/dotnet/restore.yml
-      - dotnet/dotnet/build.yml
+      - dotnet/dotnet/restore-and-build.yml
       - dotnet/dotnet/test.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
@@ -58,17 +54,7 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
-      - template: '../../../../dotnet/dotnet/install-SDK.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: '../../../../dotnet/dotnet/restore.yml'
-        parameters:
-          enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          workingDirectory: ${{ parameters.workingDirectory }}
-
-      - template: '../../../../dotnet/dotnet/build.yml'
+      - template: '../../../../dotnet/dotnet/restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           workingDirectory: ${{ parameters.workingDirectory }}

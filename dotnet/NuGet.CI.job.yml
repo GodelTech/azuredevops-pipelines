@@ -134,6 +134,7 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if parameters.dotnet.nuGetServiceConnections }}:
             nuGetServiceConnections: ${{ parameters.dotnet.nuGetServiceConnections }}
+          # prettier-ignore
           restore: {
             enable: true,
             useCache: true
