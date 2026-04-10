@@ -1,0 +1,118 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: enable
+    displayName: 'Enable NuGet push'
+    type: boolean
+    default: true
+
+  - name: condition
+    displayName: 'Condition for push step'
+    type: string
+    default: |-
+      and
+      (
+        succeeded(),
+        eq(variables['Build.SourceBranch'], 'refs/heads/main')
+      )
+
+  - name: feedUrl
+    displayName: 'Azure Artifacts feed URL'
+    type: string
+    default: ''
+
+  - name: packageDir
+    displayName: 'Directory containing NuGet packages to push'
+    type: string
+    default: '$(Build.ArtifactStagingDirectory)/nuget'
+
+  - name: apiKey
+    displayName: 'API key for NuGet push (use az for Azure Artifacts)'
+    type: string
+    default: 'az'
+
+  - name: appendSummary
+    displayName: 'Append section to job summary'
+    type: boolean
+    default: true
+
+steps:
+  - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
+      $feedUrl = $env:FEED_URL
+      $packageDir = $env:PACKAGE_DIR
+      $apiKey = $env:API_KEY
+
+      $packages = Get-ChildItem -Path $packageDir -Filter '*.nupkg' -Recurse
+
+      if ($packages.Count -eq 0) {
+        Write-Host "##vso[task.logissue type=warning]No .nupkg files found in '$packageDir'"
+        Write-Host "##vso[task.setvariable variable=nugetPushResult]NoPackages"
+        exit 0
+      }
+
+      Write-Host "Found $($packages.Count) package(s) to push:"
+      $packages | ForEach-Object { Write-Host "  - $($_.Name)" }
+
+      $failed = $false
+      foreach ($pkg in $packages) {
+        $pushArgs = @(
+          'nuget', 'push', "`"$($pkg.FullName)`""
+          '--source', "`"$feedUrl`""
+          '--api-key', $apiKey
+          '--skip-duplicate'
+        )
+
+        if ($enableBuildDebug) {
+          Write-Host "##[debug]dotnet $($pushArgs -join ' ')"
+        }
+
+        Write-Host "Pushing $($pkg.Name)..."
+        & dotnet @pushArgs
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "##vso[task.logissue type=error]Failed to push $($pkg.Name)"
+          $failed = $true
+        }
+      }
+
+      if ($failed) {
+        Write-Host "##vso[task.setvariable variable=nugetPushResult]Failed"
+        exit 1
+      }
+
+      Write-Host "##vso[task.setvariable variable=nugetPushResult]Succeeded"
+    displayName: 'dotnet nuget push'
+    condition: |
+      and
+      (
+        ${{ parameters.condition }},
+        eq(${{ parameters.enable }}, true),
+        ne('${{ parameters.feedUrl }}', '')
+      )
+    env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
+      FEED_URL: ${{ parameters.feedUrl }}
+      PACKAGE_DIR: ${{ parameters.packageDir }}
+      API_KEY: ${{ parameters.apiKey }}
+
+  - template: '../../azuredevops/build/append-to-job-summary.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      stepDisplayName: 'Append NuGet push section to job summary'
+      condition: |
+        and
+        (
+          succeededOrFailed(),
+          eq(${{ parameters.enable }}, true),
+          eq(${{ parameters.appendSummary }}, true)
+        )
+      title: 'NuGet Push'
+      content: |
+        | Property | Value |
+        | --- | --- |
+        | Feed URL | ${{ parameters.feedUrl }} |
+        | Result | $(nugetPushResult) |

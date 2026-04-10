@@ -15,6 +15,66 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
+  - name: sonarCloud
+    displayName: 'SonarCloud parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      serviceConnection: 'SonarCloud',
+      organization: 'godeltech',
+      projectKey: 'GodelTech_azuredevops-pipelines_test_dotnet_NuGet_CI_job',
+      projectName: 'azuredevops-pipelines test dotnet NuGet.CI.job',
+      coverageReportPath: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
+    }
+
+  - name: dotnet
+    displayName: '.NET parameters'
+    type: object
+    default: {}
+
+  - name: stryker
+    displayName: 'Stryker mutation testing parameters'
+    type: object
+    default: {}
+
+  - name: pack
+    displayName: 'NuGet pack parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      includesSymbols: true
+    }
+
+  - name: push
+    displayName: 'NuGet push parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: false
+    }
+
+  - name: quality
+    displayName: 'Quality check parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      jobWarnings: {
+        warningThreshold: 1
+      }
+    }
+
+  - name: buildSummary
+    displayName: 'Build summary parameters'
+    type: object
+    default: {}
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-core'
+
 trigger:
   batch: true
   paths:
@@ -42,20 +102,28 @@ schedules:
     always: true
 
 variables:
-  ciJobName: 'GitVersion'
+  buildJobName: 'Pack'
 
 jobs:
-  - template: '../../../../dotnet/NuGet.CI.job.yml'
+  - template: '../../../dotnet/NuGet.CI.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
+      sonarCloud: ${{ parameters.sonarCloud }}
+      dotnet: ${{ parameters.dotnet }}
+      stryker: ${{ parameters.stryker }}
+      pack: ${{ parameters.pack }}
+      push: ${{ parameters.push }}
+      quality: ${{ parameters.quality }}
+      buildSummary: ${{ parameters.buildSummary }}
+      workingDirectory: ${{ parameters.workingDirectory }}
 
-  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+  - template: '../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - ${{ variables.ciJobName }}
+        - ${{ variables.buildJobName }}
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'${{ variables.ciJobName }}'** result must be: **Succeeded**
+        Job **'${{ variables.buildJobName }}'** result must be: **Succeeded**

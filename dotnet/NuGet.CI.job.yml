@@ -9,10 +9,232 @@ parameters:
     type: string
     default: 'ubuntu-latest'
 
+  - name: gitVersion
+    displayName: 'GitVersion job parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      jobName: 'GitVersion',
+      stepName: 'git_version_step'
+    }
+
+  - name: build
+    displayName: 'Build job parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      jobName: 'BuildDotnet'
+    }
+
+  - name: sonarCloud
+    displayName: 'SonarCloud parameters'
+    type: object
+    default: {}
+    # See build.job.yml for example usage
+
+  - name: dotnet
+    displayName: '.NET parameters'
+    type: object
+    default: {}
+    # See build.job.yml for example usage
+
+  - name: stryker
+    displayName: 'Stryker mutation testing parameters'
+    type: object
+    default: {}
+    # See build.job.yml for example usage
+
+  - name: quality
+    displayName: 'Quality check parameters'
+    type: object
+    default: {}
+    # See build.job.yml for example usage
+
+  - name: pack
+    displayName: 'NuGet pack parameters'
+    type: object
+    default: {}
+    # Example:
+    # pack:
+    #   enable: true
+    #   projects: '**/*.csproj'
+    #   includesSymbols: true
+    #   outputDir: '$(Build.ArtifactStagingDirectory)/nuget'
+    #   artifactName: 'nuget-packages'
+
+  - name: push
+    displayName: 'NuGet push parameters'
+    type: object
+    default: {}
+    # Example:
+    # push:
+    #   enable: true
+    #   condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))"
+    #   feedUrl: 'https://pkgs.dev.azure.com/my-org/_packaging/my-feed/nuget/v3/index.json'
+
+  - name: buildSummary
+    displayName: 'Build summary parameters'
+    type: object
+    default: {}
+    # Example:
+    # buildSummary:
+    #   enable: true
+    #   showSystemInfo: true
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: ''
+
 jobs:
+  # -- Job 1: GitVersion ---------------------------------------------------
   - template: '../git/version/get.job.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      jobName: 'GitVersion'
+      jobName: ${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}
       vmImage: ${{ parameters.vmImage }}
-      stepName: 'git_version_step'
+      stepName: ${{ coalesce(parameters.gitVersion.stepName, 'git_version_step') }}
+
+  # -- Job 2: Build & test -------------------------------------------------
+  - template: 'build.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      jobName: ${{ coalesce(parameters.build.jobName, 'BuildDotnet') }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - ${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}
+      sonarCloud: ${{ parameters.sonarCloud }}
+      dotnet: ${{ parameters.dotnet }}
+      stryker: ${{ parameters.stryker }}
+      quality: ${{ parameters.quality }}
+      buildSummary: ${{ parameters.buildSummary }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+  # -- Job 3: Pack ----------------------------------------------------------
+  - job: Pack
+    displayName: 'Pack NuGet'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ coalesce(parameters.pack.enable, true) }}, true)
+      )
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - ${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}
+      - ${{ coalesce(parameters.build.jobName, 'BuildDotnet') }}
+    variables:
+      # yamllint disable-line rule:line-length
+      gitVersionSemVer: $[ dependencies.${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}.outputs['${{ coalesce(parameters.gitVersion.stepName, 'git_version_step') }}.semVer'] ]
+    steps:
+      - template: 'dotnet/restore-and-build.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if parameters.dotnet.nuGetServiceConnections }}:
+            nuGetServiceConnections: ${{ parameters.dotnet.nuGetServiceConnections }}
+          restore: {
+            enable: true,
+            useCache: true
+          }
+          ${{ if ne(parameters.dotnet.projects, '') }}:
+            projects: ${{ parameters.dotnet.projects }}
+          ${{ if ne(parameters.dotnet.configuration, '') }}:
+            configuration: ${{ parameters.dotnet.configuration }}
+          ${{ if ne(parameters.dotnet.verbosity, '') }}:
+            verbosity: ${{ parameters.dotnet.verbosity }}
+          noRestore: true
+          selfContained: false
+          publishBinlog: false
+          appendSummary: false
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: 'dotnet/pack.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.pack.enable, '') }}:
+            enable: ${{ parameters.pack.enable }}
+          ${{ if ne(parameters.pack.projects, '') }}:
+            projects: ${{ parameters.pack.projects }}
+          ${{ if ne(parameters.dotnet.configuration, '') }}:
+            configuration: ${{ parameters.dotnet.configuration }}
+          ${{ if ne(parameters.dotnet.verbosity, '') }}:
+            verbosity: ${{ parameters.dotnet.verbosity }}
+          versioningScheme: 'byEnvVar'
+          versionEnvVar: 'gitVersionSemVer'
+          noBuild: true
+          ${{ if ne(parameters.pack.includesSymbols, '') }}:
+            includesSymbols: ${{ parameters.pack.includesSymbols }}
+          ${{ if ne(parameters.pack.outputDir, '') }}:
+            outputDir: ${{ parameters.pack.outputDir }}
+          publishPackages: true
+          artifactName: ${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
+          ${{ if ne(parameters.workingDirectory, '') }}:
+            workingDirectory: ${{ parameters.workingDirectory }}
+
+      - template: '../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Upload NuGet pack build summary'
+          condition: |
+            and
+            (
+              always(),
+              eq(${{ coalesce(parameters.buildSummary.enable, true) }}, true)
+            )
+          title: 'NuGet Pack Summary'
+          includeJobSummary: true
+          ${{ if ne(parameters.buildSummary.showSystemInfo, '') }}:
+            showSystemInfo: ${{ parameters.buildSummary.showSystemInfo }}
+
+  # -- Job 4: Push ----------------------------------------------------------
+  - job: Push
+    displayName: 'Push NuGet'
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ coalesce(parameters.push.enable, true) }}, true),
+        ne('${{ parameters.push.feedUrl }}', '')
+      )
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - Pack
+    steps:
+      - checkout: none
+
+      - download: current
+        displayName: 'Download NuGet packages artifact'
+        artifact: ${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
+
+      - template: 'NuGet/push.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.push.enable, '') }}:
+            enable: ${{ parameters.push.enable }}
+          feedUrl: ${{ parameters.push.feedUrl }}
+          packageDir: $(Pipeline.Workspace)/${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
+          ${{ if ne(parameters.push.condition, '') }}:
+            condition: ${{ parameters.push.condition }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
+
+      - template: '../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Upload NuGet push build summary'
+          condition: |
+            and
+            (
+              always(),
+              eq(${{ coalesce(parameters.buildSummary.enable, true) }}, true)
+            )
+          title: 'NuGet Push Summary'
+          includeJobSummary: true
+          ${{ if ne(parameters.buildSummary.showSystemInfo, '') }}:
+            showSystemInfo: ${{ parameters.buildSummary.showSystemInfo }}

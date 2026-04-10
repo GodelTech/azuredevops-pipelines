@@ -52,7 +52,7 @@ parameters:
   - name: includesSymbols
     displayName: 'Include symbol packages (.snupkg)'
     type: boolean
-    default: false
+    default: true
 
   - name: outputDir
     displayName: 'Output directory for NuGet packages'
@@ -82,13 +82,13 @@ parameters:
 steps:
   - pwsh: |
       $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
-      $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
-      $includesSymbols = [System.Convert]::ToBoolean($env:INCLUDES_SYMBOLS)
       $configuration = $env:CONFIGURATION
       $verbosity = $env:VERBOSITY
-      $outputDir = $env:OUTPUT_DIR
       $versioningScheme = $env:VERSIONING_SCHEME
       $versionEnvVar = $env:VERSION_ENV_VAR
+      $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
+      $includesSymbols = [System.Convert]::ToBoolean($env:INCLUDES_SYMBOLS)
+      $outputDir = $env:OUTPUT_DIR
 
       $packArgs = "--configuration $configuration"
       $packArgs += " --verbosity $verbosity"
@@ -126,13 +126,13 @@ steps:
       )
     env:
       ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
-      NO_BUILD: ${{ parameters.noBuild }}
-      INCLUDES_SYMBOLS: ${{ parameters.includesSymbols }}
       CONFIGURATION: ${{ parameters.configuration }}
       VERBOSITY: ${{ parameters.verbosity }}
-      OUTPUT_DIR: ${{ parameters.outputDir }}
       VERSIONING_SCHEME: ${{ parameters.versioningScheme }}
       VERSION_ENV_VAR: ${{ parameters.versionEnvVar }}
+      NO_BUILD: ${{ parameters.noBuild }}
+      INCLUDES_SYMBOLS: ${{ parameters.includesSymbols }}
+      OUTPUT_DIR: ${{ parameters.outputDir }}
       BUILD_BUILDNUMBER: $(Build.BuildNumber)
 
   - task: DotNetCoreCLI@2
