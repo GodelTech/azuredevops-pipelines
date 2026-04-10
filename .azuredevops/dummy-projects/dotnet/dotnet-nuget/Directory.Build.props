@@ -1,0 +1,15 @@
+<Project>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591: Missing XML doc comment -->
+    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <!-- Test projects don't need XML doc warnings -->
+  <PropertyGroup Condition="$(MSBuildProjectDirectory.Replace('\', '/').Contains('/test/')) Or $(MSBuildProjectDirectory.Replace('\', '/').EndsWith('/test'))">
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>

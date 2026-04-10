@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DummyProjectDotNetNuGet/DummyProjectDotNetNuGet.csproj" Id="c1d2e3f4-a5b6-7890-cdef-012345678901" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/DummyProjectDotNetNuGet.Tests/DummyProjectDotNetNuGet.Tests.csproj" Id="d2e3f4a5-b6c7-8901-defa-123456789012" />
+  </Folder>
+</Solution>
