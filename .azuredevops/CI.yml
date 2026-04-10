@@ -82,10 +82,10 @@ jobs:
     steps:
       - checkout: self
 
-      - task: NodeTool@0
+      - task: UseNode@1
         displayName: 'Use Node.js'
         inputs:
-          versionSpec: '22.x'
+          version: '22.x'
 
       - task: Cache@2
         displayName: 'Cache npm packages'
@@ -96,8 +96,8 @@ jobs:
             npm
           path: $(npm_config_cache)
 
-      - script: npm install
-        displayName: 'npm install'
+      - script: npm ci
+        displayName: 'npm ci'
 
       - script: npx prettier . --check
         displayName: 'Run prettier'
