@@ -208,9 +208,10 @@ jobs:
     condition: |
       and
       (
-        succeeded(),
+        not(canceled()),
         eq(${{ coalesce(parameters.push.enable, true) }}, true),
-        ne('${{ parameters.push.feedUrl }}', '')
+        ne('${{ parameters.push.feedUrl }}', ''),
+        eq(dependencies.Pack.result, 'Succeeded')
       )
     steps:
       - checkout: none
