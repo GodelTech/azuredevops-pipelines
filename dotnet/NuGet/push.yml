@@ -60,8 +60,8 @@ steps:
       $failed = $false
       foreach ($pkg in $packages) {
         $pushArgs = @(
-          'nuget', 'push', "`"$($pkg.FullName)`""
-          '--source', "`"$feedUrl`""
+          'nuget', 'push', $pkg.FullName
+          '--source', $feedUrl
           '--api-key', $apiKey
           '--skip-duplicate'
         )

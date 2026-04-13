@@ -142,11 +142,11 @@ jobs:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
-        - ${{ variables.buildJobName }}
+        - Push
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'${{ variables.buildJobName }}'** result must be: **Succeeded**
+        Job **'Pack NuGet'** result must be: **Succeeded**
+        Job **'Push NuGet'** result must be: **Succeeded** or **Skipped**
       # Known issue: branchCoverage and methodCoverage checks currently report 0% covered due to limitations in PublishCodeCoverageResults@2,
       # so set warning threshold low to avoid unnecessarily failing the build.
-      # Known issue: Timeline does not exist or has no records.
-      warningThreshold: 3
+      warningThreshold: 2
