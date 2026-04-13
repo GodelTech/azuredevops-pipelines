@@ -44,6 +44,9 @@ parameters:
     # prettier-ignore
     default: {
       stryker: {
+        # Known issue: Stryker.NET does not support xUnit v3. Projects using xUnit v3 will show most mutants
+        # as 'not covered' or 'survived' with incorrect results.
+        # Track progress at https://github.com/stryker-mutator/stryker-net/issues/3117
         enable: false
       },
       jobWarnings: {

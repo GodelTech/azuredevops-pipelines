@@ -12,7 +12,7 @@ parameters:
   - name: projects
     displayName: 'Projects to pack'
     type: string
-    default: ''
+    default: '**/*.csproj'
 
   - name: configuration
     displayName: 'Build configuration'
@@ -145,8 +145,7 @@ steps:
       )
     inputs:
       command: 'pack'
-      ${{ if ne(parameters.projects, '') }}:
-        packagesToPack: ${{ parameters.projects }}
+      packagesToPack: ${{ parameters.projects }}
       arguments: $(dotnetPackArguments)
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
