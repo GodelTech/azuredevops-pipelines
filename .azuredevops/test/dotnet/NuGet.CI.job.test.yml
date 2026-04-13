@@ -38,6 +38,19 @@ parameters:
     type: object
     default: {}
 
+  - name: quality
+    displayName: 'Quality check parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      stryker: {
+        enable: false
+      },
+      jobWarnings: {
+        warningThreshold: 1
+      }
+    }
+
   - name: pack
     displayName: 'NuGet pack parameters'
     type: object
@@ -53,16 +66,6 @@ parameters:
     # prettier-ignore
     default: {
       enable: false
-    }
-
-  - name: quality
-    displayName: 'Quality check parameters'
-    type: object
-    # prettier-ignore
-    default: {
-      jobWarnings: {
-        warningThreshold: 1
-      }
     }
 
   - name: buildSummary
@@ -112,9 +115,9 @@ jobs:
       sonarCloud: ${{ parameters.sonarCloud }}
       dotnet: ${{ parameters.dotnet }}
       stryker: ${{ parameters.stryker }}
+      quality: ${{ parameters.quality }}
       pack: ${{ parameters.pack }}
       push: ${{ parameters.push }}
-      quality: ${{ parameters.quality }}
       buildSummary: ${{ parameters.buildSummary }}
       workingDirectory: ${{ parameters.workingDirectory }}
 

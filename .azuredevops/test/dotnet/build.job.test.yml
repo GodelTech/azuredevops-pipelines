@@ -43,6 +43,9 @@ parameters:
     type: object
     # prettier-ignore
     default: {
+      stryker: {
+        enable: false
+      },
       jobWarnings: {
         warningThreshold: 1
       }
