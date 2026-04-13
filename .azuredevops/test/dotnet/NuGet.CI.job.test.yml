@@ -125,6 +125,7 @@ jobs:
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       vmImage: ${{ parameters.vmImage }}
+      build: ${{ parameters.build }}
       sonarCloud: ${{ parameters.sonarCloud }}
       dotnet: ${{ parameters.dotnet }}
       stryker: ${{ parameters.stryker }}
