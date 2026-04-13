@@ -78,7 +78,9 @@ parameters:
     type: object
     # prettier-ignore
     default: {
-      enable: false
+      enable: false,
+      feedUrl: 'https://godeltech.pkgs.visualstudio.com/OpenSource/_packaging/azuredevops-pipelines-test/nuget/v3/index.json',
+      condition: 'succeeded()'
     }
 
   - name: buildSummary
@@ -146,4 +148,5 @@ jobs:
         Job **'${{ variables.buildJobName }}'** result must be: **Succeeded**
       # Known issue: branchCoverage and methodCoverage checks currently report 0% covered due to limitations in PublishCodeCoverageResults@2,
       # so set warning threshold low to avoid unnecessarily failing the build.
-      warningThreshold: 2
+      # Known issue: Timeline does not exist or has no records.
+      warningThreshold: 3
