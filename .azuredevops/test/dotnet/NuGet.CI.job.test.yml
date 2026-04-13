@@ -47,7 +47,7 @@ parameters:
         enable: false
       },
       jobWarnings: {
-        # branchCoverage and methodCoverage checks currently report 0% covered due to limitations in PublishCodeCoverageResults@2,
+        # Known issue: branchCoverage and methodCoverage checks currently report 0% covered due to limitations in PublishCodeCoverageResults@2,
         # so set warning threshold low to avoid unnecessarily failing the build.
         warningThreshold: 2
       }
@@ -132,3 +132,6 @@ jobs:
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
         Job **'${{ variables.buildJobName }}'** result must be: **Succeeded**
+      # Known issue: branchCoverage and methodCoverage checks currently report 0% covered due to limitations in PublishCodeCoverageResults@2,
+      # so set warning threshold low to avoid unnecessarily failing the build.
+      warningThreshold: 2
