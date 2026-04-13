@@ -82,7 +82,6 @@ parameters:
 steps:
   - pwsh: |
       $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
-      $configuration = $env:CONFIGURATION
       $verbosity = $env:VERBOSITY
       $versioningScheme = $env:VERSIONING_SCHEME
       $versionEnvVar = $env:VERSION_ENV_VAR
@@ -98,7 +97,7 @@ steps:
       }
 
       if ($versioningScheme -eq 'byEnvVar' -and -not [string]::IsNullOrEmpty($versionEnvVar)) {
-        $version = [System.Environment]::GetEnvironmentVariable($versionEnvVar)
+        $version = $env:VERSION_VALUE
         if (-not [string]::IsNullOrEmpty($version)) {
           $packArgs += " /p:PackageVersion=$version"
           $packArgs += " /p:Version=$version"
@@ -131,6 +130,8 @@ steps:
       NO_BUILD: ${{ parameters.noBuild }}
       INCLUDES_SYMBOLS: ${{ parameters.includesSymbols }}
       BUILD_BUILDNUMBER: $(Build.BuildNumber)
+      ${{ if and(eq(parameters.versioningScheme, 'byEnvVar'), ne(parameters.versionEnvVar, '')) }}:
+        VERSION_VALUE: $(${{ parameters.versionEnvVar }})
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet pack'
