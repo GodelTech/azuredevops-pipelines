@@ -102,6 +102,8 @@ steps:
         if (-not [string]::IsNullOrEmpty($version)) {
           $packArgs += " /p:PackageVersion=$version"
           $packArgs += " /p:Version=$version"
+        } else {
+          Write-Host "##vso[task.logissue type=warning]Version was not specified: environment variable '$versionEnvVar' is empty or not set."
         }
       } elseif ($versioningScheme -eq 'byBuildNumber') {
         $buildNumber = $env:BUILD_BUILDNUMBER

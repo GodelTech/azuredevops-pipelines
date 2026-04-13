@@ -24,6 +24,11 @@ parameters:
     type: object
     default: []
 
+  - name: enable
+    displayName: 'Enable job'
+    type: boolean
+    default: true
+
   - name: sonarCloud
     displayName: 'SonarCloud parameters'
     type: object
@@ -152,6 +157,12 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.enable }}, true)
+      )
     steps:
       - template: 'SonarCloud/prepare.yml'
         parameters:

@@ -68,9 +68,9 @@ jobs:
 
   - job: AppendToJobSummaryWithContentBlocks
     displayName: 'Append to job summary with content blocks'
-    dependsOn: AppendToJobSummary
     pool:
       vmImage: ${{ parameters.vmImage }}
+    dependsOn: AppendToJobSummary
     steps:
       - checkout: none
 

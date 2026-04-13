@@ -15,6 +15,7 @@ parameters:
     # prettier-ignore
     default: {
       jobName: 'GitVersion',
+      enable: true,
       stepName: 'git_version_step'
     }
 
@@ -23,7 +24,8 @@ parameters:
     type: object
     # prettier-ignore
     default: {
-      jobName: 'BuildDotnet'
+      jobName: 'BuildDotnet',
+      enable: true
     }
 
   - name: sonarCloud
@@ -93,6 +95,7 @@ jobs:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
       jobName: ${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}
       vmImage: ${{ parameters.vmImage }}
+      enable: ${{ coalesce(parameters.gitVersion.enable, true) }}
       stepName: ${{ coalesce(parameters.gitVersion.stepName, 'git_version_step') }}
 
   # -- Job 2: Build & test -------------------------------------------------
@@ -103,6 +106,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       dependsOn:
         - ${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}
+      enable: ${{ coalesce(parameters.build.enable, true) }}
       sonarCloud: ${{ parameters.sonarCloud }}
       dotnet: ${{ parameters.dotnet }}
       stryker: ${{ parameters.stryker }}
@@ -114,17 +118,17 @@ jobs:
   # -- Job 3: Pack ----------------------------------------------------------
   - job: Pack
     displayName: 'Pack NuGet'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - ${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}
+      - ${{ coalesce(parameters.build.jobName, 'BuildDotnet') }}
     condition: |
       and
       (
         succeeded(),
         eq(${{ coalesce(parameters.pack.enable, true) }}, true)
       )
-    pool:
-      vmImage: ${{ parameters.vmImage }}
-    dependsOn:
-      - ${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}
-      - ${{ coalesce(parameters.build.jobName, 'BuildDotnet') }}
     variables:
       # yamllint disable-line rule:line-length
       gitVersionSemVer: $[ dependencies.${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}.outputs['${{ coalesce(parameters.gitVersion.stepName, 'git_version_step') }}.semVer'] ]
@@ -195,6 +199,10 @@ jobs:
   # -- Job 4: Push ----------------------------------------------------------
   - job: Push
     displayName: 'Push NuGet'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - Pack
     condition: |
       and
       (
@@ -202,10 +210,6 @@ jobs:
         eq(${{ coalesce(parameters.push.enable, true) }}, true),
         ne('${{ parameters.push.feedUrl }}', '')
       )
-    pool:
-      vmImage: ${{ parameters.vmImage }}
-    dependsOn:
-      - Pack
     steps:
       - checkout: none
 

@@ -15,6 +15,14 @@ parameters:
       - ubuntu-latest
       - macOS-latest
 
+  - name: build
+    displayName: 'Build job parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true
+    }
+
   - name: sonarCloud
     displayName: 'SonarCloud parameters'
     type: object
