@@ -145,7 +145,10 @@ steps:
       )
     inputs:
       command: 'pack'
-      packagesToPack: ${{ parameters.projects }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        packagesToPack: ${{ parameters.workingDirectory }}/${{ parameters.projects }}
+      ${{ else }}:
+        packagesToPack: ${{ parameters.projects }}
       arguments: $(dotnetPackArguments)
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
