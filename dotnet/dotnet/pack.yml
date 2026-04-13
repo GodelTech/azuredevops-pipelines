@@ -22,13 +22,14 @@ parameters:
   - name: verbosity
     displayName: 'MSBuild verbosity level'
     type: string
-    default: 'minimal'
+    default: 'Minimal'
     values:
-      - quiet
-      - minimal
-      - normal
-      - detailed
-      - diagnostic
+      - '-'
+      - Quiet
+      - Minimal
+      - Normal
+      - Detailed
+      - Diagnostic
 
   - name: versioningScheme
     displayName: 'Versioning scheme'
@@ -36,13 +37,30 @@ parameters:
     default: 'off'
     values:
       - 'off'
+      - byPrereleaseNumber
       - byEnvVar
       - byBuildNumber
+      - bySemVerBuildNumber
 
   - name: versionEnvVar
     displayName: 'Pipeline variable name holding the version (used when versioningScheme is byEnvVar)'
     type: string
     default: ''
+
+  - name: majorVersion
+    displayName: 'Major version (used when versioningScheme is byPrereleaseNumber)'
+    type: string
+    default: '1'
+
+  - name: minorVersion
+    displayName: 'Minor version (used when versioningScheme is byPrereleaseNumber)'
+    type: string
+    default: '0'
+
+  - name: patchVersion
+    displayName: 'Patch version (used when versioningScheme is byPrereleaseNumber)'
+    type: string
+    default: '0'
 
   - name: noBuild
     displayName: 'Do not build the project before packing'
@@ -80,59 +98,6 @@ parameters:
     default: ''
 
 steps:
-  - pwsh: |
-      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
-      $verbosity = $env:VERBOSITY
-      $versioningScheme = $env:VERSIONING_SCHEME
-      $versionEnvVar = $env:VERSION_ENV_VAR
-      $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
-      $includesSymbols = [System.Convert]::ToBoolean($env:INCLUDES_SYMBOLS)
-
-      $packArgs = "--verbosity $verbosity"
-      $packArgs += ' --no-restore'
-      if ($noBuild) { $packArgs += ' --no-build' }
-      if ($includesSymbols) {
-        $packArgs += ' --include-symbols'
-        $packArgs += ' -p:SymbolPackageFormat=snupkg'
-      }
-
-      if ($versioningScheme -eq 'byEnvVar' -and -not [string]::IsNullOrEmpty($versionEnvVar)) {
-        $version = $env:VERSION_VALUE
-        if (-not [string]::IsNullOrEmpty($version)) {
-          $packArgs += " -p:PackageVersion=$version"
-          $packArgs += " -p:Version=$version"
-        } else {
-          Write-Host "##vso[task.logissue type=warning]Version was not specified: environment variable '$versionEnvVar' is empty or not set."
-        }
-      } elseif ($versioningScheme -eq 'byBuildNumber') {
-        $buildNumber = $env:BUILD_BUILDNUMBER
-        $packArgs += " -p:PackageVersion=$buildNumber"
-        $packArgs += " -p:Version=$buildNumber"
-      }
-
-      if ($enableBuildDebug) {
-        Write-Host "##[debug]dotnet pack arguments: $packArgs"
-      }
-
-      Write-Host "##vso[task.setvariable variable=dotnetPackArguments]$packArgs"
-    displayName: 'Set dotnet pack arguments'
-    condition: |
-      and
-      (
-        succeeded(),
-        eq(${{ parameters.enable }}, true)
-      )
-    env:
-      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
-      VERBOSITY: ${{ parameters.verbosity }}
-      VERSIONING_SCHEME: ${{ parameters.versioningScheme }}
-      VERSION_ENV_VAR: ${{ parameters.versionEnvVar }}
-      NO_BUILD: ${{ parameters.noBuild }}
-      INCLUDES_SYMBOLS: ${{ parameters.includesSymbols }}
-      BUILD_BUILDNUMBER: $(Build.BuildNumber)
-      ${{ if and(eq(parameters.versioningScheme, 'byEnvVar'), ne(parameters.versionEnvVar, '')) }}:
-        VERSION_VALUE: $(${{ parameters.versionEnvVar }})
-
   - task: DotNetCoreCLI@2
     displayName: 'dotnet pack'
     condition: |
@@ -150,7 +115,18 @@ steps:
         packagesToPack: ${{ parameters.projects }}
       configurationToPack: ${{ parameters.configuration }}
       outputDir: ${{ parameters.outputDir }}
-      arguments: $(dotnetPackArguments)
+      nobuild: ${{ parameters.noBuild }}
+      includesymbols: ${{ parameters.includesSymbols }}
+      verbosityPack: ${{ parameters.verbosity }}
+      versioningScheme: ${{ parameters.versioningScheme }}
+      ${{ if eq(parameters.versioningScheme, 'byEnvVar') }}:
+        versionEnvVar: ${{ parameters.versionEnvVar }}
+      ${{ if eq(parameters.versioningScheme, 'byPrereleaseNumber') }}:
+        majorVersion: ${{ parameters.majorVersion }}
+        minorVersion: ${{ parameters.minorVersion }}
+        patchVersion: ${{ parameters.patchVersion }}
+      ${{ if eq(parameters.includesSymbols, true) }}:
+        buildProperties: 'SymbolPackageFormat=snupkg'
 
   - publish: '${{ parameters.outputDir }}'
     displayName: 'Publish NuGet packages artifact'
