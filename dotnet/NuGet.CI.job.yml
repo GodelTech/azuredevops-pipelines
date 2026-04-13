@@ -126,8 +126,10 @@ jobs:
     condition: |
       and
       (
-        succeeded(),
-        eq(${{ coalesce(parameters.pack.enable, true) }}, true)
+        not(canceled()),
+        eq(${{ coalesce(parameters.pack.enable, true) }}, true),
+        eq(dependencies.${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}.result, 'Succeeded'),
+        in(dependencies.${{ coalesce(parameters.build.jobName, 'BuildDotnet') }}.result, 'Succeeded', 'Skipped')
       )
     variables:
       # yamllint disable-line rule:line-length
