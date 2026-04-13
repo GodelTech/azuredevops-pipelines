@@ -88,17 +88,14 @@ steps:
       $versionEnvVar = $env:VERSION_ENV_VAR
       $noBuild = [System.Convert]::ToBoolean($env:NO_BUILD)
       $includesSymbols = [System.Convert]::ToBoolean($env:INCLUDES_SYMBOLS)
-      $outputDir = $env:OUTPUT_DIR
 
-      $packArgs = "--configuration $configuration"
-      $packArgs += " --verbosity $verbosity"
+      $packArgs = "--verbosity $verbosity"
       $packArgs += ' --no-restore'
       if ($noBuild) { $packArgs += ' --no-build' }
       if ($includesSymbols) {
         $packArgs += ' --include-symbols'
         $packArgs += ' -p:SymbolPackageFormat=snupkg'
       }
-      $packArgs += " --output `"$outputDir`""
 
       if ($versioningScheme -eq 'byEnvVar' -and -not [string]::IsNullOrEmpty($versionEnvVar)) {
         $version = [System.Environment]::GetEnvironmentVariable($versionEnvVar)
@@ -126,13 +123,11 @@ steps:
       )
     env:
       ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
-      CONFIGURATION: ${{ parameters.configuration }}
       VERBOSITY: ${{ parameters.verbosity }}
       VERSIONING_SCHEME: ${{ parameters.versioningScheme }}
       VERSION_ENV_VAR: ${{ parameters.versionEnvVar }}
       NO_BUILD: ${{ parameters.noBuild }}
       INCLUDES_SYMBOLS: ${{ parameters.includesSymbols }}
-      OUTPUT_DIR: ${{ parameters.outputDir }}
       BUILD_BUILDNUMBER: $(Build.BuildNumber)
 
   - task: DotNetCoreCLI@2
@@ -147,11 +142,12 @@ steps:
       command: 'pack'
       ${{ if ne(parameters.workingDirectory, '') }}:
         packagesToPack: ${{ parameters.workingDirectory }}/${{ parameters.projects }}
+        workingDirectory: ${{ parameters.workingDirectory }}
       ${{ else }}:
         packagesToPack: ${{ parameters.projects }}
+      configurationToPack: ${{ parameters.configuration }}
+      outputDir: ${{ parameters.outputDir }}
       arguments: $(dotnetPackArguments)
-      ${{ if ne(parameters.workingDirectory, '') }}:
-        workingDirectory: ${{ parameters.workingDirectory }}
 
   - publish: '${{ parameters.outputDir }}'
     displayName: 'Publish NuGet packages artifact'
