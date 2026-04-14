@@ -24,6 +24,11 @@
     type: string
     default: ''
 
+  - name: noNewLine
+    displayName: 'Do not add a trailing newline after the content block'
+    type: boolean
+    default: false
+
   - name: contentBlocks
     displayName: 'Content blocks to include in the summary'
     type: object
@@ -44,6 +49,7 @@ steps:
       $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $title = $env:SUMMARY_TITLE
       $content = $env:SUMMARY_CONTENT
+      $noNewLine = [System.Convert]::ToBoolean($env:NO_NEW_LINE)
       $contentBlocks = $env:SUMMARY_CONTENT_BLOCKS | ConvertFrom-Json
       $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
@@ -58,7 +64,9 @@ steps:
 
       if (-not [string]::IsNullOrEmpty($content)) {
         $lines += $content.TrimEnd()
-        $lines += ""
+        if (-not $noNewLine) {
+          $lines += ""
+        }
       }
 
       foreach ($block in $contentBlocks) {
@@ -90,5 +98,6 @@ steps:
       ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       SUMMARY_TITLE: ${{ parameters.title }}
       SUMMARY_CONTENT: ${{ parameters.content }}
+      NO_NEW_LINE: ${{ parameters.noNewLine }}
       SUMMARY_CONTENT_BLOCKS: ${{ convertToJson(parameters.contentBlocks) }}
       AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)

@@ -34,6 +34,15 @@ parameters:
     type: string
     default: 'git_version_step'
 
+  - name: buildSummary
+    displayName: 'Build summary parameters'
+    type: object
+    default: {}
+    # Example:
+    # buildSummary:
+    #   enable: true
+    #   showSystemInfo: true
+
 jobs:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
@@ -77,3 +86,35 @@ jobs:
             displayName: 'Display GitVersion FullSemVer output'
             env:
               GIT_VERSION_FULLSEMVER: $(${{ parameters.stepName }}.fullSemVer)
+
+      - template: '../../azuredevops/build/append-to-job-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Append GitVersion section to job summary'
+          condition: |
+            and
+            (
+              succeededOrFailed(),
+              eq(${{ coalesce(parameters.buildSummary.enable, true) }}, true)
+            )
+          title: 'GitVersion'
+          content: |
+            | Property | Value |
+            | --- | --- |
+            | SemVer | $(${{ parameters.stepName }}.semVer) |
+            | FullSemVer | $(${{ parameters.stepName }}.fullSemVer) |
+
+      - template: '../../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Upload GitVersion build summary'
+          condition: |
+            and
+            (
+              always(),
+              eq(${{ coalesce(parameters.buildSummary.enable, true) }}, true)
+            )
+          title: 'GitVersion Summary'
+          includeJobSummary: true
+          ${{ if ne(parameters.buildSummary.showSystemInfo, '') }}:
+            showSystemInfo: ${{ parameters.buildSummary.showSystemInfo }}

@@ -204,8 +204,6 @@ steps:
             content: '_Test results publishing is disabled._'
             noNewLine: true
         - ${{ if parameters.collectCoverage }}:
-            # yamllint disable rule:line-length
             content: 'Code coverage: [**view**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=codecoverage-tab)'
-            # yamllint enable rule:line-length
           ${{ else }}:
             content: '_Code coverage collection is disabled._'

@@ -156,7 +156,16 @@ steps:
         | --- | --- |
         | Configuration | ${{ parameters.configuration }} |
         | Versioning Scheme | ${{ parameters.versioningScheme }} |
+      noNewLine: true
       contentBlocks:
+        - ${{ if eq(parameters.versioningScheme, 'byEnvVar') }}:
+            content: '| Version | $(${{ parameters.versionEnvVar }}) |'
+          ${{ elseif eq(parameters.versioningScheme, 'byPrereleaseNumber') }}:
+            content: '| Version | ${{ parameters.majorVersion }}.${{ parameters.minorVersion }}.${{ parameters.patchVersion }}-CI.* |'
+          ${{ elseif in(parameters.versioningScheme, 'byBuildNumber', 'bySemVerBuildNumber') }}:
+            content: '| Version | $(Build.BuildNumber) |'
+          ${{ else }}:
+            content: '| Version | _N/A (scheme: off)_ |'
         - ${{ if parameters.publishPackages }}:
             # yamllint disable rule:line-length
             content: 'NuGet packages artifact: [**${{ parameters.artifactName }}**]($(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)'

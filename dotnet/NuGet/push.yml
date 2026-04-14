@@ -67,19 +67,36 @@ steps:
       $feedUrl = $env:FEED_URL
       $packageDir = $env:PACKAGE_DIR
       $apiKey = $env:API_KEY
+      $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
+      $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
       $packages = Get-ChildItem -Path $packageDir -Filter '*.nupkg' -Recurse
 
       if ($packages.Count -eq 0) {
         Write-Host "##vso[task.logissue type=warning]No .nupkg files found in '$packageDir'"
-        Write-Host "##vso[task.setvariable variable=nugetPushResult]NoPackages"
+
+        if ($appendSummary) {
+          $summaryLines = @(
+            "## NuGet Push",
+            "",
+            "| Property | Value |",
+            "| --- | --- |",
+            "| Feed URL | [$feedUrl]($feedUrl) |",
+            "| Result | NoPackages |",
+            ""
+          )
+          $summaryPath = "$agentTempDirectory/job-summary.md"
+          Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8
+        }
+
         exit 0
       }
 
       Write-Host "Found $($packages.Count) package(s) to push:"
       $packages | ForEach-Object { Write-Host "  - $($_.Name)" }
 
-      $failed = $false
+      $packageResults = @()
+
       foreach ($pkg in $packages) {
         $pushArgs = @(
           'nuget', 'push', $pkg.FullName
@@ -93,20 +110,63 @@ steps:
         }
 
         Write-Host "Pushing $($pkg.Name)..."
-        & dotnet @pushArgs
+        $output = & dotnet @pushArgs 2>&1 | Out-String
+        $exitCode = $LASTEXITCODE
+        Write-Host $output
 
-        if ($LASTEXITCODE -ne 0) {
+        if ($exitCode -ne 0) {
           Write-Host "##vso[task.logissue type=error]Failed to push $($pkg.Name)"
-          $failed = $true
+          $packageResults += @{ Name = $pkg.Name; Result = 'Failed' }
+        } elseif ($output -match 'already exists') {
+          $packageResults += @{ Name = $pkg.Name; Result = 'SkippedDuplicate' }
+        } else {
+          $packageResults += @{ Name = $pkg.Name; Result = 'Pushed' }
         }
       }
 
-      if ($failed) {
-        Write-Host "##vso[task.setvariable variable=nugetPushResult]Failed"
-        exit 1
+      $failedCount = @($packageResults | Where-Object { $_.Result -eq 'Failed' }).Count
+
+      if ($appendSummary) {
+        $resultDisplayMap = @{
+          'Pushed' = 'Pushed'
+          'SkippedDuplicate' = 'Skipped (already exists)'
+          'Failed' = 'Failed'
+        }
+        $packageDetailLines = @("| Package | Result |", "| --- | --- |")
+        $packageDetailLines += $packageResults | ForEach-Object { "| $($_.Name) | $($resultDisplayMap[$_.Result]) |" }
+
+        $pushedCount = @($packageResults | Where-Object { $_.Result -eq 'Pushed' }).Count
+        $skippedCount = @($packageResults | Where-Object { $_.Result -eq 'SkippedDuplicate' }).Count
+
+        if ($failedCount -gt 0) {
+          $result = 'Failed'
+        } elseif ($pushedCount -eq 0 -and $skippedCount -gt 0) {
+          $result = 'Skipped (all packages already exist)'
+        } elseif ($skippedCount -gt 0) {
+          $result = "Succeeded ($pushedCount pushed, $skippedCount skipped)"
+        } else {
+          $result = 'Succeeded'
+        }
+
+        $summaryLines = @(
+          "## NuGet Push",
+          "",
+          "| Property | Value |",
+          "| --- | --- |",
+          "| Feed URL | [$feedUrl]($feedUrl) |",
+          "| Result | $result |",
+          ""
+        )
+        $summaryLines += $packageDetailLines
+        $summaryLines += ""
+
+        $summaryPath = "$agentTempDirectory/job-summary.md"
+        Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8
       }
 
-      Write-Host "##vso[task.setvariable variable=nugetPushResult]Succeeded"
+      if ($failedCount -gt 0) {
+        exit 1
+      }
     displayName: 'dotnet nuget push'
     condition: |
       and
@@ -120,21 +180,5 @@ steps:
       FEED_URL: ${{ parameters.feedUrl }}
       PACKAGE_DIR: ${{ parameters.packageDir }}
       API_KEY: ${{ parameters.apiKey }}
-
-  - template: '../../azuredevops/build/append-to-job-summary.yml'
-    parameters:
-      enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      stepDisplayName: 'Append NuGet push section to job summary'
-      condition: |
-        and
-        (
-          succeededOrFailed(),
-          eq(${{ parameters.enable }}, true),
-          eq(${{ parameters.appendSummary }}, true)
-        )
-      title: 'NuGet Push'
-      content: |
-        | Property | Value |
-        | --- | --- |
-        | Feed URL | ${{ parameters.feedUrl }} |
-        | Result | $(nugetPushResult) |
+      APPEND_SUMMARY: ${{ parameters.appendSummary }}
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)

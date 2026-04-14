@@ -58,9 +58,11 @@ parameters:
         enable: false
       },
       jobWarnings: {
-        # Known issue: branchCoverage and methodCoverage checks currently report 0% covered due to limitations in PublishCodeCoverageResults@2,
-        # so set warning threshold low to avoid unnecessarily failing the build.
-        warningThreshold: 2
+        # Known issues producing expected warnings:
+        # 1. branchCoverage check reports 0% covered due to limitations in PublishCodeCoverageResults@2
+        # 2. methodCoverage check reports 0% covered due to limitations in PublishCodeCoverageResults@2
+        # 3. Warnings quality check reports 'Timeline does not exist or has no records' (BuildQualityChecks@10 limitation)
+        warningThreshold: 3
       }
     }
 
@@ -150,6 +152,8 @@ jobs:
       buildResultDescription: |
         Job **'Pack NuGet'** result must be: **Succeeded**
         Job **'Push NuGet'** result must be: **Succeeded** or **Skipped**
-      # Known issue: branchCoverage and methodCoverage checks currently report 0% covered due to limitations in PublishCodeCoverageResults@2,
-      # so set warning threshold low to avoid unnecessarily failing the build.
-      warningThreshold: 2
+      # Known issues producing expected warnings:
+      # 1. branchCoverage check reports 0% covered due to limitations in PublishCodeCoverageResults@2
+      # 2. methodCoverage check reports 0% covered due to limitations in PublishCodeCoverageResults@2
+      # 3. Warnings quality check reports 'Timeline does not exist or has no records' (BuildQualityChecks@10 limitation)
+      warningThreshold: 3

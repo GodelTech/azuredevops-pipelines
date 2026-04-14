@@ -99,6 +99,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       enable: ${{ coalesce(parameters.gitVersion.enable, true) }}
       stepName: ${{ coalesce(parameters.gitVersion.stepName, 'git_version_step') }}
+      buildSummary: ${{ parameters.buildSummary }}
 
   # -- Job 2: Build & test -------------------------------------------------
   - template: 'build.job.yml'
