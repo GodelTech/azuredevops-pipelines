@@ -135,7 +135,7 @@ jobs:
       )
     variables:
       # yamllint disable-line rule:line-length
-      gitVersionSemVer: $[ dependencies.${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}.outputs['${{ coalesce(parameters.gitVersion.stepName, 'git_version_step') }}.semVer'] ]
+      gitVersionFullSemVer: $[ dependencies.${{ coalesce(parameters.gitVersion.jobName, 'GitVersion') }}.outputs['${{ coalesce(parameters.gitVersion.stepName, 'git_version_step') }}.fullSemVer'] ]
     steps:
       - template: 'dotnet/restore-and-build.yml'
         parameters:
@@ -172,7 +172,7 @@ jobs:
           ${{ if ne(parameters.dotnet.verbosity, '') }}:
             verbosity: ${{ parameters.dotnet.verbosity }}
           versioningScheme: 'byEnvVar'
-          versionEnvVar: 'gitVersionSemVer'
+          versionEnvVar: 'gitVersionFullSemVer'
           noBuild: true
           ${{ if ne(parameters.pack.includesSymbols, '') }}:
             includesSymbols: ${{ parameters.pack.includesSymbols }}
