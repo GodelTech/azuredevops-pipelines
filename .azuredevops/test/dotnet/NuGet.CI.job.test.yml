@@ -78,11 +78,11 @@ parameters:
     type: object
     # prettier-ignore
     default: {
-      enable: false,
+      enable: true,
       feedUrl: 'https://godeltech.pkgs.visualstudio.com/OpenSource/_packaging/azuredevops-pipelines-test/nuget/v3/index.json',
       condition: 'succeeded()',
       nuGetAuth: {
-        mode: sameOrganization
+        mode: 'sameOrganization'
       }
     }
 
