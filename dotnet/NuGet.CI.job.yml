@@ -73,6 +73,8 @@ parameters:
     #   enable: true
     #   condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))"
     #   feedUrl: 'https://pkgs.dev.azure.com/my-org/_packaging/my-feed/nuget/v3/index.json'
+    #   nuGetAuth:
+    #     mode: 'sameOrganization'
 
   - name: buildSummary
     displayName: 'Build summary parameters'
@@ -231,6 +233,11 @@ jobs:
             condition: ${{ parameters.push.condition }}
           ${{ if ne(parameters.buildSummary.enable, '') }}:
             appendSummary: ${{ parameters.buildSummary.enable }}
+          ${{ if ne(parameters.push.nuGetAuth, '') }}:
+            nuGetAuth: ${{ parameters.push.nuGetAuth }}
+          ${{ else }}:
+            nuGetAuth:
+              mode: 'sameOrganization'
 
       - template: '../azuredevops/build/upload-summary.yml'
         parameters:

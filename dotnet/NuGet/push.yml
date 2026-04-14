@@ -19,6 +19,14 @@ parameters:
         eq(variables['Build.SourceBranch'], 'refs/heads/main')
       )
 
+  - name: nuGetAuth
+    displayName: 'NuGet authentication parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      mode: 'off'
+    }
+
   - name: feedUrl
     displayName: 'Azure Artifacts feed URL'
     type: string
@@ -40,6 +48,20 @@ parameters:
     default: true
 
 steps:
+  - template: 'authenticate.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      ${{ if ne(parameters.nuGetAuth.mode, '') }}:
+        mode: ${{ parameters.nuGetAuth.mode }}
+      ${{ if ne(parameters.nuGetAuth.azureDevOpsServiceConnection, '') }}:
+        azureDevOpsServiceConnection: ${{ parameters.nuGetAuth.azureDevOpsServiceConnection }}
+      ${{ if ne(parameters.nuGetAuth.feedUrl, '') }}:
+        feedUrl: ${{ parameters.nuGetAuth.feedUrl }}
+      ${{ if ne(parameters.nuGetAuth.forceReinstallCredentialProvider, '') }}:
+        forceReinstallCredentialProvider: ${{ parameters.nuGetAuth.forceReinstallCredentialProvider }}
+      ${{ if parameters.nuGetAuth.nuGetServiceConnections }}:
+        nuGetServiceConnections: ${{ parameters.nuGetAuth.nuGetServiceConnections }}
+
   - pwsh: |
       $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $feedUrl = $env:FEED_URL

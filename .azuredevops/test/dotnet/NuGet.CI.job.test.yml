@@ -80,7 +80,10 @@ parameters:
     default: {
       enable: false,
       feedUrl: 'https://godeltech.pkgs.visualstudio.com/OpenSource/_packaging/azuredevops-pipelines-test/nuget/v3/index.json',
-      condition: 'succeeded()'
+      condition: 'succeeded()',
+      nuGetAuth: {
+        mode: sameOrganization
+      }
     }
 
   - name: buildSummary
