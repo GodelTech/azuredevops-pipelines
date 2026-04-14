@@ -43,7 +43,7 @@ schedules:
 
 jobs:
   - job: NuGetAuthenticate
-    displayName: 'NuGet authenticate (no service connections)'
+    displayName: 'NuGet authenticate (same organization)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
@@ -52,6 +52,7 @@ jobs:
       - template: '../../../../dotnet/NuGet/authenticate.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          mode: 'sameOrganization'
 
   - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:
@@ -61,4 +62,4 @@ jobs:
         - NuGetAuthenticate
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
-        Job **'NuGet authenticate (no service connections)'** result must be: **Succeeded**
+        Job **'NuGet authenticate (same organization)'** result must be: **Succeeded**

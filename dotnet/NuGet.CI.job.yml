@@ -138,8 +138,8 @@ jobs:
       - template: 'dotnet/restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if parameters.dotnet.nuGetServiceConnections }}:
-            nuGetServiceConnections: ${{ parameters.dotnet.nuGetServiceConnections }}
+          ${{ if ne(parameters.dotnet.nuGetAuth, '') }}:
+            nuGetAuth: ${{ parameters.dotnet.nuGetAuth }}
           # prettier-ignore
           restore: {
             enable: true,

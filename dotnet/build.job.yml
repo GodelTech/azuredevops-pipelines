@@ -48,8 +48,8 @@ parameters:
     default: {}
     # Example:
     # dotnet:
-    #   nuGetServiceConnections:
-    #     - 'my-nuget-feed'
+    #   nuGetAuth:
+    #     mode: 'sameOrganization'
     #   projects: '**/*.csproj'
     #   configuration: 'Release'
     #   verbosity: 'minimal'
@@ -185,8 +185,8 @@ jobs:
       - template: 'dotnet/restore-and-build.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if parameters.dotnet.nuGetServiceConnections }}:
-            nuGetServiceConnections: ${{ parameters.dotnet.nuGetServiceConnections }}
+          ${{ if ne(parameters.dotnet.nuGetAuth, '') }}:
+            nuGetAuth: ${{ parameters.dotnet.nuGetAuth }}
           ${{ if ne(parameters.dotnet.restore, '') }}:
             restore: ${{ parameters.dotnet.restore }}
           ${{ if ne(parameters.dotnet.projects, '') }}:

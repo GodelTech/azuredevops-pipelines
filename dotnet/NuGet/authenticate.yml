@@ -4,19 +4,56 @@ parameters:
     type: boolean
     default: false
 
-  - name: serviceConnections
+  - name: mode
+    displayName: 'Authentication mode'
+    type: string
+    default: 'off'
+    values:
+      - 'off'
+      - sameOrganization
+      - differentOrganization
+      - externalFeed
+
+  - name: azureDevOpsServiceConnection
+    displayName: 'Azure DevOps service connection (workload identity)'
+    type: string
+    default: ''
+
+  - name: feedUrl
+    displayName: 'Azure Artifacts feed URL'
+    type: string
+    default: ''
+
+  - name: forceReinstallCredentialProvider
+    displayName: 'Force reinstall credential provider'
+    type: boolean
+    default: false
+
+  - name: nuGetServiceConnections
     displayName: 'NuGet service connections'
     type: object
     default: []
 
 steps:
   - task: NuGetAuthenticate@1
-    displayName: 'Configure NuGet service connections'
-    condition: |
-      and
-      (
-        succeeded(),
-        gt(${{ length(parameters.serviceConnections) }}, 0)
-      )
-    inputs:
-      nuGetServiceConnections: ${{ join(',', parameters.serviceConnections) }}
+    # Same organization — auto-authenticates using the build's credentials
+    ${{ if eq(parameters.mode, 'sameOrganization') }}:
+      displayName: 'NuGet authenticate (same organization)'
+      inputs:
+        forceReinstallCredentialProvider: ${{ parameters.forceReinstallCredentialProvider }}
+    # Different organization — workload identity with service connection + feed URL
+    ${{ elseif eq(parameters.mode, 'differentOrganization') }}:
+      displayName: 'NuGet authenticate (different organization)'
+      inputs:
+        azureDevOpsServiceConnection: ${{ parameters.azureDevOpsServiceConnection }}
+        feedUrl: ${{ parameters.feedUrl }}
+        forceReinstallCredentialProvider: ${{ parameters.forceReinstallCredentialProvider }}
+    # External feed — NuGet.org or third-party repositories via service connections
+    ${{ elseif eq(parameters.mode, 'externalFeed') }}:
+      displayName: 'NuGet authenticate (external feed)'
+      inputs:
+        nuGetServiceConnections: ${{ join(',', parameters.nuGetServiceConnections) }}
+        forceReinstallCredentialProvider: ${{ parameters.forceReinstallCredentialProvider }}
+    # Off — skip authentication step
+    ${{ else }}:
+      displayName: 'NuGet authenticate (off)'

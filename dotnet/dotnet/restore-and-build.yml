@@ -4,10 +4,18 @@ parameters:
     type: boolean
     default: false
 
-  - name: nuGetServiceConnections
-    displayName: 'NuGet service connections'
+  - name: nuGetAuth
+    displayName: 'NuGet authentication parameters'
     type: object
-    default: []
+    default: {}
+    # Example:
+    # nuGetAuth:
+    #   mode: 'sameOrganization'          # or 'differentOrganization' or 'externalFeed'
+    #   azureDevOpsServiceConnection: ''   # required for 'differentOrganization'
+    #   feedUrl: ''                        # required for 'differentOrganization'
+    #   forceReinstallCredentialProvider: false
+    #   nuGetServiceConnections:           # required for 'externalFeed'
+    #     - 'my-nuget-feed'
 
   - name: restore
     displayName: 'Restore parameters'
@@ -62,8 +70,16 @@ steps:
   - template: '../NuGet/authenticate.yml'
     parameters:
       enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      ${{ if parameters.nuGetServiceConnections }}:
-        serviceConnections: ${{ parameters.nuGetServiceConnections }}
+      ${{ if ne(parameters.nuGetAuth.mode, '') }}:
+        mode: ${{ parameters.nuGetAuth.mode }}
+      ${{ if ne(parameters.nuGetAuth.azureDevOpsServiceConnection, '') }}:
+        azureDevOpsServiceConnection: ${{ parameters.nuGetAuth.azureDevOpsServiceConnection }}
+      ${{ if ne(parameters.nuGetAuth.feedUrl, '') }}:
+        feedUrl: ${{ parameters.nuGetAuth.feedUrl }}
+      ${{ if ne(parameters.nuGetAuth.forceReinstallCredentialProvider, '') }}:
+        forceReinstallCredentialProvider: ${{ parameters.nuGetAuth.forceReinstallCredentialProvider }}
+      ${{ if parameters.nuGetAuth.nuGetServiceConnections }}:
+        nuGetServiceConnections: ${{ parameters.nuGetAuth.nuGetServiceConnections }}
 
   - template: 'install-SDK.yml'
     parameters:
