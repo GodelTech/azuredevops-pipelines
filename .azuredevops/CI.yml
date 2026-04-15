@@ -200,11 +200,25 @@ jobs:
           filePath: '.scripts/check-test-coverage.ps1'
           pwsh: true
 
+  - job: CheckTaskVersions
+    displayName: 'Check tasks'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: CheckTestCoverage
+    steps:
+      - checkout: self
+
+      - task: PowerShell@2
+        displayName: 'Run check-tasks'
+        inputs:
+          filePath: '.scripts/check-tasks.ps1'
+          pwsh: true
+
   - job: CheckPipelines
     displayName: 'Check pipelines'
     pool:
       vmImage: ${{ parameters.vmImage }}
-    dependsOn: CheckTestCoverage
+    dependsOn: CheckTaskVersions
     steps:
       - checkout: self
 

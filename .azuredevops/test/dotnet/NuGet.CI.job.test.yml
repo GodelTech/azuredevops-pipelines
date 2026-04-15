@@ -151,7 +151,7 @@ jobs:
       expectedBuildResult: 'Succeeded'
       buildResultDescription: |
         Job **'Pack NuGet'** result must be: **Succeeded**
-        Job **'Push NuGet'** result must be: **Succeeded** or **Skipped**
+        Job **'Push NuGet'** result must be: **Succeeded**
       # Known issues producing expected warnings:
       # 1. branchCoverage check reports 0% covered due to limitations in PublishCodeCoverageResults@2
       # 2. methodCoverage check reports 0% covered due to limitations in PublishCodeCoverageResults@2
