@@ -73,6 +73,7 @@ parameters:
     #   enable: true
     #   condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))"
     #   feedUrl: 'https://pkgs.dev.azure.com/my-org/_packaging/my-feed/nuget/v3/index.json'
+    #   skipDuplicate: true
     #   nuGetAuth:
     #     mode: 'sameOrganization'
 
@@ -228,17 +229,19 @@ jobs:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
           ${{ if ne(parameters.push.enable, '') }}:
             enable: ${{ parameters.push.enable }}
-          feedUrl: ${{ parameters.push.feedUrl }}
-          packageDir: $(Pipeline.Workspace)/${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
           ${{ if ne(parameters.push.condition, '') }}:
             condition: ${{ parameters.push.condition }}
-          ${{ if ne(parameters.buildSummary.enable, '') }}:
-            appendSummary: ${{ parameters.buildSummary.enable }}
           ${{ if ne(parameters.push.nuGetAuth, '') }}:
             nuGetAuth: ${{ parameters.push.nuGetAuth }}
           ${{ else }}:
             nuGetAuth:
               mode: 'sameOrganization'
+          feedUrl: ${{ parameters.push.feedUrl }}
+          packageDir: $(Pipeline.Workspace)/${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
+          ${{ if ne(parameters.push.skipDuplicate, '') }}:
+            skipDuplicate: ${{ parameters.push.skipDuplicate }}
+          ${{ if ne(parameters.buildSummary.enable, '') }}:
+            appendSummary: ${{ parameters.buildSummary.enable }}
 
       - template: '../azuredevops/build/upload-summary.yml'
         parameters:

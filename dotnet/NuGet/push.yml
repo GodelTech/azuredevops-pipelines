@@ -42,6 +42,11 @@ parameters:
     type: string
     default: 'az'
 
+  - name: skipDuplicate
+    displayName: 'Skip duplicate packages'
+    type: boolean
+    default: true
+
   - name: appendSummary
     displayName: 'Append section to job summary'
     type: boolean
@@ -67,6 +72,7 @@ steps:
       $feedUrl = $env:FEED_URL
       $packageDir = $env:PACKAGE_DIR
       $apiKey = $env:API_KEY
+      $skipDuplicate = [System.Convert]::ToBoolean($env:SKIP_DUPLICATE)
       $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
       $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
@@ -82,7 +88,7 @@ steps:
             "| Property | Value |",
             "| --- | --- |",
             "| Feed URL | [$feedUrl]($feedUrl) |",
-            "| Result | NoPackages |",
+            "| Result | ⚠️ NoPackages |",
             ""
           )
           $summaryPath = "$agentTempDirectory/job-summary.md"
@@ -102,8 +108,11 @@ steps:
           'nuget', 'push', $pkg.FullName
           '--source', $feedUrl
           '--api-key', $apiKey
-          '--skip-duplicate'
         )
+
+        if ($skipDuplicate) {
+          $pushArgs += '--skip-duplicate'
+        }
 
         if ($enableBuildDebug) {
           Write-Host "##[debug]dotnet $($pushArgs -join ' ')"
@@ -128,9 +137,9 @@ steps:
 
       if ($appendSummary) {
         $resultDisplayMap = @{
-          'Pushed' = 'Pushed'
-          'SkippedDuplicate' = 'Skipped (already exists)'
-          'Failed' = 'Failed'
+          'Pushed' = '✅ Pushed'
+          'SkippedDuplicate' = '⚠️ Skipped (already exists)'
+          'Failed' = '❌ Failed'
         }
         $packageDetailLines = @("| Package | Result |", "| --- | --- |")
         $packageDetailLines += $packageResults | ForEach-Object { "| $($_.Name) | $($resultDisplayMap[$_.Result]) |" }
@@ -139,13 +148,13 @@ steps:
         $skippedCount = @($packageResults | Where-Object { $_.Result -eq 'SkippedDuplicate' }).Count
 
         if ($failedCount -gt 0) {
-          $result = 'Failed'
+          $result = '❌ Failed'
         } elseif ($pushedCount -eq 0 -and $skippedCount -gt 0) {
-          $result = 'Skipped (all packages already exist)'
+          $result = '⚠️ Skipped (all packages already exist)'
         } elseif ($skippedCount -gt 0) {
-          $result = "Succeeded ($pushedCount pushed, $skippedCount skipped)"
+          $result = "✅ Succeeded ($pushedCount pushed, $skippedCount skipped)"
         } else {
-          $result = 'Succeeded'
+          $result = '✅ Succeeded'
         }
 
         $summaryLines = @(
@@ -180,5 +189,6 @@ steps:
       FEED_URL: ${{ parameters.feedUrl }}
       PACKAGE_DIR: ${{ parameters.packageDir }}
       API_KEY: ${{ parameters.apiKey }}
+      SKIP_DUPLICATE: ${{ parameters.skipDuplicate }}
       APPEND_SUMMARY: ${{ parameters.appendSummary }}
       AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
