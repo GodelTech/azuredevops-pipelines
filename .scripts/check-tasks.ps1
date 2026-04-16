@@ -523,6 +523,7 @@ foreach ($ref in $builtInUniqueVersions) {
     }
 
     Write-Host "Checking docs for '$($ref.TaskName)@$($ref.CurrentVersion)'..." -ForegroundColor Cyan
+    Write-Host "  URL: ${docsBaseUrl}/${slug}-v${currentVersionInt}?view=azure-pipelines"
     $result = Get-BuiltInTaskLatestVersion -CurrentVersion $currentVersionInt -DocsSlug $slug -DocsBaseUrl $docsBaseUrl
 
     if (-not $result.SlugValid) {
