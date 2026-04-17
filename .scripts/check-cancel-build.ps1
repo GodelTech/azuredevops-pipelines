@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Verifies that no Azure DevOps pipeline YAML file references the cancel-build template directly.
 
@@ -33,7 +33,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if ($AzureDevOpsPath -eq '') {
@@ -43,7 +43,7 @@ if ($AzureDevOpsPath -eq '') {
 # The canonical repo-relative path every pipeline must reference
 $cancelBuildTemplatePath = 'azuredevops/build/cancel-build.yml'
 
-# ── Helper ────────────────────────────────────────────────────────────────────────────────────
+# -- Helper ------------------------------------------------------------------------------------
 
 function Get-RepoRelativeTemplatePaths {
     <#
@@ -90,7 +90,7 @@ function Get-RepoRelativeTemplatePaths {
     return $templatePaths | Select-Object -Unique
 }
 
-# ── Scan pipeline files ───────────────────────────────────────────────────────────────────────────
+# -- Scan pipeline files ---------------------------------------------------------------------------
 
 $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
     Where-Object { $_.FullName -notmatch '[/\\]testHelpers[/\\]' }
@@ -109,7 +109,7 @@ foreach ($file in $files) {
     }
 }
 
-# ── Report results ──────────────────────────────────────────────────────────────────────────────
+# -- Report results ------------------------------------------------------------------------------
 
 if ($found.Count -eq 0) {
     Write-Host "No files reference '$cancelBuildTemplatePath' template directly." -ForegroundColor Green

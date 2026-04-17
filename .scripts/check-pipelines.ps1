@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Verifies that every Azure DevOps test pipeline YAML file has a corresponding
     pipeline in the Azure DevOps project.
@@ -73,21 +73,21 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if ($TestPath -eq '') {
     $TestPath = Join-Path $repoRoot '.azuredevops\test'
 }
 
-# ── Build request headers ─────────────────────────────────────────────────────────────────────
+# -- Build request headers ---------------------------------------------------------------------
 $headers = @{ 'Accept' = 'application/json' }
 if ($AccessToken -ne '') {
     $encoded = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$AccessToken"))
     $headers['Authorization'] = "Basic $encoded"
 }
 
-# ── Helper ────────────────────────────────────────────────────────────────────────────────────
+# -- Helper ------------------------------------------------------------------------------------
 function Invoke-AzureDevOpsApi {
     <#
     .SYNOPSIS
@@ -122,7 +122,7 @@ function Invoke-AzureDevOpsApi {
     }
 }
 
-# ── Collect local test YAML files ─────────────────────────────────────────────────────────────
+# -- Collect local test YAML files -------------------------------------------------------------
 if (-not (Test-Path $TestPath)) {
     Write-Host "ERROR: Test path not found: $TestPath" -ForegroundColor Red
     exit 2
@@ -137,7 +137,7 @@ if ($testFiles.Count -eq 0) {
 
 Write-Host "Found $($testFiles.Count) test YAML file(s) to verify."
 
-# ── Fetch all pipelines from Azure DevOps (paginated) ─────────────────────────────────────────
+# -- Fetch all pipelines from Azure DevOps (paginated) -----------------------------------------
 $apiBase = "https://dev.azure.com/$Organization/$Project/_apis/pipelines"
 $allPipelines = [System.Collections.Generic.List[object]]::new()
 $continuationToken = $null
@@ -169,7 +169,7 @@ do {
 
 Write-Host "Retrieved $($allPipelines.Count) pipeline(s) from Azure DevOps."
 
-# ── Fetch configuration.path for each pipeline ────────────────────────────────────────────────
+# -- Fetch configuration.path for each pipeline ------------------------------------------------
 Write-Host 'Fetching pipeline configuration paths...'
 
 $pipelinePaths = @{}
@@ -193,7 +193,7 @@ foreach ($pipeline in $allPipelines) {
     }
 }
 
-# ── Check each local test file ────────────────────────────────────────────────────────────────
+# -- Check each local test file ----------------------------------------------------------------
 $issues   = @()
 $warnings = @()
 
@@ -235,7 +235,7 @@ foreach ($file in $testFiles) {
     }
 }
 
-# ── Report results ────────────────────────────────────────────────────────────────────────────
+# -- Report results ----------------------------------------------------------------------------
 if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
     Write-Host ''
     Write-Host 'All test pipeline YAML files have a corresponding Azure DevOps pipeline.' -ForegroundColor Green

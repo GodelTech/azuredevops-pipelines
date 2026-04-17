@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Validates that every local template reference in Azure DevOps pipeline YAML files resolves to an existing file.
 
@@ -28,7 +28,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if ($RootPath -eq '') {
@@ -37,10 +37,10 @@ if ($RootPath -eq '') {
 
 $RootPath = [System.IO.Path]::GetFullPath($RootPath)
 
-# ── Discover YAML files ───────────────────────────────────────────────────────────────────────
+# -- Discover YAML files -----------------------------------------------------------------------
 $yamlFiles = Get-ChildItem -Path $RootPath -Recurse -Filter '*.yml'
 
-# ── Check each file ───────────────────────────────────────────────────────────────────────────
+# -- Check each file ---------------------------------------------------------------------------
 $issues = @()
 
 foreach ($yamlFile in $yamlFiles) {
@@ -72,7 +72,7 @@ foreach ($yamlFile in $yamlFiles) {
     }
 }
 
-# ── Report results ────────────────────────────────────────────────────────────────────────────
+# -- Report results ----------------------------------------------------------------------------
 if ($issues.Count -eq 0) {
     Write-Host 'All template references resolve to existing files.' -ForegroundColor Green
 } else {

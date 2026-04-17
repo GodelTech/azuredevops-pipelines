@@ -1,4 +1,4 @@
-# test-dotnet-quality-check-coverage.test.yml
+﻿# test-dotnet-quality-check-coverage.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -52,7 +52,7 @@ schedules:
 
 jobs:
   - job: CheckCoveragePass
-    displayName: 'Coverage threshold check — pass (threshold: 0%)'
+    displayName: 'Coverage threshold check - pass (threshold: 0%)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
@@ -77,7 +77,7 @@ jobs:
             threshold: '0'
 
   - job: CheckCoverageBelowThreshold
-    displayName: 'Coverage threshold check — fail (line threshold: 101%)'
+    displayName: 'Coverage threshold check - fail (line threshold: 101%)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
@@ -109,8 +109,8 @@ jobs:
         checkCoverageBelowThresholdResult: $[ dependencies.CheckCoverageBelowThreshold.result ]
       expectedBuildResult: 'Canceled'
       buildResultDescription: |
-        Job **'Coverage threshold check — pass'** result must be: **Succeeded**
-        Job **'Coverage threshold check — fail'** result must be: **Failed**
+        Job **'Coverage threshold check - pass'** result must be: **Succeeded**
+        Job **'Coverage threshold check - fail'** result must be: **Failed**
       cancelBuildCondition: |
         and
         (

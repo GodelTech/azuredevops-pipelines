@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installs Node.js / npm as a globally available tool.
 
@@ -33,14 +33,14 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Platform detection (PowerShell 5.1 does not define these automatic variables) ─────────────
+# -- Platform detection (PowerShell 5.1 does not define these automatic variables) -------------
 if (-not (Get-Variable -Name 'IsWindows' -ErrorAction SilentlyContinue)) {
     $IsWindows = $env:OS -eq 'Windows_NT'
     $IsLinux   = $false
     $IsMacOS   = $false
 }
 
-# ── Helper: compare semantic versions ────────────────────────────────────────────────────────
+# -- Helper: compare semantic versions --------------------------------------------------------
 function Compare-Version {
     <#
     .SYNOPSIS
@@ -68,7 +68,7 @@ function Compare-Version {
     return $a -ge $r
 }
 
-# ── Check if npm is already installed ────────────────────────────────────────────────────────
+# -- Check if npm is already installed --------------------------------------------------------
 $npmCmd = Get-Command npm -ErrorAction SilentlyContinue
 
 if ($npmCmd) {
@@ -83,7 +83,7 @@ if ($npmCmd) {
     }
 }
 
-# ── Install Node.js (which bundles npm) ──────────────────────────────────────────────────────
+# -- Install Node.js (which bundles npm) ------------------------------------------------------
 Write-Host "Installing Node.js ($NodeVersion) to obtain npm..." -ForegroundColor Cyan
 
 if ($IsWindows -or $env:OS -eq 'Windows_NT') {
@@ -145,7 +145,7 @@ if ($IsWindows -or $env:OS -eq 'Windows_NT') {
     exit 1
 }
 
-# ── Verify installation ───────────────────────────────────────────────────────────────────────
+# -- Verify installation -----------------------------------------------------------------------
 
 # Refresh PATH in the current session so the newly installed npm is visible
 # (Windows stores PATH in the registry; Linux/macOS package managers update it in place)

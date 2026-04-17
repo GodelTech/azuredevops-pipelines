@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Verifies that every Azure DevOps pipeline YAML file contains the required schedule block.
 
@@ -25,12 +25,12 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 if ($AzureDevOpsPath -eq '') {
     $AzureDevOpsPath = Join-Path (Join-Path $PSScriptRoot '..') '.azuredevops'
 }
 
-# ── Required schedule block ────────────────────────────────────────────────────────────
+# -- Required schedule block ------------------------------------------------------------
 # Every pipeline must include this exact schedule so they are executed at least once a month
 # even when no code changes occur (always: true ensures the run happens regardless of changes).
 $scheduleBlock = @"
@@ -43,7 +43,7 @@ schedules:
     always: true
 "@
 
-# ── Scan pipeline files ───────────────────────────────────────────────────────────────────────────
+# -- Scan pipeline files ---------------------------------------------------------------------------
 $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
     Where-Object { $_.FullName -notmatch '[/\\]testHelpers[/\\]' }
 
@@ -58,7 +58,7 @@ foreach ($file in $files) {
     }
 }
 
-# ── Report results ──────────────────────────────────────────────────────────────────────────────
+# -- Report results ------------------------------------------------------------------------------
 if ($missing.Count -eq 0) {
     Write-Host "All files contain the schedule block." -ForegroundColor Green
 } else {

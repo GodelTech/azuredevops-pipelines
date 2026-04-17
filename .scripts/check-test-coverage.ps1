@@ -1,11 +1,11 @@
-<#
+﻿<#
 .SYNOPSIS
     Validates that every pipeline template has a corresponding test file in .azuredevops/test/.
 
 .DESCRIPTION
     Walks all *.yml files outside the .azuredevops folder and checks for each template that:
-      • A mirrored test file exists under .azuredevops/test/ at the same relative path, AND
-      • That test file contains at least one 'template:' reference that resolves to the template.
+      * A mirrored test file exists under .azuredevops/test/ at the same relative path, AND
+      * That test file contains at least one 'template:' reference that resolves to the template.
     Exits with code 1 when any templates are not fully covered so the build fails.
 
 .PARAMETER TemplatesPath
@@ -31,7 +31,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if ($TemplatesPath -eq '') {
@@ -45,11 +45,11 @@ if ($TestPath -eq '') {
 $TemplatesPath = [System.IO.Path]::GetFullPath($TemplatesPath)
 $TestPath      = [System.IO.Path]::GetFullPath($TestPath)
 
-# ── Discover templates ────────────────────────────────────────────────────────────────────────
+# -- Discover templates ------------------------------------------------------------------------
 $templates = Get-ChildItem -Path $TemplatesPath -Recurse -Filter '*.yml' |
     Where-Object { $_.FullName -notmatch '[/\\]\.azuredevops[/\\]' }
 
-# ── Helper: resolve template references from a test file ──────────────────────────────────────
+# -- Helper: resolve template references from a test file --------------------------------------
 function Get-TemplateReferences {
     <#
     .SYNOPSIS
@@ -86,7 +86,7 @@ function Get-TemplateReferences {
     return $refs
 }
 
-# ── Check each template ───────────────────────────────────────────────────────────────────────
+# -- Check each template -----------------------------------------------------------------------
 $issues = @()
 
 foreach ($template in $templates) {
@@ -120,7 +120,7 @@ foreach ($template in $templates) {
     }
 }
 
-# ── Report results ────────────────────────────────────────────────────────────────────────────
+# -- Report results ----------------------------------------------------------------------------
 if ($issues.Count -eq 0) {
     Write-Host 'All templates are covered by test files.' -ForegroundColor Green
 } else {

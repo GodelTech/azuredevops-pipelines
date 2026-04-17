@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installs yamllint as a globally available tool.
 
@@ -25,7 +25,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Helper: compare semantic versions ────────────────────────────────────────────────────────
+# -- Helper: compare semantic versions --------------------------------------------------------
 function Compare-Version {
     <#
     .SYNOPSIS
@@ -53,7 +53,7 @@ function Compare-Version {
     return $a -ge $r
 }
 
-# ── Check if yamllint is already installed ────────────────────────────────────────────────────
+# -- Check if yamllint is already installed ----------------------------------------------------
 $yamllintCmd = Get-Command yamllint -ErrorAction SilentlyContinue
 
 if ($yamllintCmd) {
@@ -68,7 +68,7 @@ if ($yamllintCmd) {
     }
 }
 
-# ── Ensure pip / Python is available ─────────────────────────────────────────────────────────
+# -- Ensure pip / Python is available ---------------------------------------------------------
 $pipCmd = Get-Command pip -ErrorAction SilentlyContinue
 if (-not $pipCmd) {
     $pipCmd = Get-Command pip3 -ErrorAction SilentlyContinue
@@ -88,7 +88,7 @@ if (-not $pipCmd) {
     }
 }
 
-# ── Install yamllint ──────────────────────────────────────────────────────────────────────────
+# -- Install yamllint --------------------------------------------------------------------------
 Write-Host 'Installing yamllint via pip...' -ForegroundColor Cyan
 if ($usePythonMPip) {
     & $pythonCmd.Source -m pip install --upgrade yamllint
@@ -96,7 +96,7 @@ if ($usePythonMPip) {
     & $pipCmd.Source install --upgrade yamllint
 }
 
-# ── Verify installation ───────────────────────────────────────────────────────────────────────
+# -- Verify installation -----------------------------------------------------------------------
 
 # Refresh PATH on Windows so the newly installed script is visible
 if (-not (Get-Variable -Name 'IsWindows' -ErrorAction SilentlyContinue)) {
@@ -106,7 +106,7 @@ if ($IsWindows) {
     $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
                 [System.Environment]::GetEnvironmentVariable('PATH', 'User')
 
-    # Always add the Python Scripts directory — it may not be registered in PATH
+    # Always add the Python Scripts directory - it may not be registered in PATH
     # even when pip itself was found (e.g. on Windows Store / custom Python installs).
     $resolvedPython = if ($usePythonMPip) { $pythonCmd.Source } else { $null }
     if (-not $resolvedPython) {

@@ -1,12 +1,12 @@
-<#
+﻿<#
 .SYNOPSIS
     Validates trigger blocks in all Azure DevOps pipeline YAML files.
 
 .DESCRIPTION
     Walks all *.yml files under the .azuredevops folder (excluding testHelpers) and checks
     that each pipeline has a path-based CI trigger that includes:
-      • the pipeline file itself, and
-      • every template it references.
+      * the pipeline file itself, and
+      * every template it references.
     It also checks that 'batch: true' is set in the trigger block.
     Pipelines with 'trigger: none' are also flagged.
     Exits with code 1 when any issues are found so the build fails.
@@ -29,7 +29,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if ($AzureDevOpsPath -eq '') {
@@ -39,7 +39,7 @@ if ($AzureDevOpsPath -eq '') {
 $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
     Where-Object { $_.FullName -notmatch '[/\\]testHelpers[/\\]' }
 
-# ── Helper functions ──────────────────────────────────────────────────────────────────────────────
+# -- Helper functions ------------------------------------------------------------------------------
 
 function Get-TriggerIncludePaths {
     <#
@@ -143,7 +143,7 @@ function Get-RepoRelativeTemplatePaths {
     return $templatePaths | Select-Object -Unique
 }
 
-# ── Scan pipeline files ───────────────────────────────────────────────────────────────────────────
+# -- Scan pipeline files ---------------------------------------------------------------------------
 
 $issues = [ordered]@{}
 
@@ -203,7 +203,7 @@ foreach ($file in $files) {
     }
 }
 
-# ── Report results ──────────────────────────────────────────────────────────────────────────────
+# -- Report results ------------------------------------------------------------------------------
 
 $totalIssues = 0
 

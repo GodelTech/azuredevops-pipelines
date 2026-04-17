@@ -1,4 +1,4 @@
-parameters:
+﻿parameters:
   - name: enableBuildDebug
     displayName: 'Enable build debug'
     type: boolean
@@ -36,25 +36,25 @@ parameters:
 
 steps:
   - task: NuGetAuthenticate@1
-    # Same organization — auto-authenticates using the build's credentials
+    # Same organization - auto-authenticates using the build's credentials
     ${{ if eq(parameters.mode, 'sameOrganization') }}:
       displayName: 'NuGet authenticate (same organization)'
       inputs:
         forceReinstallCredentialProvider: ${{ parameters.forceReinstallCredentialProvider }}
-    # Different organization — workload identity with service connection + feed URL
+    # Different organization - workload identity with service connection + feed URL
     ${{ elseif eq(parameters.mode, 'differentOrganization') }}:
       displayName: 'NuGet authenticate (different organization)'
       inputs:
         azureDevOpsServiceConnection: ${{ parameters.azureDevOpsServiceConnection }}
         feedUrl: ${{ parameters.feedUrl }}
         forceReinstallCredentialProvider: ${{ parameters.forceReinstallCredentialProvider }}
-    # External feed — NuGet.org or third-party repositories via service connections
+    # External feed - NuGet.org or third-party repositories via service connections
     ${{ elseif eq(parameters.mode, 'externalFeed') }}:
       displayName: 'NuGet authenticate (external feed)'
       inputs:
         nuGetServiceConnections: ${{ join(',', parameters.nuGetServiceConnections) }}
         forceReinstallCredentialProvider: ${{ parameters.forceReinstallCredentialProvider }}
-    # Off — skip authentication step
+    # Off - skip authentication step
     ${{ else }}:
       displayName: 'NuGet authenticate (off)'
     condition: |

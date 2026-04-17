@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Verifies that the last step of the last job in every Azure DevOps test pipeline
     references the build-summary-validation helper template.
@@ -28,7 +28,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if ($AzureDevOpsPath -eq '') {
@@ -41,7 +41,7 @@ $validBuildSummaryValidationTemplatePaths = @(
     '.azuredevops/testHelpers/build-summary-validation.job.yml'
 )
 
-# ── Helper ────────────────────────────────────────────────────────────────────────────────────
+# -- Helper ------------------------------------------------------------------------------------
 
 function Get-LastRepoRelativeTemplatePath {
     <#
@@ -86,7 +86,7 @@ function Get-LastRepoRelativeTemplatePath {
     return $absolute.Substring($RepoRoot.Length).TrimStart('\', '/') -replace '\\', '/'
 }
 
-# ── Scan pipeline files ───────────────────────────────────────────────────────────────────────────
+# -- Scan pipeline files ---------------------------------------------------------------------------
 
 $files = Get-ChildItem -Path $AzureDevOpsPath -Recurse -Filter '*.yml' |
     Where-Object {
@@ -106,7 +106,7 @@ foreach ($file in $files) {
     }
 }
 
-# ── Report results ──────────────────────────────────────────────────────────────────────────────
+# -- Report results ------------------------------------------------------------------------------
 
 if ($issues.Count -eq 0) {
     Write-Host "All files have a valid build summary validation template as the last step." -ForegroundColor Green

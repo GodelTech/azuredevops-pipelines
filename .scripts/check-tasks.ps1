@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Checks whether marketplace task references in Azure DevOps pipeline YAML files use the latest extension version.
 
@@ -31,7 +31,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────────────────────
+# -- Resolve paths -----------------------------------------------------------------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if ($RootPath -eq '') {
@@ -45,7 +45,7 @@ if (-not (Test-Path -LiteralPath $RootPath -PathType Container)) {
     exit 1
 }
 
-# ── Known built-in tasks ──────────────────────────────────────────────────────────────────────
+# -- Known built-in tasks ----------------------------------------------------------------------
 # Azure DevOps agent built-in tasks. These ship with the agent and have no
 # marketplace extension. Each entry maps the task name to its Microsoft docs URL slug
 # (used to probe for newer major versions at learn.microsoft.com).
@@ -72,7 +72,7 @@ $builtInTasks = @{
     'VSTest'                     = 'vstest'
 }
 
-# ── Short-name marketplace task mapping ───────────────────────────────────────────────────────
+# -- Short-name marketplace task mapping -------------------------------------------------------
 # Maps short task names (case-insensitive) to their marketplace extension IDs.
 # Add entries here when new marketplace tasks are used in the repository.
 $shortNameMapping = @{
@@ -84,11 +84,11 @@ $shortNameMapping = @{
     'sonarcloud-buildbreaker' = @{ ExtensionId = 'SimondeLang.sonarcloud-buildbreaker';       LastChecked = [datetime]'2026-04-15' }
 }
 
-# ── Constants ─────────────────────────────────────────────────────────────────────────────────
+# -- Constants ---------------------------------------------------------------------------------
 Set-Variable -Name 'docsBaseUrl' -Value 'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference' -Option ReadOnly
 Set-Variable -Name 'maxVersionProbeRange' -Value 10 -Option ReadOnly
 
-# ── Helper functions ──────────────────────────────────────────────────────────────────────────
+# -- Helper functions --------------------------------------------------------------------------
 
 function Get-MarketplaceExtensionVersion {
     <#
@@ -226,7 +226,7 @@ function Get-BuiltInTaskLatestVersion {
             $null = Invoke-WebRequest @headParams
             $latestVersion = $v
         } catch {
-            # Expected — page does not exist, stop probing
+            # Expected - page does not exist, stop probing
             break
         }
     }
@@ -339,7 +339,7 @@ function Resolve-TaskReference {
         }
     }
 
-    # Unclassified task — not in either list
+    # Unclassified task - not in either list
     return [pscustomobject]@{
         Source         = 'Unknown'
         ExtensionId    = ''
@@ -349,11 +349,11 @@ function Resolve-TaskReference {
     }
 }
 
-# ── Discover YAML files ───────────────────────────────────────────────────────────────────────
+# -- Discover YAML files -----------------------------------------------------------------------
 $yamlFiles = @(Get-ChildItem -Path $RootPath -Recurse -Filter '*.yml' |
     Where-Object { $_.FullName -notmatch '[\\/]node_modules[\\/]' })
 
-# ── Extract task references ───────────────────────────────────────────────────────────────────
+# -- Extract task references -------------------------------------------------------------------
 $taskReferences = [System.Collections.Generic.List[pscustomobject]]::new()
 
 foreach ($yamlFile in $yamlFiles) {
@@ -383,7 +383,7 @@ if ($taskReferences.Count -eq 0) {
     exit 0
 }
 
-# ── Display all discovered tasks ──────────────────────────────────────────────────────────────
+# -- Display all discovered tasks --------------------------------------------------------------
 $uniqueTasks = $taskReferences |
     Select-Object -Property TaskString, Source, ExtensionId -Unique |
     Sort-Object -Property Source, @{ Expression = { $_.TaskString.ToLower() } }
@@ -402,7 +402,7 @@ foreach ($task in $uniqueTasks) {
 }
 Write-Host ''
 
-# ── Query marketplace for each unique extension ───────────────────────────────────────────────
+# -- Query marketplace for each unique extension -----------------------------------------------
 $marketplaceRefs = $taskReferences | Where-Object { $_.Source -eq 'Marketplace' }
 $extensionIds = @($marketplaceRefs | Select-Object -ExpandProperty ExtensionId -Unique)
 $latestVersions = @{}
@@ -436,7 +436,7 @@ foreach ($extensionId in $extensionIds) {
     }
 }
 
-# ── Compare versions ─────────────────────────────────────────────────────────────────────────
+# -- Compare versions -------------------------------------------------------------------------
 $issues = [System.Collections.Generic.List[pscustomobject]]::new()
 
 foreach ($ref in $marketplaceRefs) {
@@ -506,7 +506,7 @@ foreach ($ref in $marketplaceRefs) {
     }
 }
 
-# ── Query docs for built-in task versions ────────────────────────────────────────────────────
+# -- Query docs for built-in task versions ----------------------------------------------------
 $builtInRefs = $taskReferences | Where-Object { $_.Source -eq 'Built-in' }
 $builtInUniqueVersions = @($builtInRefs |
     Select-Object -Property TaskName, CurrentVersion -Unique)
@@ -571,7 +571,7 @@ foreach ($ref in $builtInUniqueVersions) {
     }
 }
 
-# ── Check for unclassified tasks ──────────────────────────────────────────────────────────────
+# -- Check for unclassified tasks --------------------------------------------------------------
 $unknownTasks = @($taskReferences |
     Where-Object { $_.Source -eq 'Unknown' } |
     Select-Object -Property TaskString, File -Unique)
@@ -588,7 +588,7 @@ if ($unknownTasks.Count -gt 0) {
     Write-Host "  .scripts/check-tasks.ps1" -ForegroundColor Cyan
 }
 
-# ── Check for multiple versions of the same task ─────────────────────────────────────────────
+# -- Check for multiple versions of the same task ---------------------------------------------
 $multiVersionTasks = @($taskReferences |
     Where-Object { $_.IsShortName } |
     Group-Object -Property TaskName |
@@ -610,7 +610,7 @@ if ($multiVersionTasks.Count -gt 0) {
     Write-Host 'Consolidate each task to a single version.' -ForegroundColor Cyan
 }
 
-# ── Helper: write task issue details ──────────────────────────────────────────────────────────
+# -- Helper: write task issue details ----------------------------------------------------------
 
 function Write-TaskIssue {
     [CmdletBinding()]
@@ -632,7 +632,7 @@ function Write-TaskIssue {
     }
 }
 
-# ── Report results ────────────────────────────────────────────────────────────────────────────
+# -- Report results ----------------------------------------------------------------------------
 $uniqueIssues = @($issues | Select-Object -Property File, Task, CurrentVersion, LatestVersion, Link, Reason -Unique)
 $outdatedIssues = @($uniqueIssues | Where-Object { $_.Reason -eq 'outdated' })
 $nonExistentIssues = @($uniqueIssues | Where-Object { $_.Reason -eq 'non-existent' })

@@ -65,7 +65,7 @@
     type: string
     default: '.runsettings'
     # Recommended: provide a .runsettings file to configure coverage format and exclusions.
-    # Without it, coverlet defaults to Cobertura only — no OpenCover output for SonarCloud,
+    # Without it, coverlet defaults to Cobertura only - no OpenCover output for SonarCloud,
     # and generated code / test assemblies are not excluded from coverage results.
 
   - name: collectCoverage

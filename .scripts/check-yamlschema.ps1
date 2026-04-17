@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Compares the local yamlschema.json against the live schema from Azure DevOps.
 
@@ -28,7 +28,7 @@
     # Local run (schema is publicly accessible)
     .\.scripts\check-yamlschema.ps1
 
-    # CI — pipe in the pipeline token
+    # CI - pipe in the pipeline token
     .\.scripts\check-yamlschema.ps1 -AccessToken $env:SYSTEM_ACCESSTOKEN
 #>
 param(
@@ -45,7 +45,7 @@ if ($RemoteUrl -eq '') {
     $RemoteUrl = "https://dev.azure.com/$Organization/_apis/distributedtask/yamlschema"
 }
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 
 function ConvertTo-CanonicalJson {
     <#
@@ -73,14 +73,14 @@ function ConvertTo-CanonicalJson {
     return @{ Compressed = $compressed; Pretty = $pretty }
 }
 
-# ── Verify local file exists ──────────────────────────────────────────────────
+# -- Verify local file exists --------------------------------------------------
 
 if (-not (Test-Path $SchemaPath)) {
     Write-Host "ERROR: Local schema file not found: $SchemaPath" -ForegroundColor Red
     exit 2
 }
 
-# ── Download remote schema ────────────────────────────────────────────────────
+# -- Download remote schema ----------------------------------------------------
 
 Write-Host "Fetching remote schema from: $RemoteUrl"
 
@@ -126,7 +126,7 @@ if (-not $isJson) {
     exit 2
 }
 
-# ── Canonicalise both documents ───────────────────────────────────────────────
+# -- Canonicalise both documents -----------------------------------------------
 
 Write-Host "Comparing schemas..."
 
@@ -145,7 +145,7 @@ try {
     exit 2
 }
 
-# ── Compare ───────────────────────────────────────────────────────────────────
+# -- Compare -------------------------------------------------------------------
 
 if ($localCanon.Compressed -eq $remoteCanon.Compressed) {
     Write-Host "Schema check passed - local yamlschema.json matches the remote schema." -ForegroundColor Green

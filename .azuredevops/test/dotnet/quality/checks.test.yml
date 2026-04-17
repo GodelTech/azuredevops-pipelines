@@ -1,4 +1,4 @@
-# test-dotnet-quality-checks.test.yml
+﻿# test-dotnet-quality-checks.test.yml
 
 parameters:
   - name: enableBuildDebug
@@ -52,7 +52,7 @@ schedules:
 
 jobs:
   - job: QualityChecksPass
-    displayName: 'Quality checks — pass (threshold: 0%, SonarCloud & Stryker disabled)'
+    displayName: 'Quality checks - pass (threshold: 0%, SonarCloud & Stryker disabled)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
@@ -82,7 +82,7 @@ jobs:
             enable: false
 
   - job: QualityChecksFail
-    displayName: 'Quality checks — fail (line threshold: 101%)'
+    displayName: 'Quality checks - fail (line threshold: 101%)'
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
@@ -119,8 +119,8 @@ jobs:
         qualityChecksFailResult: $[ dependencies.QualityChecksFail.result ]
       expectedBuildResult: 'Canceled'
       buildResultDescription: |
-        Job **'Quality checks — pass'** result must be: **Succeeded**
-        Job **'Quality checks — fail'** result must be: **Failed**
+        Job **'Quality checks - pass'** result must be: **Succeeded**
+        Job **'Quality checks - fail'** result must be: **Failed**
       cancelBuildCondition: |
         and
         (
