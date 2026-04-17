@@ -4,29 +4,6 @@ parameters:
     type: boolean
     default: false
 
-  - name: enable
-    displayName: 'Enable NuGet push'
-    type: boolean
-    default: true
-
-  - name: condition
-    displayName: 'Condition for push step'
-    type: string
-    default: |-
-      and
-      (
-        succeeded(),
-        eq(variables['Build.SourceBranch'], 'refs/heads/main')
-      )
-
-  - name: nuGetAuth
-    displayName: 'NuGet authentication parameters'
-    type: object
-    # prettier-ignore
-    default: {
-      mode: 'off'
-    }
-
   - name: feedUrl
     displayName: 'Azure Artifacts feed URL'
     type: string
@@ -53,20 +30,6 @@ parameters:
     default: true
 
 steps:
-  - template: 'authenticate.yml'
-    parameters:
-      enableBuildDebug: ${{ parameters.enableBuildDebug }}
-      ${{ if ne(parameters.nuGetAuth.mode, '') }}:
-        mode: ${{ parameters.nuGetAuth.mode }}
-      ${{ if ne(parameters.nuGetAuth.azureDevOpsServiceConnection, '') }}:
-        azureDevOpsServiceConnection: ${{ parameters.nuGetAuth.azureDevOpsServiceConnection }}
-      ${{ if ne(parameters.nuGetAuth.feedUrl, '') }}:
-        feedUrl: ${{ parameters.nuGetAuth.feedUrl }}
-      ${{ if ne(parameters.nuGetAuth.forceReinstallCredentialProvider, '') }}:
-        forceReinstallCredentialProvider: ${{ parameters.nuGetAuth.forceReinstallCredentialProvider }}
-      ${{ if parameters.nuGetAuth.nuGetServiceConnections }}:
-        nuGetServiceConnections: ${{ parameters.nuGetAuth.nuGetServiceConnections }}
-
   - pwsh: |
       $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
       $feedUrl = $env:FEED_URL
@@ -76,30 +39,13 @@ steps:
       $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
       $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
 
-      $packages = Get-ChildItem -Path $packageDir -Filter '*.nupkg' -Recurse
+      $packages = Get-ChildItem -Path $packageDir -Filter '*.nupkg' -Recurse |
+        Where-Object { $_.Name -notmatch '\.snupkg$' }
 
       if ($packages.Count -eq 0) {
-        Write-Host "##vso[task.logissue type=warning]No .nupkg files found in '$packageDir'"
-
-        if ($appendSummary) {
-          $summaryLines = @(
-            "## NuGet Push",
-            "",
-            "| Property | Value |",
-            "| --- | --- |",
-            "| Feed URL | [$feedUrl]($feedUrl) |",
-            "| Result | ⚠️ NoPackages |",
-            ""
-          )
-          $summaryPath = "$agentTempDirectory/job-summary.md"
-          Add-Content -Path $summaryPath -Value ($summaryLines -join "`n") -Encoding UTF8
-        }
-
-        exit 0
+        Write-Host "##vso[task.logissue type=error]No .nupkg files found in '$packageDir'"
+        exit 1
       }
-
-      Write-Host "Found $($packages.Count) package(s) to push:"
-      $packages | ForEach-Object { Write-Host "  - $($_.Name)" }
 
       $packageResults = @()
 
@@ -177,13 +123,6 @@ steps:
         exit 1
       }
     displayName: 'dotnet nuget push'
-    condition: |
-      and
-      (
-        ${{ parameters.condition }},
-        eq(${{ parameters.enable }}, true),
-        ne('${{ parameters.feedUrl }}', '')
-      )
     env:
       ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
       FEED_URL: ${{ parameters.feedUrl }}

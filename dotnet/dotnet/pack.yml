@@ -4,11 +4,6 @@ parameters:
     type: boolean
     default: false
 
-  - name: enable
-    displayName: 'Enable dotnet pack'
-    type: boolean
-    default: true
-
   - name: projects
     displayName: 'Projects to pack'
     type: string
@@ -100,12 +95,6 @@ parameters:
 steps:
   - task: DotNetCoreCLI@2
     displayName: 'dotnet pack'
-    condition: |
-      and
-      (
-        succeeded(),
-        eq(${{ parameters.enable }}, true)
-      )
     inputs:
       command: 'pack'
       ${{ if ne(parameters.workingDirectory, '') }}:
@@ -134,7 +123,6 @@ steps:
       and
       (
         succeeded(),
-        eq(${{ parameters.enable }}, true),
         eq(${{ parameters.publishPackages }}, true)
       )
     artifact: ${{ parameters.artifactName }}
@@ -147,7 +135,6 @@ steps:
         and
         (
           succeededOrFailed(),
-          eq(${{ parameters.enable }}, true),
           eq(${{ parameters.appendSummary }}, true)
         )
       title: '.NET Pack'

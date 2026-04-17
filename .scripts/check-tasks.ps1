@@ -56,6 +56,7 @@ $builtInTasks = @{
     'DotNetCoreCLI'              = 'dotnet-core-cli'
     'DownloadBuildArtifacts'     = 'download-build-artifacts'
     'DownloadPipelineArtifact'   = 'download-pipeline-artifact'
+    'ManualValidation'           = 'manual-validation'
     'NuGetAuthenticate'          = 'nuget-authenticate'
     'NuGetCommand'               = 'nuget-command'
     'NuGetToolInstaller'         = 'nuget-tool-installer'

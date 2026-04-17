@@ -28,6 +28,7 @@ trigger:
       - dotnet/dotnet/restore-and-build.yml
       - dotnet/dotnet/pack.yml
       - dotnet/NuGet/push.yml
+      - dotnet/NuGet/check-nupkg-exist.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 pr:
@@ -40,6 +41,7 @@ pr:
       - dotnet/dotnet/restore-and-build.yml
       - dotnet/dotnet/pack.yml
       - dotnet/NuGet/push.yml
+      - dotnet/NuGet/check-nupkg-exist.yml
       - .azuredevops/testHelpers/build-summary-validation.job.yml
 
 schedules:
@@ -69,7 +71,6 @@ jobs:
       - template: '../../../../dotnet/NuGet/push.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          enable: false
 
   - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
     parameters:

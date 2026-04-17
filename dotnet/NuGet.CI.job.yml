@@ -64,6 +64,20 @@ parameters:
     #   outputDir: '$(Build.ArtifactStagingDirectory)/nuget'
     #   artifactName: 'nuget-packages'
 
+  - name: pushCondition
+    displayName: 'Condition for NuGet push step'
+    type: string
+    default: |-
+      eq(variables['Build.SourceBranch'], 'refs/heads/main')
+
+  - name: pushNuGetAuth
+    displayName: 'NuGet authentication parameters for push'
+    type: object
+    # prettier-ignore
+    default: {
+      mode: 'sameOrganization'
+    }
+
   - name: push
     displayName: 'NuGet push parameters'
     type: object
@@ -71,11 +85,8 @@ parameters:
     # Example:
     # push:
     #   enable: true
-    #   condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))"
     #   feedUrl: 'https://pkgs.dev.azure.com/my-org/_packaging/my-feed/nuget/v3/index.json'
     #   skipDuplicate: true
-    #   nuGetAuth:
-    #     mode: 'sameOrganization'
 
   - name: buildSummary
     displayName: 'Build summary parameters'
@@ -165,8 +176,6 @@ jobs:
       - template: 'dotnet/pack.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.pack.enable, '') }}:
-            enable: ${{ parameters.pack.enable }}
           ${{ if ne(parameters.pack.projects, '') }}:
             projects: ${{ parameters.pack.projects }}
           ${{ if ne(parameters.dotnet.configuration, '') }}:
@@ -215,7 +224,8 @@ jobs:
         not(canceled()),
         eq(${{ coalesce(parameters.push.enable, true) }}, true),
         ne('${{ parameters.push.feedUrl }}', ''),
-        eq(dependencies.Pack.result, 'Succeeded')
+        eq(dependencies.Pack.result, 'Succeeded'),
+        ${{ coalesce(parameters.pushCondition, 'true') }}
       )
     steps:
       - checkout: none
@@ -224,18 +234,28 @@ jobs:
         displayName: 'Download NuGet packages artifact'
         artifact: ${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
 
+      - template: 'NuGet/check-nupkg-exist.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          packageDir: $(Pipeline.Workspace)/${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
+
+      - template: 'NuGet/authenticate.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if ne(parameters.pushNuGetAuth.mode, '') }}:
+            mode: ${{ parameters.pushNuGetAuth.mode }}
+          ${{ if ne(parameters.pushNuGetAuth.azureDevOpsServiceConnection, '') }}:
+            azureDevOpsServiceConnection: ${{ parameters.pushNuGetAuth.azureDevOpsServiceConnection }}
+          ${{ if ne(parameters.pushNuGetAuth.feedUrl, '') }}:
+            feedUrl: ${{ parameters.pushNuGetAuth.feedUrl }}
+          ${{ if ne(parameters.pushNuGetAuth.forceReinstallCredentialProvider, '') }}:
+            forceReinstallCredentialProvider: ${{ parameters.pushNuGetAuth.forceReinstallCredentialProvider }}
+          ${{ if parameters.pushNuGetAuth.nuGetServiceConnections }}:
+            nuGetServiceConnections: ${{ parameters.pushNuGetAuth.nuGetServiceConnections }}
+
       - template: 'NuGet/push.yml'
         parameters:
           enableBuildDebug: ${{ parameters.enableBuildDebug }}
-          ${{ if ne(parameters.push.enable, '') }}:
-            enable: ${{ parameters.push.enable }}
-          ${{ if ne(parameters.push.condition, '') }}:
-            condition: ${{ parameters.push.condition }}
-          ${{ if ne(parameters.push.nuGetAuth, '') }}:
-            nuGetAuth: ${{ parameters.push.nuGetAuth }}
-          ${{ else }}:
-            nuGetAuth:
-              mode: 'sameOrganization'
           feedUrl: ${{ parameters.push.feedUrl }}
           packageDir: $(Pipeline.Workspace)/${{ coalesce(parameters.pack.artifactName, 'nuget-packages') }}
           ${{ if ne(parameters.push.skipDuplicate, '') }}:

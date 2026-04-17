@@ -75,17 +75,26 @@ parameters:
       includesSymbols: true
     }
 
+  - name: pushCondition
+    displayName: 'Condition for NuGet push step'
+    type: string
+    default: 'true'
+
+  - name: pushNuGetAuth
+    displayName: 'NuGet authentication parameters for push'
+    type: object
+    # prettier-ignore
+    default: {
+      mode: 'sameOrganization'
+    }
+
   - name: push
     displayName: 'NuGet push parameters'
     type: object
     # prettier-ignore
     default: {
       enable: true,
-      feedUrl: 'https://godeltech.pkgs.visualstudio.com/OpenSource/_packaging/azuredevops-pipelines-test/nuget/v3/index.json',
-      condition: 'succeeded()',
-      nuGetAuth: {
-        mode: 'sameOrganization'
-      }
+      feedUrl: 'https://godeltech.pkgs.visualstudio.com/OpenSource/_packaging/azuredevops-pipelines-test/nuget/v3/index.json'
     }
 
   - name: buildSummary
@@ -138,6 +147,8 @@ jobs:
       stryker: ${{ parameters.stryker }}
       quality: ${{ parameters.quality }}
       pack: ${{ parameters.pack }}
+      pushCondition: ${{ parameters.pushCondition }}
+      pushNuGetAuth: ${{ parameters.pushNuGetAuth }}
       push: ${{ parameters.push }}
       buildSummary: ${{ parameters.buildSummary }}
       workingDirectory: ${{ parameters.workingDirectory }}
