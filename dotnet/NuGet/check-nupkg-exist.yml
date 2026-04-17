@@ -1,0 +1,72 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: packageDir
+    displayName: 'Directory containing NuGet packages'
+    type: string
+    default: '$(Build.ArtifactStagingDirectory)/nuget'
+
+  - name: appendSummary
+    displayName: 'Append section to job summary'
+    type: boolean
+    default: false
+
+  - name: stepName
+    displayName: 'Step name to use as reference'
+    type: string
+    default: 'check_packages_exist'
+
+steps:
+  - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
+      $packageDir = $env:PACKAGE_DIR
+      $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
+      $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
+
+      $packages = Get-ChildItem -Path $packageDir -Filter '*.nupkg' -Recurse |
+        Where-Object { $_.Name -notmatch '\.snupkg$' }
+
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]Package directory: $packageDir"
+        Write-Host "##[debug]Package count: $($packages.Count)"
+      }
+
+      if ($packages.Count -eq 0) {
+        Write-Host "##vso[task.logissue type=error]No .nupkg files found in '$packageDir'"
+        Write-Host "##vso[task.setvariable variable=packageCount;isOutput=true]0"
+        exit 1
+      }
+
+      Write-Host "Found $($packages.Count) package(s):"
+      $packages | ForEach-Object { Write-Host "  - $($_.Name)" }
+
+      Write-Host "##vso[task.setvariable variable=packageCount;isOutput=true]$($packages.Count)"
+
+      if ($appendSummary) {
+        $lines = @(
+          "## Packages to Push",
+          "",
+          "| Package | Size |",
+          "| --- | --- |"
+        )
+        foreach ($pkg in $packages) {
+          $sizeKB = [math]::Round($pkg.Length / 1KB, 1)
+          $lines += "| $($pkg.Name) | $($sizeKB) KB |"
+        }
+        $lines += ""
+        $lines += "Found $($packages.Count) package(s)."
+        $lines += ""
+
+        $summaryPath = "$agentTempDirectory/job-summary.md"
+        Add-Content -Path $summaryPath -Value ($lines -join "`n") -Encoding UTF8
+      }
+    name: ${{ parameters.stepName }}
+    displayName: 'Check NuGet packages exist'
+    env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
+      PACKAGE_DIR: ${{ parameters.packageDir }}
+      APPEND_SUMMARY: ${{ parameters.appendSummary }}
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)

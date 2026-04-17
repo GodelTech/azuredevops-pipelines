@@ -1,0 +1,76 @@
+# test-dotnet-NuGet-check-nupkg-exist.test.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-nuget'
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/NuGet/check-nupkg-exist.test.yml
+      - dotnet/NuGet/check-nupkg-exist.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/NuGet/check-nupkg-exist.test.yml
+      - dotnet/NuGet/check-nupkg-exist.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+variables:
+  buildJobName: 'CheckPackagesExist'
+
+jobs:
+  - job: CheckPackagesExist
+    displayName: 'Check packages exist'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - task: DotNetCoreCLI@2
+        displayName: 'dotnet pack (create test package)'
+        inputs:
+          command: 'pack'
+          packagesToPack: '${{ parameters.workingDirectory }}/**/*.csproj'
+          packDirectory: '$(Build.ArtifactStagingDirectory)/nuget'
+
+      - template: '../../../../dotnet/NuGet/check-nupkg-exist.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          packageDir: '$(Build.ArtifactStagingDirectory)/nuget'
+          appendSummary: true
+
+      - template: '../../../../.azuredevops/testHelpers/build-summary-validation.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          expectedBuildResult: 'Succeeded'
+          buildResultDescription: |
+            Step **'Check NuGet packages exist'** result must be: **Succeeded**
