@@ -1,0 +1,78 @@
+﻿# test-dotnet-NuGet-get-nupkg-version.test.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+  - name: workingDirectory
+    displayName: 'Working directory'
+    type: string
+    default: '$(Build.SourcesDirectory)/.azuredevops/dummy-projects/dotnet/dotnet-nuget'
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/NuGet/get-nupkg-version.test.yml
+      - dotnet/NuGet/get-nupkg-version.yml
+      - .azuredevops/testHelpers/build-summary-validation.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/NuGet/get-nupkg-version.test.yml
+      - dotnet/NuGet/get-nupkg-version.yml
+      - .azuredevops/testHelpers/build-summary-validation.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+variables:
+  buildJobName: 'GetNupkgVersion'
+
+jobs:
+  - job: GetNupkgVersion
+    displayName: 'Get NuGet package version'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - task: DotNetCoreCLI@2
+        displayName: 'dotnet pack (create test package)'
+        inputs:
+          command: 'pack'
+          packagesToPack: '${{ parameters.workingDirectory }}/**/*.csproj'
+          packDirectory: '$(Build.ArtifactStagingDirectory)/nuget'
+
+      - template: '../../../../dotnet/NuGet/get-nupkg-version.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          packageDir: '$(Build.ArtifactStagingDirectory)/nuget'
+
+      - template: '../../../../.azuredevops/testHelpers/build-summary-validation.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          expectedBuildResult: 'Succeeded'
+          buildResultDescription: |
+            Step **'Get NuGet package version'** result must be: **Succeeded**
+          outputVariables:
+            - displayName: get_nupkg_version.version
+              value: $(get_nupkg_version.version)

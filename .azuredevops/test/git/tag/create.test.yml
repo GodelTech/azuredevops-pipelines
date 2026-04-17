@@ -1,0 +1,69 @@
+# test-git-tag-create.test.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/git/tag/create.test.yml
+      - git/tag/create.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/git/tag/create.test.yml
+      - git/tag/create.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  - job: CreateGitTag
+    displayName: 'Create git tag'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: self
+        persistCredentials: true
+        fetchDepth: 1
+
+      - template: '../../../../git/tag/create.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          tagNamePrefix: 'testPrefix-'
+          tagName: 'testTagName'
+
+  - template: '../../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - CreateGitTag
+      expectedBuildResult: 'Succeeded'
+      buildResultDescription: |
+        Job **'Create git tag'**
+        Step **'Create git tag'** result must be: **Succeeded**

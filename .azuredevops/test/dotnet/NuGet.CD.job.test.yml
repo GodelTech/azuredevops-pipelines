@@ -1,0 +1,92 @@
+# test-dotnet-NuGet.CD.job.test.yml
+
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: true
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+
+trigger:
+  batch: true
+  paths:
+    include:
+      - .azuredevops/test/dotnet/NuGet.CD.job.test.yml
+      - dotnet/NuGet.CD.job.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - .azuredevops/test/dotnet/NuGet.CD.job.test.yml
+      - dotnet/NuGet.CD.job.yml
+      - .azuredevops/testHelpers/build-summary-validation.job.yml
+
+schedules:
+  - cron: '0 0 1 * *'
+    displayName: 'Monthly check'
+    branches:
+      include:
+        - main
+    always: true
+
+jobs:
+  # Setup job: create a dummy .nupkg artifact to feed the CD template
+  - job: Setup
+    displayName: 'Create dummy NuGet artifact'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: none
+
+      - pwsh: |
+          $artifactDir = $env:ARTIFACT_DIR
+          New-Item -Path $artifactDir -ItemType Directory -Force | Out-Null
+          $dummyContent = 'dummy'
+          $dummyPath = "$artifactDir/content.txt"
+          Set-Content -Path $dummyPath -Value $dummyContent
+          Compress-Archive -Path $dummyPath -DestinationPath "$artifactDir/TestPackage.1.0.0.nupkg" -Force
+          Remove-Item -Path $dummyPath
+          Write-Host "Created dummy package: TestPackage.1.0.0.nupkg"
+        displayName: 'Create dummy .nupkg'
+        env:
+          ARTIFACT_DIR: $(Build.ArtifactStagingDirectory)/nuget
+
+      - publish: $(Build.ArtifactStagingDirectory)/nuget
+        displayName: 'Publish dummy NuGet artifact'
+        artifact: nuget-packages
+
+  - template: '../../../dotnet/NuGet.CD.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      pipelineResource: 'current'
+      pushNuGetAuth:
+        mode: 'off'
+      push:
+        feedUrl: 'https://example.com/nuget/v3/index.json'
+      gitTag:
+        enable: true
+        prefix: 'testPrefix-'
+
+  - template: '../../../.azuredevops/testHelpers/build-summary-validation.job.yml'
+    parameters:
+      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+      vmImage: ${{ parameters.vmImage }}
+      dependsOn:
+        - PushNuget
+      expectedBuildResult: 'Failed'
+      buildResultDescription: |
+        Job **'Push NuGet Packages'** result must be: **Failed**
+        (fake feed URL causes push failure)

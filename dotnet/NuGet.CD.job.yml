@@ -1,0 +1,220 @@
+parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: vmImage
+    displayName: 'Pool VM image'
+    type: string
+    default: 'ubuntu-latest'
+
+  - name: environment
+    displayName: 'Azure DevOps environment name (supports approval gates)'
+    type: string
+    default: ''
+
+  - name: pipelineResource
+    displayName: 'Pipeline resource alias for the CI pipeline'
+    type: string
+    default: 'CI'
+
+  - name: artifactName
+    displayName: 'Pipeline artifact name containing NuGet packages'
+    type: string
+    default: 'nuget-packages'
+
+  - name: pushNuGetAuth
+    displayName: 'NuGet authentication parameters for push'
+    type: object
+    # prettier-ignore
+    default: {
+      mode: 'sameOrganization'
+    }
+
+  - name: push
+    displayName: 'NuGet push parameters'
+    type: object
+    default: {}
+    # Example:
+    # push:
+    #   feedUrl: 'https://pkgs.dev.azure.com/my-org/_packaging/my-feed/nuget/v3/index.json'
+    #   apiKey: 'az'
+    #   skipDuplicate: true
+
+  - name: gitTag
+    displayName: 'Git tag parameters'
+    type: object
+    # prettier-ignore
+    default: {
+      enable: true,
+      prefix: 'v'
+    }
+    # Example:
+    # gitTag:
+    #   enable: true
+    #   prefix: 'v'
+    # Version is extracted from the first .nupkg filename.
+    # NOTE: The build service identity needs 'Contribute' permission on the
+    # repository to push tags.
+
+  - name: buildSummary
+    displayName: 'Build summary parameters'
+    type: object
+    default: {}
+    # Example:
+    # buildSummary:
+    #   enable: true
+    #   showSystemInfo: true
+
+jobs:
+  # -- Pre-push NuGet info job (visible to environment approvers) ---------------
+  # When an environment is configured, this job runs first and produces a build
+  # summary listing the packages that are about to be pushed. The approver can
+  # review this information before approving the deployment job.
+  - job: PrePushNuget
+    displayName: 'NuGet packages information'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    condition: |
+      and
+      (
+        succeeded(),
+        eq(${{ parameters.showPrePushInfo }}, true),
+        ne(parameters.environment, '')
+      )
+    steps:
+      - checkout: none
+
+      - download: ${{ parameters.pipelineResource }}
+        displayName: 'Download NuGet packages artifact'
+        artifact: ${{ parameters.artifactName }}
+
+      - template: 'NuGet/check-nupkg-exist.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          ${{ if eq(parameters.pipelineResource, 'current') }}:
+            packageDir: $(Pipeline.Workspace)/${{ parameters.artifactName }}
+          ${{ else }}:
+            packageDir: $(Pipeline.Workspace)/${{ parameters.pipelineResource }}/${{ parameters.artifactName }}
+          appendSummary: true
+
+      - template: '../azuredevops/build/upload-summary.yml'
+        parameters:
+          enableBuildDebug: ${{ parameters.enableBuildDebug }}
+          stepDisplayName: 'Upload pre-push summary'
+          condition: 'always()'
+          title: 'NuGet Packages to Push'
+          includeJobSummary: true
+
+  # -- Deployment job -----------------------------------------------------------
+  - deployment: PushNuget
+    displayName: 'Push NuGet Packages'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn:
+      - PrePushNuget
+    condition: |
+      and
+      (
+        not(canceled()),
+        in(dependencies.PrePushNuget.result, 'Succeeded', 'Skipped')
+      )
+    ${{ if ne(parameters.environment, '') }}:
+      environment: ${{ parameters.environment }}
+    strategy:
+      runOnce:
+        preDeploy:
+          steps:
+            - checkout: none
+
+            - download: ${{ parameters.pipelineResource }}
+              displayName: 'Download NuGet packages artifact'
+              artifact: ${{ parameters.artifactName }}
+
+            - template: 'NuGet/check-nupkg-exist.yml'
+              parameters:
+                enableBuildDebug: ${{ parameters.enableBuildDebug }}
+                ${{ if eq(parameters.pipelineResource, 'current') }}:
+                  packageDir: $(Pipeline.Workspace)/${{ parameters.artifactName }}
+                ${{ else }}:
+                  packageDir: $(Pipeline.Workspace)/${{ parameters.pipelineResource }}/${{ parameters.artifactName }}
+
+            - template: 'NuGet/authenticate.yml'
+              parameters:
+                enableBuildDebug: ${{ parameters.enableBuildDebug }}
+                ${{ if ne(parameters.pushNuGetAuth.mode, '') }}:
+                  mode: ${{ parameters.pushNuGetAuth.mode }}
+                ${{ if ne(parameters.pushNuGetAuth.azureDevOpsServiceConnection, '') }}:
+                  azureDevOpsServiceConnection: ${{ parameters.pushNuGetAuth.azureDevOpsServiceConnection }}
+                ${{ if ne(parameters.pushNuGetAuth.feedUrl, '') }}:
+                  feedUrl: ${{ parameters.pushNuGetAuth.feedUrl }}
+                ${{ if ne(parameters.pushNuGetAuth.forceReinstallCredentialProvider, '') }}:
+                  forceReinstallCredentialProvider: ${{ parameters.pushNuGetAuth.forceReinstallCredentialProvider }}
+                ${{ if parameters.pushNuGetAuth.nuGetServiceConnections }}:
+                  nuGetServiceConnections: ${{ parameters.pushNuGetAuth.nuGetServiceConnections }}
+
+        deploy:
+          steps:
+            - download: none
+
+            - template: 'NuGet/push.yml'
+              parameters:
+                enableBuildDebug: ${{ parameters.enableBuildDebug }}
+                feedUrl: ${{ parameters.push.feedUrl }}
+                ${{ if eq(parameters.pipelineResource, 'current') }}:
+                  packageDir: $(Pipeline.Workspace)/${{ parameters.artifactName }}
+                ${{ else }}:
+                  packageDir: $(Pipeline.Workspace)/${{ parameters.pipelineResource }}/${{ parameters.artifactName }}
+                ${{ if ne(parameters.push.apiKey, '') }}:
+                  apiKey: ${{ parameters.push.apiKey }}
+                ${{ if ne(parameters.push.skipDuplicate, '') }}:
+                  skipDuplicate: ${{ parameters.push.skipDuplicate }}
+                ${{ if ne(parameters.buildSummary.enable, '') }}:
+                  appendSummary: ${{ parameters.buildSummary.enable }}
+
+            - template: '../azuredevops/build/upload-summary.yml'
+              parameters:
+                enableBuildDebug: ${{ parameters.enableBuildDebug }}
+                stepDisplayName: 'Upload NuGet CD build summary'
+                condition: |
+                  and
+                  (
+                    always(),
+                    eq(${{ coalesce(parameters.buildSummary.enable, true) }}, true)
+                  )
+                title: 'NuGet CD Summary'
+                includeJobSummary: true
+                ${{ if ne(parameters.buildSummary.showSystemInfo, '') }}:
+                  showSystemInfo: ${{ parameters.buildSummary.showSystemInfo }}
+
+        on:
+          success:
+            steps:
+              - download: none
+
+              - ${{ if eq(parameters.gitTag.enable, true) }}:
+                  # Checkout is required for git tagging; persistCredentials allows git push
+                  - checkout: self
+                    persistCredentials: true
+                    # Shallow clone: only HEAD is needed for tagging
+                    fetchDepth: 1
+
+                  - download: ${{ parameters.pipelineResource }}
+                    displayName: 'Download NuGet packages artifact'
+                    artifact: ${{ parameters.artifactName }}
+
+                  - template: 'NuGet/get-nupkg-version.yml'
+                    parameters:
+                      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+                      ${{ if eq(parameters.pipelineResource, 'current') }}:
+                        packageDir: $(Pipeline.Workspace)/${{ parameters.artifactName }}
+                      ${{ else }}:
+                        packageDir: $(Pipeline.Workspace)/${{ parameters.pipelineResource }}/${{ parameters.artifactName }}
+
+                  - template: '../git/tag/create.yml'
+                    parameters:
+                      enableBuildDebug: ${{ parameters.enableBuildDebug }}
+                      tagNamePrefix: ${{ coalesce(parameters.gitTag.prefix, 'v') }}
+                      tagName: $(get_nupkg_version.version)
+                      appendSummary: ${{ coalesce(parameters.buildSummary.enable, true) }}

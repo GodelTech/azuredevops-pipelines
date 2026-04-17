@@ -1,0 +1,101 @@
+﻿parameters:
+  - name: enableBuildDebug
+    displayName: 'Enable build debug'
+    type: boolean
+    default: false
+
+  - name: packageDir
+    displayName: 'Directory containing NuGet packages'
+    type: string
+    default: '$(Build.ArtifactStagingDirectory)/nuget'
+
+  - name: stepName
+    displayName: 'Step name to use as reference'
+    type: string
+    default: 'get_nupkg_version'
+
+  - name: appendSummary
+    displayName: 'Append section to job summary'
+    type: boolean
+    default: true
+
+steps:
+  - pwsh: |
+      $enableBuildDebug = [System.Convert]::ToBoolean($env:ENABLE_BUILD_DEBUG)
+      $packageDir = $env:PACKAGE_DIR
+      $appendSummary = [System.Convert]::ToBoolean($env:APPEND_SUMMARY)
+      $agentTempDirectory = $env:AGENT_TEMPDIRECTORY
+
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]Package directory: $packageDir"
+      }
+
+      $packages = Get-ChildItem -Path $packageDir -Filter '*.nupkg' -Recurse |
+        Where-Object { $_.Name -notmatch '\.snupkg$' }
+
+      if ($packages.Count -eq 0) {
+        Write-Host "##vso[task.logissue type=error]No .nupkg files found in '$packageDir'"
+        Write-Host "##vso[task.setvariable variable=version;isOutput=true]"
+        exit 1
+      }
+
+      $firstPkg = $packages | Select-Object -First 1
+
+      if ($enableBuildDebug) {
+        Write-Host "##[debug]First package: $($firstPkg.Name)"
+      }
+
+      # Extract version: PackageName.1.2.3-suffix.nupkg -> 1.2.3-suffix
+      if ($firstPkg.Name -match '\.(\d+\.\d+\.\d+[^.]*)\.nupkg$') {
+        $version = $Matches[1]
+      } else {
+        Write-Host "##vso[task.logissue type=error]Could not extract version from '$($firstPkg.Name)'"
+        Write-Host "##vso[task.setvariable variable=version;isOutput=true]"
+        exit 1
+      }
+
+      # Check that all packages share the same version
+      $mismatchedPackages = @()
+      foreach ($pkg in $packages) {
+        if ($pkg.Name -match '\.(\d+\.\d+\.\d+[^.]*)\.nupkg$') {
+          if ($Matches[1] -ne $version) {
+            $mismatchedPackages += "$($pkg.Name) ($($Matches[1]))"
+          }
+        } else {
+          $mismatchedPackages += "$($pkg.Name) (unknown version)"
+        }
+      }
+
+      if ($mismatchedPackages.Count -gt 0) {
+        Write-Host "##vso[task.logissue type=warning]Version mismatch detected. Expected '$version' but found: $($mismatchedPackages -join ', ')"
+      }
+
+      Write-Host "Extracted version '$version' from '$($firstPkg.Name)'"
+      Write-Host "##vso[task.setvariable variable=version;isOutput=true]$version"
+
+      if ($appendSummary) {
+        $lines = @(
+          "## NuGet Package Version",
+          "",
+          "| Property | Value |",
+          "| --- | --- |",
+          "| Version | ``$version`` |",
+          "| Package count | $($packages.Count) |"
+        )
+
+        if ($mismatchedPackages.Count -gt 0) {
+          $lines += "| Version mismatch | ⚠️ $($mismatchedPackages -join ', ') |"
+        }
+
+        $lines += ""
+
+        $summaryPath = "$agentTempDirectory/job-summary.md"
+        Add-Content -Path $summaryPath -Value ($lines -join "`n") -Encoding UTF8
+      }
+    name: ${{ parameters.stepName }}
+    displayName: 'Get NuGet package version'
+    env:
+      ENABLE_BUILD_DEBUG: ${{ parameters.enableBuildDebug }}
+      PACKAGE_DIR: ${{ parameters.packageDir }}
+      APPEND_SUMMARY: ${{ parameters.appendSummary }}
+      AGENT_TEMPDIRECTORY: $(Agent.TempDirectory)
